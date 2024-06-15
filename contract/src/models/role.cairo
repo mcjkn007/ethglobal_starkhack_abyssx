@@ -1,5 +1,5 @@
 use starknet::ContractAddress;
-use abyss_x::models::{property::{Property,BaseProperty,PropertyTrait},stage::{StageCategory}};
+use abyss_x::models::{property::{Property,BaseProperty,PropertyTrait}};
 
 #[derive(Serde, Copy, Drop, Introspect,PartialEq)]
 enum RoleCategory {
@@ -15,7 +15,7 @@ struct Role {
     player: ContractAddress,
     seed:u64,
     cur_stage:u32,
-    stage_category:StageCategory,
+    stage_category:u32,
 
     category:RoleCategory,
     gold:u32,
@@ -61,7 +61,7 @@ impl RoleImpl of RoleTrait {
             player: player,
             seed:seed,
             cur_stage:0,
-            stage_category:StageCategory::None,
+            stage_category:0,
             category:category,
             gold:100,
 

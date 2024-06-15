@@ -1,8 +1,8 @@
  
 // define the interface
- use starknet::{ContractAddress,SyscallResultTrait,SyscallResult, syscalls,get_caller_address,get_contract_address,get_block_timestamp,contract_address_const};
+ use starknet::{ContractAddress};
 #[dojo::interface]
-trait IAccounts{
+trait IAccount{
     fn login();
     fn set_nickname(nickname:felt252);
     fn exchange_meme(meme_address:ContractAddress);
@@ -18,14 +18,12 @@ mod account {
     use token::erc20::ERC20::interface::{ERC20ABI,ERC20ABIDispatcherTrait,ERC20ABIDispatcher};
     use starknet::{ContractAddress,SyscallResultTrait,SyscallResult, syscalls,get_caller_address,get_contract_address,get_block_timestamp,contract_address_const};
     use abyss_x::models::{
-        user::{User,UserState,UserTrait}
+        user::{User,UserState,UserTrait},
+        card::{Card,CardTrait}
     };
 
     use abyss_x::utils::{
-        seed::{SeedTrait},
-        random::{RandomTrait},
-        mathtools::{Vec2,MathToolsTrait},
-        constant::{MAX_STAGE,EventCode,ERC20_ADD}
+        constant::{MAX_STAGE,EventCode}
     };
  
     #[event]
@@ -40,18 +38,20 @@ mod account {
     }
     // impl: implement functions specified in trait
     #[abi(embed_v0)]
-    impl AccountImpl of super::IAccounts<ContractState> {
+    impl AccountImpl of super::IAccount<ContractState> {
         fn login(world: IWorldDispatcher){
             let player = get_caller_address();
  
             let user = get!(world, player, (User));
 
             if(user.state == UserState::None){
+                //register
+                //card
+                set!(world,(CardTrait::init_card(player)));
+                //user
                 set!(world,(UserTrait::init_user(player)));
             }
             emit!(world,AccountEvent { player:player, event:EventCode::Login});
-
-           
         }
         fn set_nickname(world: IWorldDispatcher,nickname:felt252){
             let player = get_caller_address();

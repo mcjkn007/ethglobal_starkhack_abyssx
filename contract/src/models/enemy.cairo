@@ -4,7 +4,8 @@ use core::nullable::{NullableTrait, match_nullable, FromNullableResult};
  
 use starknet::{ContractAddress, get_caller_address,get_contract_address,get_block_timestamp};
 
-use abyss_x::models::{property::{Property,BaseProperty,PropertyTrait},card::{Card,CardID,CardTrait}};
+use abyss_x::models::{property::{Property,BaseProperty,PropertyTrait}};
+//use abyss_x::config::{card::{CardID}};
 use abyss_x::utils::constant::{MAX_STAGE};
 
 #[derive(Serde, Copy, Drop, Introspect,PartialEq)]
@@ -22,14 +23,8 @@ struct Enemy {
     property:Property
 }
  
-
-trait EnemyTrait {
-    fn init_enemy(id:u32,category:EnemyCategory) -> Enemy;
-    fn get_enemy_action(round:u32,category:EnemyCategory)->Card;
-    fn get_enemies(stage_process:u32)->Felt252Dict<Nullable<Enemy>>;
-    fn get_enemies_number(stage_process:u32)->u32;
-}
-
+ 
+#[generate_trait]
 impl EnemyImpl of EnemyTrait {
     fn init_enemy(id:u32,category:EnemyCategory) -> Enemy{
         let mut enemy = Enemy{
@@ -38,45 +33,47 @@ impl EnemyImpl of EnemyTrait {
             property:PropertyTrait::init_property(),
         };
         if (category == EnemyCategory::Goblin){
-            enemy.property.cur_property.hp = 30;
+           // enemy.property.cur_property.hp = 30;
         }else if(category == EnemyCategory::Hercules){
-            enemy.property.cur_property.hp = 50;
+           // enemy.property.cur_property.hp = 50;
         }else if(category == EnemyCategory::Boss1){
-            enemy.property.cur_property.hp = 120;
+           // enemy.property.cur_property.hp = 120;
         } 
         else{
-            enemy.property.cur_property.hp = 50;
+           // enemy.property.cur_property.hp = 50;
         };
          
         return enemy;
     }
-     fn get_enemy_action(round:u32,category:EnemyCategory)->Card{
+     fn get_enemy_action(round:u32,category:EnemyCategory)->u32{
+ 
         if(category == EnemyCategory::Goblin){
             if(round %2 == 0){
-                return  CardTrait::create_enemy_card(CardID::Attack,0);
+                return 0;
             }else{
-                return CardTrait::create_enemy_card(CardID::Defence,0);
+                return 1;
             }
         }else if(category == EnemyCategory::Hercules){
             if(round == 0){
-                return  CardTrait::create_enemy_card(CardID::BerserkerStance,0);
+                return 1;
             }else{
-                return CardTrait::create_enemy_card(CardID::Attack,0);
+                return 1;
             }
         }else if(category == EnemyCategory::Boss1){
             if(round == 0){
-                return  CardTrait::create_enemy_card(CardID::BerserkerStance,0);
+                return  1;
             }else{
                 if(round %2 == 0){
-                    return CardTrait::create_enemy_card(CardID::Attack,0);
+                    return 1;
                 }else{
-                    return CardTrait::create_enemy_card(CardID::Defence,0);
+                    return 1;
                 }
             }
         }
         else{
-            return CardTrait::create_role_card(get_contract_address(),0,CardID::Attack);
+            return 1;
         }
+
      }
  
     fn get_enemies(stage_process:u32)->Felt252Dict<Nullable<Enemy>>{
@@ -105,32 +102,4 @@ impl EnemyImpl of EnemyTrait {
     }
 }
 
-#[cfg(test)]
-mod tests {
-    use core::dict::Felt252DictTrait;
-use core::option::OptionTrait;
-use core::traits::TryInto;
-use core::nullable::{NullableTrait, match_nullable, FromNullableResult};
-    use core::traits::Into;
-    use super::{Enemy, EnemyTrait};
-
-    #[test]
-    #[available_gas(100000)]
-    fn test_get_enemy_by_stage_id() {
-       //
-     //  let mut enemy_dict = EnemyTrait::get_enemy_by_stage_id(0);
-      // let mut val = enemy_dict.get(0);
-        
-       // assert(val.is_null() == false,'error');
-       // let mut dd:Enemy = val.deref();
-       // assert(dd.id != 0,'error 2');
-       // dd.property.cur_property.hp = 10;
-       // enemy_dict.insert(0,NullableTrait::new(dd));
-
-       // val = enemy_dict.get(0);
-        
-       // dd = val.deref();
-       // assert(dd.property.cur_property.hp == 10,'error 3');
-    }
  
-}

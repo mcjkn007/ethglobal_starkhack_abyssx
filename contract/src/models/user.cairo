@@ -6,8 +6,7 @@ struct User {
     #[key]
     player:ContractAddress,
     nickname:felt252,
-    state:UserState,
-    score:u32,
+    state:UserState
 }
 
 #[derive(Serde, Copy, Drop, Introspect,PartialEq)]
@@ -36,8 +35,7 @@ impl UserImpl of UserTrait {
         return User{
             player:player,
             nickname:'red',
-            state:UserState::Free,
-            score:0
+            state:UserState::Free
         };
     }
 }

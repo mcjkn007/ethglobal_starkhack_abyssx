@@ -41,13 +41,7 @@ use debug::PrintTrait;
 
 
     // import test utils
-    use abyss_x::{
-        systems::{account::{account, IAccountsDispatcher, IAccountsDispatcherTrait},
-        
-        },
-        models::{user::{User,UserState,user}},
-         
-    };
+    
 
 fn STATE() -> (IWorldDispatcher, ERC20::ContractState) {
  
@@ -91,12 +85,12 @@ fn assert_only_event_transfer(from: ContractAddress, to: ContractAddress, value:
  
       //  assert(ERC20Impl::total_supply(@state) == SUPPLY, 'Should eq SUPPLY');
 
-        println!("0000");
+        
         let mut models = array![erc_20_balance::TEST_CLASS_HASH,erc_20_allowance::TEST_CLASS_HASH,erc_20_meta::TEST_CLASS_HASH];
         let world = spawn_test_world(models);
-        println!("11111");
+     
        // let mut erc20_dispatcher = ERC20ABIDispatcher {contract_address: world.deploy_contract('salt', ERC20::TEST_CLASS_HASH.try_into().unwrap())};
-        println!("2222");
+ 
        // let a  = erc20_dispatcher.total_supply();
       //  println!("{:?}", a);
         

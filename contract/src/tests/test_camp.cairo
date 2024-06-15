@@ -49,7 +49,7 @@ use debug::PrintTrait;
     #[test]
     
     #[available_gas(3000000000)]
-    fn test_account_system() {
+    fn test_camp_system() {
 
         // models
         let mut models = array![user::TEST_CLASS_HASH,card::TEST_CLASS_HASH];
@@ -59,18 +59,20 @@ use debug::PrintTrait;
 
         // deploy systems contract
         let account_system = IAccountDispatcher { contract_address:world.deploy_contract('account', account::TEST_CLASS_HASH.try_into().unwrap()) };
+        account_system.login();
+ 
+        let camp_system = ICampDispatcher { contract_address:world.deploy_contract('camp', camp::TEST_CLASS_HASH.try_into().unwrap()) };
+        println!("---------test_camp_system_begin----------");
         let mut initial = testing::get_available_gas();
         gas::withdraw_gas().unwrap();
-        account_system.login();
-        println!("---------test_account_system_begin----------");
+        camp_system.set_up_deck(1,'red',0x11050105030101110501050301011105010503010111050105030101);
         let mut gas = initial - testing::get_available_gas();
-        println!("login gas : {}", gas);
+        println!("set_up_deck gas : {}", gas);
 
         initial = testing::get_available_gas();
-        account_system.set_nickname('black');
+        camp_system.delete_deck(1,'red');
         gas = initial - testing::get_available_gas();
-        println!("set_nickname gas : {}", gas);
-        println!("---------test_account_system_end----------");
-      
+        println!("delete_deck gas : {}", gas);
+        println!("---------test_camp_system_end----------");
     }
 }

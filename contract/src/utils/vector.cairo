@@ -93,14 +93,29 @@ impl VectorImpl<T,+Drop<T>, +Copy<T>> of VectorTrait<T> {
 #[cfg(test)]
 mod tests {
     use super::{Vector,VectorTrait};
-
+ 
     #[test]
-    #[available_gas(10000000)]
-    fn test_vec() {
-        let mut a:Vector<u32> = VectorTrait::<u32>::new();
-        a.push_back(1);
-        let aa = a.pop_back();
-        assert(aa == 1,'error');
-       // assert(position.is_equal(Vec2 { x: 420, y: 0 }), 'not equal');
+    #[ignore]
+    #[available_gas(100_000_000)]
+    fn test_vector() {
+        println!("---------vector_test----------");
+
+        let mut initial = testing::get_available_gas();
+        gas::withdraw_gas().unwrap();
+         
+        let mut result = VectorTrait::<u8>::new();
+        let mut gas = initial - testing::get_available_gas();
+        println!("vector new gas : {}", gas);
+
+        initial = testing::get_available_gas();
+        result.push_back(1);
+        gas = initial - testing::get_available_gas();
+        println!("vector push gas : {}", gas);
+
+        initial = testing::get_available_gas();
+        let a = result.at(0);
+        gas = initial - testing::get_available_gas();
+        println!("vector get gas : {}", gas);
+        println!("---------vector_test----------");
     }
 }

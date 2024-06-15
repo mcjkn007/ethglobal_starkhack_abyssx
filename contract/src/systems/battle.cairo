@@ -1,6 +1,6 @@
  
  
-use abyss_x::utils::{mathtools::{Vec2}};
+use abyss_x::utils::{vec::{Vec2}};
 // define the interface
 #[dojo::interface]
 trait IBattle {
@@ -31,7 +31,8 @@ mod battle {
     use abyss_x::utils::{
         seed::{SeedTrait},
         random::{RandomTrait},
-        mathtools::{Vec2,MathToolsTrait},
+        bit::{BitTrait},
+        vec::{Vec2},
         constant::{MAX_STAGE,EventCode}
     };
     #[event]
@@ -101,10 +102,10 @@ mod battle {
             let mut i:u256 = role.card_slot;
             let mut p:u256 = 0;
             loop{
-                if(MathToolsTrait::pow(2,p) > i){
+                if(BitTrait::pow(2,p) > i){
                     break;
                 }
-                if(MathToolsTrait::checkbit(i,p) == true){
+                if(BitTrait::is_bit(i,p) == true){
                     let card:Card = get!(world, (player,p), (Card));
                     delete!(world,(card));
                 }
@@ -262,20 +263,17 @@ mod battle {
                 let mut i:u256 = role.card_slot;
                 let mut p:u256 = 0;
                 loop{
-                    if(MathToolsTrait::pow(2,p) > i){
+                    if(BitTrait::fast_pow_2(p) > i){
                         break;
                     }
-                    if(MathToolsTrait::checkbit(i,p) == true){
+                    if(BitTrait::is_bit(i,p) == true){
                         let card:Card = get!(world, (player,p), (Card));
                         delete!(world,(card));
                     }
                 p += 1;
                 };
 
-                if(role.cur_stage == MAX_STAGE){
-                    user.score += 1;
-                }
-
+              
                 user.state == UserState::Free;
                 set!(world,(user));
                 delete!(world,(role));
@@ -344,13 +342,13 @@ mod battle {
                     let mut i:u32 = 0;
                     let mut card_slot = role.card_slot;
                     loop{
-                        let check:bool = MathToolsTrait::checkbit(card_slot,i.into());
+                        let check:bool = BitTrait::is_bit(card_slot,i.into());
                         if(check == false){
                             let card:Card = CardTrait::create_role_card(player,i.into(),value.y.into());
                              set!(world,(card));
                              break;
                         }
-                        if(MathToolsTrait::pow(2,i.into()) > card_slot){
+                        if(BitTrait::fast_pow_2(i.into()) > card_slot){
                             break;
                         }
                         i +=1;
@@ -358,9 +356,9 @@ mod battle {
                 }else{
                     //delete card
                     let mut card_slot = role.card_slot;
-                    let check:bool = MathToolsTrait::checkbit(card_slot,value.y.into());
+                    let check:bool = BitTrait::is_bit(card_slot,value.y.into());
                     assert(check == true, 'delete card is void');
-                    card_slot = MathToolsTrait::setbit(card_slot,value.y.into(),false);
+                    card_slot = BitTrait::set_bit(card_slot,value.y.into(),false);
                 }
             }else if(stage_category == StageCategory::Idol){
                 

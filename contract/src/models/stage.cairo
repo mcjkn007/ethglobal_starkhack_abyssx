@@ -1,6 +1,6 @@
 use core::option::OptionTrait;
 use starknet::ContractAddress;
-use dojo_starter::utils::{
+use abyss_x::utils::{
     constant::{MAX_STAGE},
     random::{RandomTrait},
 };

@@ -1,5 +1,5 @@
 use starknet::ContractAddress;
-use dojo_starter::models::{property::{Property,BaseProperty,PropertyTrait},stage::{StageCategory}};
+use abyss_x::models::{property::{Property,BaseProperty,PropertyTrait},stage::{StageCategory}};
 
 #[derive(Serde, Copy, Drop, Introspect,PartialEq)]
 enum RoleCategory {

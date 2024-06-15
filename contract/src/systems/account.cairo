@@ -1,11 +1,11 @@
  
 // define the interface
-use starknet::{ContractAddress,SyscallResultTrait, syscalls,get_caller_address,get_contract_address,get_block_timestamp};
-
+ use starknet::{ContractAddress,SyscallResultTrait,SyscallResult, syscalls,get_caller_address,get_contract_address,get_block_timestamp,contract_address_const};
 #[dojo::interface]
-trait IAccounts {
-    fn register();
-    fn erc20(contract_address:ContractAddress);
+trait IAccounts{
+    fn login();
+    fn set_nickname(nickname:felt252);
+    fn exchange_meme(meme_address:ContractAddress);
 }
 
 // dojo decorator
@@ -14,63 +14,63 @@ mod account {
     use core::traits::Index;
     use core::option::OptionTrait;
     use core::serde::Serde;
-
-
-    use super::{IAccounts};
-
-    use origami::map::hex::{types::Direction};
-    use token::erc20::ERC20::interface::{ERC20ABI,ERC20ABIDispatcherTrait,ERC20ABIDispatcher};
  
+    use token::erc20::ERC20::interface::{ERC20ABI,ERC20ABIDispatcherTrait,ERC20ABIDispatcher};
     use starknet::{ContractAddress,SyscallResultTrait,SyscallResult, syscalls,get_caller_address,get_contract_address,get_block_timestamp,contract_address_const};
-    use dojo_starter::models::{
-        user::{User,UserState},
-        role::{Role,RoleCategory,RoleTrait},
-        enemy::{Enemy,EnemyTrait},
-        card::{Card,CardID,CardTarget,CardTrait},
-        stage::{StageCategory,StageTrait},
-        property::{Property,BaseProperty,PropertyTrait}
+    use abyss_x::models::{
+        user::{User,UserState,UserTrait}
     };
 
-    use dojo_starter::utils::{
+    use abyss_x::utils::{
         seed::{SeedTrait},
         random::{RandomTrait},
         mathtools::{Vec2,MathToolsTrait},
         constant::{MAX_STAGE,EventCode,ERC20_ADD}
     };
-
+ 
+    #[event]
+    #[derive(Drop, starknet::Event)]
+    enum Event {
+        AccountEvent:AccountEvent,
+    }
+    #[derive(Drop, starknet::Event)]
+    struct AccountEvent {
+        player: ContractAddress,
+        event: EventCode
+    }
     // impl: implement functions specified in trait
     #[abi(embed_v0)]
-    impl AccountImpl of IAccounts<ContractState> {
-        fn register(world: IWorldDispatcher) {
-             
+    impl AccountImpl of super::IAccounts<ContractState> {
+        fn login(world: IWorldDispatcher){
             let player = get_caller_address();
  
             let user = get!(world, player, (User));
 
             if(user.state == UserState::None){
-                set!(
-                    world,
-                    (
-                        User { player, state: UserState::Free,score:0}
-                    )
-                );
-            }   
-          
-
-           // let mut res:Span<felt252> = syscalls::call_contract_syscall(add, selector!("transferFrom"), output_array.span()).unwrap_syscall();
+                set!(world,(UserTrait::init_user(player)));
+            }
+            emit!(world,AccountEvent { player:player, event:EventCode::Login});
 
            
-          //  Serde::<bool>::deserialize(ref res).unwrap();
- 
         }
-        fn erc20(world: IWorldDispatcher,contract_address:ContractAddress){
+        fn set_nickname(world: IWorldDispatcher,nickname:felt252){
+            let player = get_caller_address();
+ 
+            let mut user = get!(world, player, (User));
 
-        
-           // println!("{:?}",add);
-            let token_dispatcher = ERC20ABIDispatcher { contract_address };
-            println!("erc   2222");
-            let a  = token_dispatcher.total_supply();
-            println!("{:?}", a);
+            assert(user.state != UserState::None, 'user state is wrong');
+
+            user.nickname = nickname;
+            set!(world,(user));
+
+            emit!(world,AccountEvent { player:player, event:EventCode::SetNickName});
+        }
+        fn exchange_meme(world: IWorldDispatcher,meme_address:ContractAddress){
+  
+
+           // let token_dispatcher = ERC20ABIDispatcher { contract_address:meme_address };
+           // let a = token_dispatcher.totalSupply();
+           //  println!("{:?}", a);
         }
     }
 }

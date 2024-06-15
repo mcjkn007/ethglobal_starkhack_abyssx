@@ -3,8 +3,8 @@ use core::traits::TryInto;
 use core::clone::Clone;
 use core::array::ArrayTrait;
 use starknet::ContractAddress;
-use dojo_starter::utils::{mathtools::{Vec2,Vec3}};
-use dojo_starter::models::{role::{Role,RoleCategory},property::{Property,BaseProperty}};
+use abyss_x::utils::{mathtools::{Vec2,Vec3}};
+use abyss_x::models::{role::{Role,RoleCategory},property::{Property,BaseProperty}};
 
 #[derive(Model,Copy, Drop, Serde,PartialEq)]
 struct Card {
@@ -546,10 +546,5 @@ mod tests {
        //
     }
 
-    #[test]
-    #[available_gas(100000)]
-    fn test_vec_is_equal() {
-         
-       // assert(position.is_equal(Vec2 { x: 420, y: 0 }), 'not equal');
-    }
+ 
 }

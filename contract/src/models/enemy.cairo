@@ -4,8 +4,8 @@ use core::nullable::{NullableTrait, match_nullable, FromNullableResult};
  
 use starknet::{ContractAddress, get_caller_address,get_contract_address,get_block_timestamp};
 
-use dojo_starter::models::{property::{Property,BaseProperty,PropertyTrait},card::{Card,CardID,CardTrait}};
-use dojo_starter::utils::constant::{MAX_STAGE};
+use abyss_x::models::{property::{Property,BaseProperty,PropertyTrait},card::{Card,CardID,CardTrait}};
+use abyss_x::utils::constant::{MAX_STAGE};
 
 #[derive(Serde, Copy, Drop, Introspect,PartialEq)]
 enum EnemyCategory {

@@ -5,6 +5,7 @@ use starknet::Event;
 enum EventCode{
     None,
     Login,
+    SetNickName,
     StartGame,
     GiveUpGame,
     SelectNextStage,

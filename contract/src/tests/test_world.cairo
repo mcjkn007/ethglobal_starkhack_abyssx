@@ -24,23 +24,24 @@ use token::erc20::ERC20::ERC20Impl;
 use token::erc20::ERC20::ERC20MetadataImpl;
 use token::erc20::ERC20::InternalImpl;
 use token::erc20::ERC20::Transfer;
-use token::erc20::ERC20;
+use token::erc20::erc20::{ERC20};
 use starknet::ContractAddress;
 use starknet::contract_address_const;
 use starknet::testing;
 use zeroable::Zeroable;
 
  
-use token::erc20::models::{erc_20_balance,erc_20_allowance,erc_20_meta};
-use token::erc20::models::{ERC20Balance,ERC20Allowance,ERC20Meta};
- 
+use token::erc20::models::{
+    ERC20Allowance, erc_20_allowance, ERC20Balance, erc_20_balance, ERC20Meta, erc_20_meta
+};
+
  
 use token::erc20::ERC20::_worldContractMemberStateTrait;
 use debug::PrintTrait;
 
 
     // import test utils
-    use dojo_starter::{
+    use abyss_x::{
         systems::{account::{account, IAccountsDispatcher, IAccountsDispatcherTrait},
         
         },
@@ -59,11 +60,11 @@ fn STATE() -> (IWorldDispatcher, ERC20::ContractState) {
     (world, state)
 }
 
-fn setup() -> ERC20::ContractState {
+fn setup() -> (IWorldDispatcher, ERC20::ContractState) {
     let (world, mut state) = STATE();
     ERC20::constructor(ref state, world.contract_address, NAME, SYMBOL, SUPPLY, OWNER());
     utils::drop_event(ZERO());
-    state
+    (world,state)
 }
 
 fn assert_event_transfer(from: ContractAddress, to: ContractAddress, value: u256) {
@@ -84,21 +85,31 @@ fn assert_only_event_transfer(from: ContractAddress, to: ContractAddress, value:
   
     fn test_token() {
  
-        let (_world, mut state) = STATE();
+       // let (_world, mut state) = STATE();
+ 
+       // InternalImpl::_mint(ref state, OWNER(), SUPPLY);
+ 
+      //  assert(ERC20Impl::total_supply(@state) == SUPPLY, 'Should eq SUPPLY');
 
-        InternalImpl::initializer(ref state, NAME, SYMBOL);
-        InternalImpl::_mint(ref state, OWNER(), SUPPLY);
+        println!("0000");
+        let mut models = array![erc_20_balance::TEST_CLASS_HASH,erc_20_allowance::TEST_CLASS_HASH,erc_20_meta::TEST_CLASS_HASH];
+        let world = spawn_test_world(models);
+        println!("11111");
+       // let mut erc20_dispatcher = ERC20ABIDispatcher {contract_address: world.deploy_contract('salt', ERC20::TEST_CLASS_HASH.try_into().unwrap())};
+        println!("2222");
+       // let a  = erc20_dispatcher.total_supply();
+      //  println!("{:?}", a);
+        
 
-        println!("{:?}",_world.contract_address);
-        let token_dispatcher = ERC20ABIDispatcher { contract_address:_world.contract_address };
-        let a  = token_dispatcher.total_supply();
-        println!("{:?}", a);
+       // let erc20_add = world.deploy_contract('ERC20', erc_20::TEST_CLASS_HASH.try_into().unwrap());
+       // let token_dispatcher = ERC20ABIDispatcher { contract_address:erc20_add };
+       // let a  = token_dispatcher.total_supply();
+       // println!("{:?}", a);
 
-          let contract_address = _world
-            .deploy_contract('salt', account::TEST_CLASS_HASH.try_into().unwrap());
-        let actions_system = IAccountsDispatcher { contract_address };
+       // let contract_address = world.deploy_contract('salt', account::TEST_CLASS_HASH.try_into().unwrap());
+      //  let actions_system = IAccountsDispatcher { contract_address };
        // actions_system.erc20(_world.contract_address);
-        println!("22222");
+ 
 
     }
 }

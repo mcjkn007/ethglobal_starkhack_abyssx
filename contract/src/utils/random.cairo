@@ -118,12 +118,27 @@ mod tests {
     use core::traits::TryInto;
     use debug::PrintTrait;
     use core::traits::Into;
-    use super::{RandomTrait};
-    use dojo_starter::utils::seed::{SeedTrait};
+    use super::{RandomTrait,RandomContainerTrait};
+    use abyss_x::utils::seed::{SeedTrait};
 
     #[test]
     #[available_gas(100000000)]
-    fn test_random() {
+    fn test_random_dict() {
+        let mut seed = SeedTrait::create_seed(1,2,3);
+
+        let mut dict: Felt252Dict<u32> = Default::default();
+        dict.insert(0,1);
+        dict.insert(1,2);
+        dict.insert(2,3);
+        dict.insert(3,4);
+        dict.insert(4,5);
+        dict.insert(5,6);
+        let result = RandomContainerTrait::random_dict(ref seed,ref dict,6);
+        //let dict = RandomTrait::create_random_sequence(ref seed,@arr);
+    }
+    #[test]
+    #[available_gas(100000000)]
+    fn test_random_array() {
         let mut seed = SeedTrait::create_seed(1,2,3);
         let mut arr = ArrayTrait::<u64>::new();
         arr.append(0);
@@ -131,14 +146,6 @@ mod tests {
         arr.append(3);
         arr.append(4);
         arr.append(5);
-
-         let mut dict: Felt252Dict<u32> = Default::default();
-         dict.insert(0,1);
-         let a = dict.get(0);
-         let b = dict.get(0);
-        assert(a == b, '11111111');
-
-        //let dict = RandomTrait::create_random_sequence(ref seed,@arr);
+        let result = RandomContainerTrait::random_array(ref seed,@arr);
     }
- 
 }

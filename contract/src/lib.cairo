@@ -1,6 +1,6 @@
 mod systems {
     mod account;
-    mod actions;
+    mod battle;
 }
 
 mod models {
@@ -21,5 +21,7 @@ mod utils{
 }
  
 mod tests {
+    mod test_account;
     mod test_world;
+    
 }

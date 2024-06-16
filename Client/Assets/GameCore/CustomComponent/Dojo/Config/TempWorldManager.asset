@@ -1,0 +1,20 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: faed63f2427f3ed83a42d16bb3e73e6d, type: 3}
+  m_Name: TempWorldManager
+  m_EditorClassIdentifier: 
+  toriiUrl: http://192.168.3.37:8080
+  rpcUrl: http://192.168.3.37:5050
+  relayUrl: /ip4/192.168.3.37/tcp/9090
+  relayWebrtcUrl: /ip4/192.168.3.37/udp/9091/webrtc-direct/certhash/uEiDD8KQcRhXJcyHxQ9MaxEFxVQY-0bsdTqJMCa4t7px4iA
+  limit: 100
+  worldAddress: 0x9b86a67b310934dc4c874300450f4b7d9fd18665dbc29ebc4e4586a62449e8

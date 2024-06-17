@@ -1,5 +1,5 @@
 use core::dict::Felt252DictTrait;
- 
+use core::nullable::NullableImpl;
 use abyss_x::utils::math::{MathU32Trait};
  
 struct Vector<T> {
@@ -34,12 +34,13 @@ impl VectorImpl<T,+Drop<T>, +Copy<T>,+Felt252DictValue<T>> of VectorTrait<T> {
             size:0_u32
         };
     }
-    #[inline(always)]
+    #[inline]
     fn size(self: @Vector<T>) -> u32{
         return *self.size;
     }
+    #[inline]
     fn empty(self:@ Vector<T>) -> bool{
-        return *self.size == 0_u32;
+        return (*self.size).is_zero_u32();
     }
     fn at(ref self:Vector<T>, index: u32)->T{
         return self.vector.get(index.into());
@@ -94,5 +95,47 @@ impl VectorImpl<T,+Drop<T>, +Copy<T>,+Felt252DictValue<T>> of VectorTrait<T> {
     }
 }
 
+ 
+struct Vector2<T> {
+    vector:Felt252Dict<Nullable<T>>,
+    size:u32
+}
+ 
+ pub trait Vector2Trait<T> {
+    fn new()->Vector2<T>;
+    fn size(self: @Vector2<T>)->u32;
+    fn empty(self: @Vector2<T>)->bool;
+    fn at(ref self:Vector2<T>, index: u32)->Nullable<T>;
+    fn set(ref self: Vector2<T>, index: u32, value: Nullable<T>);
+}
+ 
+impl DestructVec2<T, +Drop<T>> of Destruct<Vector2<T>> {
+    fn destruct(self: Vector2<T>) nopanic {
+        self.vector.squash();
+    }
+}
+ 
+impl Vector2Impl<T,+Drop<T>, +Copy<T>,+Felt252DictValue<T>> of Vector2Trait<T> {
+    fn new()->Vector2<T>{
+        return Vector2{
+            vector:Default::default(),
+            size:0_u32
+        };
+    }
+    #[inline]
+    fn size(self: @Vector2<T>) -> u32{
+        return *self.size;
+    }
+    #[inline]
+    fn empty(self:@ Vector2<T>) -> bool{
+        return (*self.size).is_zero_u32();
+    }
+    fn at(ref self:Vector2<T>, index: u32)->Nullable<T>{
+        return self.vector.get(index.into());
+    }
+    fn set(ref self: Vector2<T>, index: u32, value: Nullable<T>){
+        self.vector.insert(index.into(),value);
+    }
+}
 
  

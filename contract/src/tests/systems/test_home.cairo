@@ -8,7 +8,7 @@ mod tests {
     // import test utils
     use dojo::test_utils::{spawn_test_world, deploy_contract};
 
-    use token::erc20::ERC20::_worldContractMemberStateTrait;
+     
     use debug::PrintTrait;
 
 

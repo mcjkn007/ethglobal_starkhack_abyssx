@@ -1,3 +1,5 @@
+use abyss_x::utils::math::{MathU8Trait};
+
 #[generate_trait]
 impl Pow256Impl of Pow256Trait {
     fn pow(b: u256, n: u8)-> u256{
@@ -596,6 +598,5 @@ impl Pow128Impl of Pow128Trait {
             _ => 1_u128
         };
     }
-    
 }
  

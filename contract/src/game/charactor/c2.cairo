@@ -1,17 +1,23 @@
-use abyss_x::game::explorer::{Explorer,ExplorerInheritTrait,ExplorerTrait,ExplorerCategory,CardTarget};
-use abyss_x::game::attribute::{Attribute,AttributeTrait};
-use abyss_x::game::enemy::{Enemy,EnemyTeam3};
  
  
 use abyss_x::utils::dict_map::{DictMap,DictMapTrait};
 use abyss_x::utils::random::{RandomTrait,RandomContainerTrait};
 use abyss_x::utils::math::{MathU32Trait,MathU16Trait,MathU8Trait};
 use abyss_x::utils::constant::{HAND_CARD_NUMBER_MAX};
+use abyss_x::utils::bit::{Bit128Trait};
 
+use abyss_x::game::adventurer::{Adventurer,AdventurerBaseTrait,AdventurerTrait};
+use abyss_x::game::attribute::{Attribute,AttributeTrait,CalAttributeTrait};
+use abyss_x::game::status::{Status,StatusTrait};
+use abyss_x::game::enemy::{Enemy,EnemyTeam2,EnemyTeam3};
+
+use abyss_x::game::damage::{DamageTrait};
+ 
 mod C2CardID{
     const Attack:u8 = 1_u8;
     const Defence:u8 = 2_u8;
 }
+ 
 
 mod C2CardCost{
     const Attack:u8 = 1_u8;
@@ -23,55 +29,88 @@ mod C2CardValue{
     const Defence:u16 = 5_u16;
 } 
 
+#[derive(Destruct)]
+struct C2{
+    seed:u64,
+    attr:Attribute,
+    category:u8,
+ 
+    init_cards:Array<u8>,
+    left_cards:Array<u8>,
+    mid_cards:DictMap<u8>,
+    right_cards:Array<u8>,
+}
 
-impl C2ExplorerImpl of ExplorerInheritTrait{
-    fn init_explorer() -> Explorer{
-        return Explorer{
+impl C2DamageImpl of DamageTrait {
+    fn calculate_damage_dealt(ref self:Attribute,ref value:u16,){
+        self.status.cal_damage_status(ref value);
+    }
+    fn  damage_taken(ref self:Attribute,mut value:u16){
+      
+         
+        self.status.cal_damaged_status(ref value);
+
+        self.sub_hp_and_armor(value); 
+    }
+
+    fn calculate_direct_damage_dealt(ref self:Attribute,ref value:u16){
+
+    }
+    fn  direct_damage_taken(ref self:Attribute,mut value:u16){
+
+    }
+}
+
+
+impl C2Impl of AdventurerBaseTrait{
+    fn new() -> Adventurer{
+        return Adventurer{
             seed:0,
-            hand_cards_init:5,
-            attr:AttributeTrait::init_attribute(),
-            category:ExplorerCategory::C1,
-            role_cards:ArrayTrait::<u8>::new(),
+            attr:AttributeTrait::new(80),
+            category:1,
+            init_cards:ArrayTrait::<u8>::new(),
             left_cards:ArrayTrait::<u8>::new(),
             mid_cards:DictMapTrait::<u8>::new(),
             right_cards:ArrayTrait::<u8>::new(),
         };
     } 
-    fn get_card_target(card_id: u8) -> CardTarget {
-        match card_id {
-            0 => CardTarget::One,
-            1 => CardTarget::One,
-            2 => CardTarget::Self,
-            _ => CardTarget::Self
-        }
-    }
-    fn get_card_energy(card_id: u8) -> u8{
-        match card_id {
-            0 => 1_u8,
-            1 => 1_u8,
-            _ => 1_u8
-        }
-    }
  
-    fn use_card_self(ref self:Explorer,card_id:u8){
-        self.attr.energy.self_sub_u8_e(C2ExplorerImpl::get_card_energy(card_id));
-       
-        if(card_id == C2CardID::Defence){
-            let mut value:u16 = MathU16Trait::add_u16(self.attr.agi,C2CardValue::Defence);
-            self.attr.cal_armor_self_status(ref value);
-            self.attr.armor.add_eq_u16(value);
-        }
+    fn get_card_energy(card_id: u8) -> u16{
+        return match card_id {
+            0 => 1,
+            1 => 1,
+            _ => 1
+        };
     }
-    fn use_card(ref self:Explorer,ref target:Enemy,card_id:u8){
-        self.attr.energy.self_sub_u8_e(C2ExplorerImpl::get_card_energy(card_id));
 
-        if(card_id == C2CardID::Attack){
-            let mut value:u16 = MathU16Trait::add_u16(self.attr.str,C2CardValue::Attack);
-            self.attr.cal_damage_self_status(ref value);
-            target.attr.cal_damage_target_status(ref value);
-        
-            target.attr.sub_armor(ref value);    
-            target.attr.hp.sub_eq_u16(value);
-        }
+    fn game_begin_e1(ref self:Adventurer,ref target:Enemy){}
+    fn game_begin_e2(ref self:Adventurer,ref target:EnemyTeam2){}
+    fn game_begin_e3(ref self:Adventurer,ref target:EnemyTeam3){}
+
+    fn round_begin_e1(ref self:Adventurer,ref target:Enemy){}
+    fn round_begin_e2(ref self:Adventurer,ref target:EnemyTeam2){}
+    fn round_begin_e3(ref self:Adventurer,ref target:EnemyTeam3){}
+    
+    fn round_end_e1(ref self:Adventurer,ref target:Enemy){}
+    fn round_end_e2(ref self:Adventurer,ref target:EnemyTeam2){}
+    fn round_end_e3(ref self:Adventurer,ref target:EnemyTeam3){}
+
+   
+    fn use_card_e1(ref self:Adventurer,ref target:Enemy,opt:u16){
+        let card_index = (opt/256_u16).try_into().unwrap();
+        println!("card_index c2 gas : {}", card_index);
+        assert(self.mid_cards.check_value(card_index), 'card void');
+ 
     }
+    fn use_card_e2(ref self:Adventurer,ref target:EnemyTeam2,card_id:u8){
+
+    }
+    fn use_card_e3(ref self:Adventurer,ref target:EnemyTeam3,card_id:u8){
+
+    }
+}
+
+#[generate_trait]
+impl C2UseCardImpl of C2UseCardTrait{
+    
 }

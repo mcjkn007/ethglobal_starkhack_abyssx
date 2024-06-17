@@ -20,6 +20,7 @@ impl DestructDictMap<T, +Drop<T>, +Felt252DictValue<T>> of Destruct<DictMap<T>> 
  
 #[generate_trait]
 impl DictMapImpl<T, +Drop<T>, +Copy<T>,+PartialEq<T>,+Felt252DictValue<T>,+Into<u8,T>,+Into<T,u32>,+Into<T,felt252>> of DictMapTrait<T> {
+    #[inline]
     fn new()->DictMap<T>{
         return DictMap{
             key:Default::default(),
@@ -27,19 +28,23 @@ impl DictMapImpl<T, +Drop<T>, +Copy<T>,+PartialEq<T>,+Felt252DictValue<T>,+Into<
             size:0_u32
         };
     }
-    #[inline(always)]
+    #[inline]
     fn size(self: @DictMap<T>) -> u32{
         return *self.size;
     }
+    #[inline]
     fn empty(self:@DictMap<T>) -> bool{
-        return *self.size == 0_u32;
+        return (*self.size).is_zero_u32();
     }
+    #[inline]
     fn at(ref self:DictMap<T>, index: u32)->T{
         return self.key.get(index.into());
     }
+    #[inline]
     fn check_value(ref self:DictMap<T>, value: T)->bool{
-        return self.value.get(value.into()) != 0_u8.into();
+        return self.value.get(value.into()).is_no_zero_u32();
     }
+    #[inline]
     fn remove_value(ref self:DictMap<T>, value: T){
         let index:u32 = self.value.get(value.into());
         if(index != self.size){    
@@ -48,20 +53,22 @@ impl DictMapImpl<T, +Drop<T>, +Copy<T>,+PartialEq<T>,+Felt252DictValue<T>,+Into<
         self.value.insert(value.into(),0_u8.into());
         self.size.self_sub_u32();
     }
-    
+    #[inline]
     fn push_back(ref self:DictMap<T>,value:T){
         self.key.insert((self.size.self_add__u32()).into(),value);
         self.value.insert(value.into(),self.size);
     }
- 
+    #[inline]
     fn pop_back(ref self:DictMap<T>)->T{
         let result = self.key.get((self.size.self_sub__u32()).into());
         self.value.insert(result.into(),0_u8.into());
         return result;
     }
+    #[inline]
     fn pop_back_fast(ref self:DictMap<T>)->T{
         return self.key.get((self.size.self_sub__u32()).into());
     }
+    #[inline]
     fn clean_value_dict(ref self:DictMap<T>){
         self.value = Default::default();
     }

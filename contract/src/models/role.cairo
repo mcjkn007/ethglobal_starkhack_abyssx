@@ -1,6 +1,9 @@
+use core::option::OptionTrait;
 use starknet::ContractAddress;
 use abyss_x::utils::bit::{Bit256Trait};
 use abyss_x::utils::math::{MathU8Trait};
+
+use abyss_x::utils::constant::{POW_2_U256};
 
 #[derive(Model, Copy, Drop, Serde)]
 struct Role {
@@ -9,18 +12,19 @@ struct Role {
     #[key]
     category:u8,
 
-    seed:u64,
-
     game_mode:u8,
     cur_stage:u8,
-     
+
     hp:u16,
     gold:u16,
+
+    seed:u64,
+
+    blessing:u128,
 
     cards:u256,
     idols:u256,
 
-    temp:u256,
 }
 
 mod RoleCategory{
@@ -32,7 +36,7 @@ mod RoleCategory{
 
 #[generate_trait]
 impl RoleImpl of RoleTrait {
-    fn reset_role(ref self:Role){
+    fn reset(ref self:Role){
         self.seed = 0;
 
         self.game_mode = 0;
@@ -41,28 +45,47 @@ impl RoleImpl of RoleTrait {
         self.hp = 0;
         self.gold = 0;
 
+        self.blessing = 0;
+
         self.cards = 0;
         self.idols = 0;
-        self.temp = 0;
+      
     
     }
     fn get_cards(ref self:Role)->Array<u8>{
         let mut result =  ArrayTrait::<u8>::new();
-        let mut i:u8 = 0_u8;
-       
+ 
+        let mut cards:u256 = self.cards;
+        result.append((cards & 0xf_u256).try_into().unwrap());
         loop{
-            if(i == 32_u8){
+            if(cards == 0){
                 break;
             }
-            let v:u8 = Bit256Trait::cut_bit_8(self.cards,i*8_u8).try_into().unwrap();
-            if(v == 0_u8){
+            cards /= POW_2_U256::_8;
+            let mut v:u8 = (cards & 0xf_u256).try_into().unwrap();
+ 
+            if(v.is_zero_u8()){
                 break;
             }
             result.append(v);
-
-            i.self_add_u8();
         };
         return result;
     }
+    fn get_cards_test(ref cards:u256)->Array<u8>{
+        let mut result =  ArrayTrait::<u8>::new();
+        result.append((cards & 0xf_u256).try_into().unwrap());
+        loop{
+            if(cards == 0){
+                break;
+            }
+            cards /= POW_2_U256::_8;
+            let mut v:u8 = (cards & 0xf_u256).try_into().unwrap();
  
+            if(v.is_zero_u8()){
+                break;
+            }
+            result.append(v);
+        };
+        return result;
+    }
 }

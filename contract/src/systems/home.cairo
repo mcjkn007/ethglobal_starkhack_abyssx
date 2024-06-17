@@ -15,11 +15,10 @@ mod home {
     use core::option::OptionTrait;
     use core::serde::Serde;
  
-    use token::erc20::ERC20::interface::{ERC20ABI,ERC20ABIDispatcherTrait,ERC20ABIDispatcher};
+    //use token::erc20::ERC20::interface::{ERC20ABI,ERC20ABIDispatcherTrait,ERC20ABIDispatcher};
     use starknet::{ContractAddress,SyscallResultTrait,SyscallResult, syscalls,get_caller_address,get_contract_address,get_block_timestamp,contract_address_const};
     use abyss_x::models::{
-        user::{User,UserState,UserTrait},
-        cardslot::{CardSlot,CardSlotTrait}
+        user::{User,UserState,UserTrait}
     };
 
     use abyss_x::utils::{
@@ -42,14 +41,16 @@ mod home {
         fn login(world: IWorldDispatcher){
             let player = get_caller_address();
  
-            let user = get!(world, player, (User));
+            let mut user:User = get!(world, player, (User));
 
             if(user.state == UserState::NONE){
                 //register
                 //card
-                set!(world,(CardSlotTrait::init_cardslot(player)));
-                //user
-                set!(world,(UserTrait::init_user(player)));
+            
+              //  set!(world,(CardSlotTrait::init_cardslot(player)));
+            
+                user.init();
+                set!(world,(user));
             }
             emit!(world,HomeEvent { player:player, event:EventCode::Login});
         }
@@ -68,9 +69,9 @@ mod home {
         }
         fn exchange_meme(world: IWorldDispatcher,meme_address:ContractAddress){
   
-            let player = get_caller_address();
+           // let player = get_caller_address();
  
-            let mut user = get!(world, player, (User));
+           // let mut user = get!(world, player, (User));
            // let token_dispatcher = ERC20ABIDispatcher { contract_address:meme_address };
            // let a = token_dispatcher.totalSupply();
            //  println!("{:?}", a);

@@ -17,10 +17,10 @@ enum EventCode{
 }
 
 #[derive(Serde, Copy, Drop, Introspect,PartialEq)]
-enum CardTarget {
-    Self,
-    One,
-    All,
+enum CardResult {
+    Null,
+    Consume,
+    Discard,
 }
 
 const MAX_U8:u8 = 0xf_u8; 
@@ -37,9 +37,11 @@ const MIN_U64:u64 = 0_u64;
 //card
 const CARD_MAX:u32 = 32_u32; 
 const HAND_CARD_NUMBER_MAX:u32 = 10_u32;
-const HAND_CARD_NUMBER_INIT:u32 = 5_u32;
+const HAND_CARD_NUMBER_INIT:u16 = 5_u16;
 const SLOT_SIZE:u32 = 256_u32;
 const MAX_STAGE:u32 = 12_u32;
+
+ 
 
 mod AttributeCategory{
     const NONE:u8 = 0;
@@ -53,7 +55,7 @@ mod DIGIT_2{
     const _16: u32 = 16_u32;
     const _32: u32 = 32_u32;
 }
-mod POW_2_u128{
+mod POW_2_U128{
     const _0: u128 = 0x1_u128;
     const _1: u128 = 0x2_u128;
     const _2: u128 = 0x4_u128;
@@ -215,7 +217,7 @@ mod POW_2_u128{
     const _127: u128 = 0x80000000000000000000000000000000_u128;
  
 }
-mod POW_2_u256{
+mod POW_2_U256{
     const _0: u256 = 0x1_u256;
     const _1: u256 = 0x2_u256;
     const _2: u256 = 0x4_u256;

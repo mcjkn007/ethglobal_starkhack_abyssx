@@ -8,8 +8,12 @@ mod game{
         mod m1;
         mod m2;
     }
+    mod adventurer;
     mod attribute;
-    mod explorer;
+    mod damage;
+    mod status;
+ 
+ 
     mod enemy;
     mod stage;
 
@@ -41,17 +45,24 @@ mod utils{
 }
  
 mod tests {
+    mod game{
+      //  mod test_c1;
+    }
     mod systems {
         mod test_battle;
-        mod test_home;
+     //   mod test_home;
     }
     
     mod utils{
+       // mod test_test;
      //   mod test_array_map;
-        mod test_bit;
-        mod test_math;
-       // mod test_random;
+      //  mod test_bit;
+       // mod test_dict_ptr;
+       // mod test_pow;
+       // mod test_math;
+      //  mod test_random;
        // mod test_dict_map;
+       mod test_vector;
     }
 
 }

@@ -1,11 +1,15 @@
-use abyss_x::game::explorer::{Explorer,ExplorerInheritTrait,ExplorerTrait,ExplorerCategory};
-use abyss_x::game::attribute::{Attribute,AttributeTrait};
-use abyss_x::game::enemy::{Enemy,EnemyInheritTrait,EnemyCategory};
- 
-use abyss_x::utils::constant::{HAND_CARD_NUMBER_MAX,CardTarget};
+ use abyss_x::utils::constant::{HAND_CARD_NUMBER_MAX};
 use abyss_x::utils::dict_map::{DictMap,DictMapTrait};
 use abyss_x::utils::random::{RandomTrait,RandomContainerTrait};
 use abyss_x::utils::math::{MathU32Trait,MathU16Trait,MathU8Trait};
+
+use abyss_x::game::adventurer::{Adventurer,AdventurerBaseTrait,AdventurerTrait};
+use abyss_x::game::status::{Status,StatusTrait};
+
+use abyss_x::game::attribute::{Attribute,AttributeTrait,CalAttributeTrait};
+use abyss_x::game::enemy::{Enemy,EnemyTrait,EnemyBaseTrait,EnemyCategory};
+
+use abyss_x::game::damage::{DamageTrait};
 
 mod M1CardID{
     const Attack:u8 = 1_u8;
@@ -17,45 +21,64 @@ mod M1CardValue{
     const Defence:u16 = 5_u16;
 } 
 
-
-impl M1EnemyImpl of EnemyInheritTrait{
-    fn init_enemy() -> Enemy{
-        let mut result = Enemy{
+impl M1EnemyImpl of EnemyBaseTrait{
+    fn new()->Enemy{
+        return Enemy{
             category:EnemyCategory::M1,
-            attr:AttributeTrait::init_attribute(),
+            attr:AttributeTrait::new(20),
         };
-        result.attr.hp = 30;
-        return result;
-    } 
-    fn get_card_target(card_id: u8) -> CardTarget {
-        match card_id {
-            0 => CardTarget::One,
-            1 => CardTarget::One,
-            2 => CardTarget::Self,
-            _ => CardTarget::Self
-        }
     }
-    fn get_enemy_action_card(round:u8)->u8
+ 
+    fn get_enemy_action(round:u8)->u8
     {
         return 1;
     }
-
-    fn use_card_self(ref self:Enemy,card_id:u8){
-        if(card_id == M1CardID::Defence){
-            let mut value:u16 = MathU16Trait::add_u16(self.attr.agi,M1CardValue::Defence);
-            self.attr.cal_armor_self_status(ref value);
-            self.attr.armor.add_eq_u16(value);
-        }
+      
+    fn round_begin(ref self:Enemy,ref target:Adventurer){
+        self.attr.round_begin();
     }
-    fn use_card(ref self:Enemy,ref target:Explorer,card_id:u8){
+    fn round_end(ref self:Enemy,ref target:Adventurer){
+        self.attr.round_end();
+    }
+
+    fn use_card(ref self:Enemy,ref target:Adventurer,round:u8){
  
+        let card_id:u8 = M1EnemyImpl::get_enemy_action(round);
         if(card_id == M1CardID::Attack){
-            let mut value:u16 = MathU16Trait::add_u16(self.attr.str,M1CardValue::Attack);
-            self.attr.cal_damage_self_status(ref value);
-            target.attr.cal_damage_target_status(ref value);
-        
-            target.attr.sub_armor(ref value);    
-            target.attr.hp.sub_eq_u16(value);
+            self.attack(ref target,card_id);
+           
+        }else if(card_id == M1CardID::Defence){
+            self.defence(card_id);
         }
+         
+    }
+}
+
+impl M1DamageImpl of DamageTrait {
+    fn calculate_damage_dealt(ref self:Attribute,ref value:u16,){
+        self.status.cal_damage_status(ref value);
+    }
+    fn  damage_taken(ref self:Attribute,mut value:u16){
+        
+        self.status.cal_damaged_status(ref value);
+
+        self.sub_hp_and_armor(value); 
+    }
+
+    fn calculate_direct_damage_dealt(ref self:Attribute,ref value:u16){
+
+    }
+    fn  direct_damage_taken(ref self:Attribute,mut value:u16){
+        self.sub_hp_and_armor(value); 
+    }
+}
+
+#[generate_trait]
+impl M1UseCardImpl of M1UseCardTrait{
+    fn attack(ref self:Enemy,ref target:Adventurer,card_id:u8){
+        
+    }
+    fn defence(ref self:Enemy,card_id:u8){
+         
     }
 }

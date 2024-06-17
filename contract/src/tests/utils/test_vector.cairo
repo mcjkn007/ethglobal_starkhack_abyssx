@@ -1,7 +1,17 @@
 #[cfg(test)]
 mod tests {
-    use super::{Vector,VectorTrait};
- 
+    use core::dict::Felt252DictTrait;
+use abyss_x::game::enemy::{Enemy,EnemyTrait,EnemyCategory};
+    use abyss_x::utils::vector::{Vector,VectorTrait,Vector2,Vector2Trait};
+    use core::nullable::NullableImpl;
+
+    #[derive(Copy,Drop,Destruct)]
+    struct Vec2 {
+        x:u32,
+        y:u32
+    }
+
+
     #[test]
     #[ignore]
     #[available_gas(100_000_000)]
@@ -25,6 +35,18 @@ mod tests {
         result.remove(2);
         let mut gas = initial - testing::get_available_gas();
         println!("test_vector gas : {}", gas);
+     
+    }
+    fn test_vector2() {
+     
+        let mut result:Felt252Dict<Nullable<Vec2>> = Default::default();
+        let e = Vec2{
+            x:3,
+            y:2,
+        };
+        result.insert(0,NullableImpl::new(e));
+     
+     
      
     }
 }

@@ -41,17 +41,18 @@ mod tests {
         let battle_system = IBattleDispatcher { contract_address:world.deploy_contract('battle', battle::TEST_CLASS_HASH.try_into().unwrap()) };
         println!("---------test_battle_system_begin----------");
          
-        battle_system.start_game(1,1);
+        battle_system.start_game(1,0);
   
         let mut arr:Array<u16> = array![]; 
-        arr.append(513);
-        arr.append(769);
-        arr.append(1536);
+        arr.append(257);
+        arr.append(1280);
+        arr.append(2048);
+
         arr.append(0);
 
-        arr.append(257);
-        arr.append(1793);
-        arr.append(2049);
+        arr.append(1);
+        arr.append(513);
+        arr.append(1536);
         arr.append(0);
 
         arr.append(1);
@@ -59,7 +60,7 @@ mod tests {
 
         let initial = testing::get_available_gas();
         gas::withdraw_gas().unwrap();
-        battle_system.check_e1_battle_result(arr,1,0);
+        battle_system.check_e1_battle_result(arr,0,0);
        
         println!("check_battle_result gas : {}", initial - testing::get_available_gas());
          

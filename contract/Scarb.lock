@@ -6,7 +6,6 @@ name = "abyss_x"
 version = "0.6.0"
 dependencies = [
  "dojo",
- "token",
 ]
 
 [[package]]
@@ -21,11 +20,3 @@ dependencies = [
 name = "dojo_plugin"
 version = "0.3.11"
 source = "git+https://github.com/dojoengine/dojo?tag=v0.3.11#1e651b5d4d3b79b14a7d8aa29a92062fcb9e6659"
-
-[[package]]
-name = "token"
-version = "0.0.0"
-source = "git+https://github.com/dojoengine/origami.git#501dcd41c010af3f2c3842d42b8c3d19a6ec5056"
-dependencies = [
- "dojo",
-]

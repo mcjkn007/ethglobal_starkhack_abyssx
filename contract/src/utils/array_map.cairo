@@ -24,6 +24,7 @@ struct ArrayMap<T> {
 }
  
 impl ArrayMapImpl<T,+Drop<T>, +Copy<T>,+PartialEq<T>,+Into<T,u8>,+Into<u8,T>,+Into<T,u32>,+Into<T,felt252>> of ArrayMapTrait<T> {
+    #[inline]
     fn new()->ArrayMap<T>{
         return ArrayMap{
             value:ArrayTrait::<T>::new(),
@@ -31,12 +32,13 @@ impl ArrayMapImpl<T,+Drop<T>, +Copy<T>,+PartialEq<T>,+Into<T,u8>,+Into<u8,T>,+In
             size:0,
         };
     }
-    #[inline(always)]
+    #[inline]
     fn size(self: @ArrayMap<T>) -> u32{
         return *self.size;
     }
+    #[inline]
     fn empty(self:@ ArrayMap<T>) -> bool{
-        return *self.size == 0_u32;
+        return (*self.size).is_zero_u32();
     }
     fn at(ref self:ArrayMap<T>, index: u32)->T{
         return *self.value.at(index);
@@ -58,13 +60,21 @@ impl ArrayMapImpl<T,+Drop<T>, +Copy<T>,+PartialEq<T>,+Into<T,u8>,+Into<u8,T>,+In
     fn pop_front(ref self:ArrayMap<T>)->T{
         let mut v:T = 0_u8.into();
         loop{
-            v = self.value.pop_front().unwrap();
-            if(self.map & Pow128Trait::fast_pow_2(v.into()) != 0_u128){
-                self.map = self.map & ~Pow128Trait::fast_pow_2(v.into());
-                self.size.self_sub_u32();
-                break;
+            match self.value.pop_front() {
+                Option::Some(r) => {
+                    if(self.map & Pow128Trait::fast_pow_2(r.into()) != 0_u128){
+                        self.map = self.map & ~Pow128Trait::fast_pow_2(r.into());
+                        v = r.into();
+                        self.size.self_sub_u32();
+                        break;
+                    }
+                },
+                Option::None => {
+                    break;
+                },
             }
         };
+       
         return v;
     }
 }

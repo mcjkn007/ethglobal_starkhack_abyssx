@@ -1,75 +1,68 @@
 use starknet::ContractAddress;
-use abyss_x::models::{property::{Property,BaseProperty,PropertyTrait}};
-
-#[derive(Serde, Copy, Drop, Introspect,PartialEq)]
-enum RoleCategory {
-    None,
-    Warrior,
-    Rogue,
-    Mage
-}
+use abyss_x::utils::bit::{Bit256Trait};
+use abyss_x::utils::math::{MathU8Trait};
 
 #[derive(Model, Copy, Drop, Serde)]
 struct Role {
     #[key]
     player: ContractAddress,
+    #[key]
+    category:u8,
+
     seed:u64,
-    cur_stage:u32,
-    stage_category:u32,
 
-    category:RoleCategory,
-    gold:u32,
+    game_mode:u8,
+    cur_stage:u8,
+     
+    hp:u16,
+    gold:u16,
 
-    card_slot:u256,
-    blessing_slot:u256,
+    cards:u256,
+    idols:u256,
 
-    property:Property,
+    temp:u256,
 }
 
-impl U32IntoRoleCategory of Into<u32, RoleCategory> {
-    fn into(self: u32) -> RoleCategory {
-        match self.into() {
-            0 => RoleCategory::None,
-            1 => RoleCategory::Warrior,
-            2 => RoleCategory::Rogue,
-            3 => RoleCategory::Mage,
-            _ => RoleCategory::None
- 
-        }
-    }
+mod RoleCategory{
+    const NONE:u32 = 0;
+    const WARRIOR:u32 = 1;
+    const ROGUE:u32 = 2;
+    const MAGE:u32 = 3;
 }
 
-impl RoleCategoryIntoU32 of Into<RoleCategory, u32> {
-    fn into(self: RoleCategory) -> u32{
-        match self {
-            RoleCategory::None => 0,
-            RoleCategory::Warrior => 1,
-            RoleCategory::Rogue => 2,
-            RoleCategory::Mage => 3,
-           
-        }
-    }
-}
-
-trait RoleTrait {
-    fn init_role(player: ContractAddress,seed:u64,category:RoleCategory) -> Role;
-}
-
+#[generate_trait]
 impl RoleImpl of RoleTrait {
-    fn init_role(player: ContractAddress,seed:u64,category:RoleCategory) -> Role{
-        let mut role = Role{
-            player: player,
-            seed:seed,
-            cur_stage:0,
-            stage_category:0,
-            category:category,
-            gold:100,
+    fn reset_role(ref self:Role){
+        self.seed = 0;
 
-            card_slot:1023,
-            blessing_slot:1,
-            property:PropertyTrait::init_property(),
+        self.game_mode = 0;
+        self.cur_stage = 0;
+
+        self.hp = 0;
+        self.gold = 0;
+
+        self.cards = 0;
+        self.idols = 0;
+        self.temp = 0;
+    
+    }
+    fn get_cards(ref self:Role)->Array<u8>{
+        let mut result =  ArrayTrait::<u8>::new();
+        let mut i:u8 = 0_u8;
+       
+        loop{
+            if(i == 32_u8){
+                break;
+            }
+            let v:u8 = Bit256Trait::cut_bit_8(self.cards,i*8_u8).try_into().unwrap();
+            if(v == 0_u8){
+                break;
+            }
+            result.append(v);
+
+            i.self_add_u8();
         };
-        return role;
+        return result;
     }
  
 }

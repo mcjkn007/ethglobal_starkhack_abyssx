@@ -15,11 +15,13 @@ enum StageCategory {
     Idol
 }
 
-#[derive(Copy, Drop, Serde)]
-struct Stage {
-    seed:felt252,
+mod StageEvent{
+    const Camp:u32 = 1;
+    const Cave:u32 = 2;
+    const Shop:u32 = 3;
 }
 
+ 
 impl StageCategoryIntoU64 of Into<StageCategory, u64> {
     fn into(self: StageCategory) -> u64 {
         match self {
@@ -49,11 +51,7 @@ impl U64IntoStageCategory of Into<u64, StageCategory> {
 
 #[generate_trait]
 impl StageImpl of StageTrait {
-    fn create_stage_by_id(id:u32,seed:felt252,category:StageCategory)->Stage{
-        return Stage{
-            seed:seed,
-        };
-    }
+ 
      fn get_stage_category(seed:u64,stage_process:u32)->Array<StageCategory>{
         let mut arr = ArrayTrait::<StageCategory>::new();
         if(stage_process == 0){
@@ -70,10 +68,10 @@ impl StageImpl of StageTrait {
                 let min:u64 = StageCategory::Normal.into();
                 let max:u64 = StageCategory::Idol.into();
                 let mut i = 0;
-                s1 = RandomTrait::random_r(ref seed_r,min,max);
+                s1 = RandomTrait::random_u64(ref seed_r,min,max);
                 arr.append(s1.into());
                 loop{
-                    let s2 = RandomTrait::random_r(ref seed_r,min,max);
+                    let s2 = RandomTrait::random_u64(ref seed_r,min,max);
                     if(s2 != s1){
                         arr.append(s2.into());
                         break;

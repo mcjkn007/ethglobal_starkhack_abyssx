@@ -1,39 +1,45 @@
  
  
-use abyss_x::utils::{vec::{Vec2}};
 // define the interface
 #[dojo::interface]
 trait IBattle {
-    fn start_game(role_category:u32);
-    fn giveup_game();
-    fn select_next_stage(option:u64);
-    fn check_battle_result(opts:Array<Array<Vec2>>,value:u32);
-    fn choose_event_bonus(opt:u64,value:Vec2);
+    fn start_game(game_mode:u32,role_category:u8);
+    fn giveup_game(role_category: u8);
+    fn check_e1_battle_result(opts:Array<u16>,role_category:u8,value:u32);
+   // fn choose_event_bonus(opt:u64,value:Vec2);
 }
 
 // dojo decorator
 #[dojo::contract]
 mod battle {
+    use core::array::ArrayTrait;
+use core::traits::Destruct;
+use core::traits::TryInto;
+use core::traits::Into;
     use core::traits::Index;
     use core::option::OptionTrait;
     use core::serde::Serde;
+
   
     use starknet::{ContractAddress,SyscallResultTrait, syscalls,get_caller_address,get_contract_address,get_block_timestamp};
+    use abyss_x::game::{
+        //adventurer::{Adventurer,AdventurerTrait},
+        explorer::{Explorer,ExplorerTrait,ExplorerCategory},
+        attribute::{Attribute,AttributeTrait},
+        enemy::{Enemy,EnemyTeam3,EnemyTrait},
+    };
     use abyss_x::models::{
         user::{User,UserState},
-        role::{Role,RoleCategory,RoleTrait},
-        enemy::{Enemy,EnemyTrait},
-        card::{Card,CardID,CardTarget,CardTrait},
-        stage::{StageCategory,StageTrait},
-        property::{Property,BaseProperty,PropertyTrait}
+        role::{Role,RoleCategory,RoleTrait}
     };
+
 
     use abyss_x::utils::{
         seed::{SeedTrait},
-        random::{RandomTrait},
-        bit::{BitTrait},
-        vec::{Vec2},
-        constant::{MAX_STAGE,EventCode}
+        random::{RandomTrait,RandomArrayTrait,RandomContainerTrait},
+        math::{MathU32Trait,MathU16Trait,MathU8Trait},
+        dict_map::{DictMap,DictMapTrait},
+        constant::{MAX_STAGE,HAND_CARD_NUMBER_MAX,HAND_CARD_NUMBER_INIT,AttributeCategory,EventCode}
     };
     #[event]
     #[derive(Drop, starknet::Event)]
@@ -49,325 +55,115 @@ mod battle {
     // impl: implement functions specified in trait
     #[abi(embed_v0)]
     impl BattleImpl of super::IBattle<ContractState> {
-        fn start_game(world:IWorldDispatcher,role_category: u32) {
+        fn start_game(world:IWorldDispatcher,game_mode:u32,role_category: u8) {
           
             let player = get_caller_address();
 
             let mut user:User = get!(world, player, (User));
 
-            assert(user.state == UserState::Free, 'user start game state is wrong');
+            assert(user.state == UserState::FREE, 'user start game state is wrong');
 
-            user.state = UserState::StageBegin;
+            user.state = UserState::GAME_BATTLE;
         
             let seed = SeedTrait::create_seed(get_contract_address().into(),get_block_timestamp().into(),player.into());
-        
-            let mut role = RoleTrait::init_role(player,seed,role_category.into());
-            role.cur_stage = 0;
-            role.stage_category = StageCategory::Normal;
 
-            let mut card_arr:Array<CardID> = CardTrait::create_role_init_card(role_category.into());
-            let car_arr_len = card_arr.len();
-            let mut i:u32 = 0;
-             
-            loop{
-                if(i >= car_arr_len){
-                    break;
-                }
-
-                let card:Card = CardTrait::create_role_card(player,i,*card_arr[i]);
-                set!(world,(card));
-                i +=1;
-            };
+            let mut role:Role = get!(world,(player,role_category), (Role));
+      
+            role.cur_stage = 1;
+            role.seed = seed;
+            role.cards = 0b00000010000000100000001000000010000000100000000100000001000000010000000100000001;
+            role.hp = 100;
+            role.gold = 100;
+       
 
             set!(world,(user));
             set!(world,(role));
             emit!(world,ActionEvent { player:player, event:EventCode::StartGame});
         }
 
-        fn giveup_game(world:IWorldDispatcher){
+        fn giveup_game(world:IWorldDispatcher,role_category: u8){
            
             let player = get_caller_address();
 
             let mut user:User = get!(world, player, (User));
 
-            assert(user.state == UserState::StageBegin || user.state == UserState::StageEnd, 'user give up state is wrong');
+            assert(user.state.into() == UserState::GAME_EVENT || user.state.into() == UserState::GAME_BATTLE, 'user give up state is wrong');
 
-            user.state == UserState::Free;
+            user.state == UserState::FREE;
  
-
             set!(world,(user));
 
-            let role = get!(world, player, (Role));
-     
-            let mut i:u256 = role.card_slot;
-            let mut p:u256 = 0;
-            loop{
-                if(BitTrait::pow(2,p) > i){
-                    break;
-                }
-                if(BitTrait::is_bit(i,p) == true){
-                    let card:Card = get!(world, (player,p), (Card));
-                    delete!(world,(card));
-                }
-                p += 1;
-            };
+            let mut role:Role = get!(world, (player,role_category), (Role));
+            role.reset_role();
 
-            delete!(world,(role));
-
+            set!(world,(role));
+ 
             emit!(world, ActionEvent { player:player, event:EventCode::GiveUpGame});
         }
-
-        fn select_next_stage(world:IWorldDispatcher,option:u64){
-
+ 
+        fn check_e1_battle_result(world:IWorldDispatcher,opts:Array<u16>,role_category:u8,value:u32){
+             
             let player = get_caller_address();
-
+        
             let mut user:User = get!(world, player, (User));
+            assert(user.state == UserState::GAME_BATTLE, 'state is wrong');
+        
+            let mut role:Role = get!(world, (player,role_category), (Role));
+        
+            assert(role.cur_stage%2 == 1, 'stage category is wrong');
+         
+            let mut explorer:Explorer = ExplorerTrait::init_explorer(role_category.into());
+            explorer.seed = role.seed;
+             
+            explorer.attr.hp = role.hp;
+            explorer.attr.idols = role.idols;
+    
+           
+          //  let mut seed = role.seed+role.hp.into()+role.cur_stage.into();
+          explorer.seed = 123;
 
-            assert(user.state == UserState::StageEnd, 'select stage state is wrong');
-   
-            let mut role:Role = get!(world, player, (Role));
+            let mut enemy:Enemy = EnemyTrait::get_enemy(role.cur_stage.into());
 
-            assert(role.cur_stage < MAX_STAGE, 'stage state is wrong');
-
-
-            let stage_arr = StageTrait::get_stage_category(role.seed,role.cur_stage);
-            let mut i = 0;
-            let stage_arr_len = stage_arr.len();
-            let mut check_select_opt_flag = false;
-            loop{
-                if(i > stage_arr_len){
-                    break;
-                }
-                if(option == (*stage_arr[i]).into()){
-                    check_select_opt_flag = true;
-                    break;
-                }
-            };
-            assert(check_select_opt_flag == true, 'select option state is wrong');
-
-            role.stage_category = option.into();
-            role.seed = SeedTrait::create_seed(role.seed.into(),get_block_timestamp().into(),option.into());
-            role.cur_stage +=1;
-
-            user.state = UserState::StageBegin;
-            set!(world,(user));
-            set!(world,(role));
-
-            emit!(world,ActionEvent { player, event:EventCode::SelectNextStage});
-        }
-
-        fn check_battle_result(world:IWorldDispatcher,opts:Array<Array<Vec2>>,value:u32){
-
-            let player = get_caller_address();
-
-            let mut user:User = get!(world, player, (User));
-            assert(user.state == UserState::StageBegin, 'state is wrong');
-
-            let mut role:Role = get!(world, player, (Role));
-
-            assert(role.cur_stage%2 == 0, 'stage category is wrong');
+         
+            explorer.role_cards = role.get_cards();
+            explorer.left_cards = RandomArrayTrait::random_number(ref explorer.seed,explorer.role_cards.len().try_into().unwrap());
+              
+            explorer.round_begin();
 
             let round_len = opts.len();
-            let mut i = 0;
-           // let mut enemies = EnemyTrait::get_enemy_by_stage_id(0);
-            let mut enemies:Felt252Dict<Nullable<Enemy>> =  EnemyTrait::get_enemies(role.cur_stage);
-            let enemies_len = EnemyTrait::get_enemies_number(role.cur_stage);
+            let mut i:u32 = 0_u32;
+            let mut ii:u8 = 0_u8;
             loop{
-                if(i >= round_len){
+                if(i == round_len){
                     break;
                 }
-                let opt_arr:Array<Vec2> = opts[i].clone();
-                let opt_arr_len = opt_arr.len();
-
-                //user action
-                let mut j = 0;
-                PropertyTrait::round_begin_action(ref role.property);
-                loop{
-                    if(j >= opt_arr_len){
-                        break;
-                    }
-                    let opt:Vec2 = *opt_arr[j];
-                    let card = get!(world, (player,opt.x), (Card));
-
-                    assert(card.id != CardID::None, 'card is void');
-                    let energy = CardTrait::get_card_energy(card);
-
-                    assert(role.property.cur_property.energy >= energy, 'energy not enough');
-
-                    
-                    role.property.cur_property.energy -= energy;
-          
-                    let card_target:CardTarget = CardTrait::get_card_target(card);
-                    if(card_target == CardTarget::Self){
-                            CardTrait::calculate_card(ref role.property,ref role.property,card);   
-                    }else if (card_target == CardTarget::SingleEnemy){
-                        let mut enemy = enemies.get(opt.y.into());
-                        assert(enemy.is_null() == false, 'target is void');
-
-                        let mut e1 = enemy.deref();
-                        CardTrait::calculate_card(ref role.property,ref e1.property,card);
-                        enemies.insert(opt.y.into(),NullableTrait::new(e1));
-                    }else if(card_target == CardTarget::Enemies){
-                        let mut k = 0;
-                        loop{
-                            if(k >= enemies_len){
-                                break;
-                            }
-                             
-                            let mut enemy = enemies.get(k.into());
-                            assert(enemy.is_null() == false, 'target is void');
-                            let mut e1 = enemy.deref();
-                            if(e1.property.cur_property.hp != 0){
-                                CardTrait::calculate_card(ref role.property,ref e1.property,card);
-                                enemies.insert(opt.y.into(),NullableTrait::new(e1));
-                            }
-                            k += 1;
-                        }
-                    }
-                    else{
-
-                    }
-                    j += 1;
-                };
-              
-                PropertyTrait::round_end_action(ref role.property);
- 
-                //enemy action
-                let mut k = 0;
-                loop{
-                    if(k >= enemies_len){
-                        break;
-                    }
-                    let mut enemy = enemies.get(k.into());
-                    assert(enemy.is_null() == false, 'target is void');
-
-                    let mut e1 = enemy.deref();
-                    if(e1.property.cur_property.hp != 0){
-                         PropertyTrait::round_begin_action(ref e1.property);
-                        let enemy_card:Card = EnemyTrait::get_enemy_action(i,e1.category);
-                        let enemy_card_target:CardTarget = CardTrait::get_card_target(enemy_card);
-                        if(enemy_card_target == CardTarget::Self){
-                            CardTrait::calculate_card(ref e1.property,ref e1.property,enemy_card);
-                        }else{
-                            CardTrait::calculate_card(ref e1.property,ref role.property,enemy_card);
-                        }
-                        PropertyTrait::round_end_action(ref e1.property);
-                        enemies.insert(k.into(),NullableTrait::new(e1));
-                    }
-                    k +=1;
-                };
-                i +=1;
-            };
-
-            if(role.property.cur_property.hp == 0 || role.cur_stage == MAX_STAGE){
-                let mut i:u256 = role.card_slot;
-                let mut p:u256 = 0;
-                loop{
-                    if(BitTrait::fast_pow_2(p) > i){
-                        break;
-                    }
-                    if(BitTrait::is_bit(i,p) == true){
-                        let card:Card = get!(world, (player,p), (Card));
-                        delete!(world,(card));
-                    }
-                p += 1;
-                };
-
-              
-                user.state == UserState::Free;
-                set!(world,(user));
-                delete!(world,(role));
-            }else{
-                user.state == UserState::StageEnd;
-                set!(world,(user));
-                set!(world,(role));
-            }
-
-            emit!(world,ActionEvent { player, event:EventCode::CheckBattleResult});
-        }
-
-        fn choose_event_bonus(world:IWorldDispatcher,opt:u64,value:Vec2){
-
-            let player = get_caller_address();
-
-            let mut user:User = get!(world, player, (User));
-
-            assert(user.state == UserState::StageBegin, 'check stage ops state is wrong');
-
-            let mut role:Role = get!(world, player, (Role));
-
-            assert(role.cur_stage%2 != 0, 'stage category is wrong');
-
-            let stage_category:StageCategory = opt.into();
-            let stage_arr = StageTrait::get_stage_category(role.seed,role.cur_stage);
-            let mut i = 0;
-            let mut stage_arr_len = stage_arr.len();
-            let mut check_flag = false;
-            loop{
-                if(i >= stage_arr_len){
-                    break;
-                }
-                if(*stage_arr[i] == stage_category){
-                    check_flag = true;
-                }
-                i +=1;
-            };
-            assert(check_flag == true, 'event opt is wrong');
-
-            if(stage_category == StageCategory::Camp){
-                if(value.x == 0){
-                    //rest
-                    let add_hp = role.property.cur_property.max_hp/4;
-                    if(role.property.cur_property.hp + add_hp >=role.property.cur_property.max_hp){
-                        role.property.cur_property.hp = role.property.cur_property.max_hp;
-                    }else{
-                        role.property.cur_property.hp += add_hp;
-                    }
-                     
+                let opt:u16 = *opts.at(i);
+                if(opt == 0_u16){
+                    explorer.round_end();
+                    //enemy action
+                    enemy.enemy_action(ref explorer,ii);
+                    ii.self_add_u8();
+                    explorer.round_begin();
                 }else{
-                    //upgrade
-                    let mut card:Card = get!(world, (player,value.y), (Card));
-                    assert(card.id != CardID::None, 'card is void');
-                    if(card.id == CardID::InfiniteStrike){
-                        card.level += 1;
-                    }
-                    assert(card.level == 0, 'upgrade card is void');
-                    card.level = 1;
+                    //player action
+                    explorer.explorer_e1_action(ref enemy,opt);
+                }
+                i.self_add_u32();
+            }; 
+            
+           // println!("enemy.hp : {}", enemy.attr.hp);
+            if (enemy.attr.hp == 0){
+                user.state == UserState::GAME_EVENT;
+        
+                role.cur_stage.self_add_u8();
+                role.gold.add_eq_u16(100);
 
-                    set!(world,(card));
-                }
-            }else if(stage_category == StageCategory::Cave){
-                if(value.x == 0){
-                    //add card
-                    let mut i:u32 = 0;
-                    let mut card_slot = role.card_slot;
-                    loop{
-                        let check:bool = BitTrait::is_bit(card_slot,i.into());
-                        if(check == false){
-                            let card:Card = CardTrait::create_role_card(player,i.into(),value.y.into());
-                             set!(world,(card));
-                             break;
-                        }
-                        if(BitTrait::fast_pow_2(i.into()) > card_slot){
-                            break;
-                        }
-                        i +=1;
-                    };
-                }else{
-                    //delete card
-                    let mut card_slot = role.card_slot;
-                    let check:bool = BitTrait::is_bit(card_slot,value.y.into());
-                    assert(check == true, 'delete card is void');
-                    card_slot = BitTrait::set_bit(card_slot,value.y.into(),false);
-                }
-            }else if(stage_category == StageCategory::Idol){
-                
             }else{
-
+               // assert(false, 'opt error');
             }
             set!(world,(user));
             set!(world,(role));
-            emit!(world,ActionEvent { player, event:EventCode::ChooseEventBonus});
+            emit!(world,ActionEvent { player, event:EventCode::CheckBattleResult});
         }
     }
 }

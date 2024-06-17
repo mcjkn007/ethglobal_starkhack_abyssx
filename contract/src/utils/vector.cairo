@@ -1,8 +1,9 @@
 use core::dict::Felt252DictTrait;
-use core::nullable::{NullableTrait, match_nullable, FromNullableResult};
-
+ 
+use abyss_x::utils::math::{MathU32Trait};
+ 
 struct Vector<T> {
-    data:Felt252Dict<Nullable<T>>,
+    vector:Felt252Dict<T>,
     size:u32
 }
  
@@ -11,111 +12,87 @@ struct Vector<T> {
     fn size(self: @Vector<T>)->u32;
     fn empty(self: @Vector<T>)->bool;
     fn at(ref self:Vector<T>, index: u32)->T;
-    fn insert(ref self:Vector<T>,index:u32,data:T);
+    fn replace(ref self:Vector<T>, index: u32,value:T);
+    fn insert(ref self:Vector<T>,index:u32,value:T);
+    fn swap(ref self:Vector<T>,begin:u32,end:u32);
     fn remove(ref self:Vector<T>,index:u32);
-    fn push_back(ref self:Vector<T>,data:T);
+    fn push_back(ref self:Vector<T>,value:T);
     fn pop_back(ref self:Vector<T>)->T;
+   
 }
-
-impl DestructVec<T, +Drop<T>> of Destruct<Vector<T>> {
+ 
+impl DestructVec<T, +Drop<T>,+Felt252DictValue<T>> of Destruct<Vector<T>> {
     fn destruct(self: Vector<T>) nopanic {
-        self.data.squash();
+        self.vector.squash();
     }
 }
  
-impl VectorImpl<T,+Drop<T>, +Copy<T>> of VectorTrait<T> {
+impl VectorImpl<T,+Drop<T>, +Copy<T>,+Felt252DictValue<T>> of VectorTrait<T> {
     fn new()->Vector<T>{
         return Vector{
-            data:Default::default(),
-            size:0
+            vector:Default::default(),
+            size:0_u32
         };
     }
+    #[inline(always)]
     fn size(self: @Vector<T>) -> u32{
         return *self.size;
     }
     fn empty(self:@ Vector<T>) -> bool{
-        return *self.size == 0;
+        return *self.size == 0_u32;
     }
     fn at(ref self:Vector<T>, index: u32)->T{
-        assert(index < self.size(), 'Index out of bounds');
-        let val = self.data.get(index.into());
-        let result = match match_nullable(val) {
-            FromNullableResult::Null => panic!("No value found"),
-            FromNullableResult::NotNull(val) => val.unbox(),
-        };
-        return result;
+        return self.vector.get(index.into());
     }
-    fn insert(ref self:Vector<T>,index:u32,data:T){
-        assert(index < self.size(), 'Index out of bounds');
-        if(index == self.size()-1){
-            self.data.insert(index.into(),NullableTrait::new(data));
+    fn replace(ref self:Vector<T>, index: u32,value:T){
+        self.vector.insert(index.into(), value);
+    }
+ 
+    fn insert(ref self:Vector<T>,index:u32,value:T){
+        if(index == MathU32Trait::sub_u32(self.size,1_u32)){
+            self.vector.insert(index.into(),value);
         }else{
-            let mut i = self.size();
+            let mut i = self.size;
             loop{
-                if(i < index){
+                if(i == index){
                     break;
                 }
-                 self.insert(i.into(),self.at(i-1));
-                i -= 1;
-            }
+                 self.vector.insert(i.into(),self.vector.get((i.self_sub__u32()).into()));     
+            };
+            self.vector.insert(index.into(),value);
         }
-         self.size += 1;
+        self.size.self_add_u32();
     }
+  
+    fn swap(ref self:Vector<T>,begin:u32,end:u32){
+        let v = self.vector.get(begin.into());
+        self.vector.insert(begin.into(),self.vector.get(end.into()));
+        self.vector.insert(end.into(),v);
+    }
+     
     fn remove(ref self:Vector<T>,index:u32){
-        assert(index < self.size(), 'Index out of bounds');
-        if(index ==self.size() -1){
-            self.pop_back();
+        let size = MathU32Trait::sub_u32(self.size,1_u32);
+        if(index == size){
+            self.size.self_sub_u32();
         }else{
             let mut i = index;
             loop{
-                if(i < self.size()){
+                if(i == size){
                     break;
                 }
-                self.insert(i.into(),self.at(i+1));
-                i += 1;
+                self.vector.insert(i.into(),self.vector.get((i.self_add__u32()).into()));
             };
-            self.size -= 1;
+            self.size.self_sub_u32();
         }  
     }
-    fn push_back(ref self:Vector<T>,data:T){
-        self.data.insert(self.size.into(),NullableTrait::new(data));
-        self.size += 1;
+    fn push_back(ref self:Vector<T>,value:T){
+        self.vector.insert(self.size.into(),value);
+        self.size.self_add_u32();
     }
     fn pop_back(ref self:Vector<T>)->T{
-        assert(self.size() != 0, 'Vector is empty');
-        let result = self.at(self.size-1);
-        self.size -= 1;
-        return result;
+        return self.vector.get((self.size.self_sub__u32()).into());
     }
 }
 
 
-#[cfg(test)]
-mod tests {
-    use super::{Vector,VectorTrait};
  
-    #[test]
-    #[ignore]
-    #[available_gas(100_000_000)]
-    fn test_vector() {
-        println!("---------vector_test----------");
-
-        let mut initial = testing::get_available_gas();
-        gas::withdraw_gas().unwrap();
-         
-        let mut result = VectorTrait::<u8>::new();
-        let mut gas = initial - testing::get_available_gas();
-        println!("vector new gas : {}", gas);
-
-        initial = testing::get_available_gas();
-        result.push_back(1);
-        gas = initial - testing::get_available_gas();
-        println!("vector push gas : {}", gas);
-
-        initial = testing::get_available_gas();
-        let a = result.at(0);
-        gas = initial - testing::get_available_gas();
-        println!("vector get gas : {}", gas);
-        println!("---------vector_test----------");
-    }
-}

@@ -4,11 +4,11 @@ use starknet::ContractAddress;
 use starknet::storage_access::StorePacking;
 use core::dict::Felt252DictTrait;
 
-use abyss_x::utils::bit::{BitTrait};
 use abyss_x::utils::vector::{Vector,VectorTrait};
+
  
 #[derive(Model,Copy, Drop, Serde,PartialEq)]
-struct Card {
+struct CardSlot {
     #[key]
     player:ContractAddress,
     #[key]
@@ -17,12 +17,16 @@ struct Card {
 }
 
 #[generate_trait]
-impl CardImpl of CardTrait {
-    fn init_card(player:ContractAddress)->Card{
-        return Card{
+impl CardSlotImpl of CardSlotTrait {
+    fn init_cardslot(player:ContractAddress)->CardSlot{
+        return CardSlot{
             player:player,
             role_category:1,
             slot:2047
         };
     }
+    fn check_cardslot(slot:u256,cards:u256)->bool{
+        return (~slot) & cards != 0;
+    }
 }
+ 

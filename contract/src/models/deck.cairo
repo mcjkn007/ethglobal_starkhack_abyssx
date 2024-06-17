@@ -5,8 +5,10 @@ struct Deck {
     #[key]
     player:ContractAddress,
     #[key]
-    name:felt252,
-    #[key]
     role_category:u32,
+    #[key]
+    position:u32,
+    
+    name:felt252,
     slot:u256,
 }

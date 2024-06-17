@@ -9,104 +9,263 @@ use hash::HashStateTrait;
 use debug::PrintTrait;
 
 const RANDOM_P1:u64 = 1103515245_u64;
-const RANDOM_P2:u64 = 12345_u64;
-const RANDOM_P3:u64 = 0x7fffffff;
-
-trait RandomTrait {
-    fn random(seed:u64,min:u64,max:u64) -> u64;
-    fn random_r(ref seed:u64,min:u64,max:u64) -> u64;
-}
-
+const RANDOM_P2:u128 = 12345_128;
+const RANDOM_P3:u128 = 0x7fffffff_u128;
+ 
+use abyss_x::utils::vector::{Vector,VectorTrait};
+use abyss_x::utils::math::{MathU8Trait,MathU32Trait,MathU64Trait}; 
+ 
+#[generate_trait]
 impl RandomImpl of RandomTrait{
-     fn random(seed:u64,min:u64,max:u64) -> u64{
-        let s:u128 = ((seed * RANDOM_P1 + RANDOM_P2) & RANDOM_P3).into();
-        return min + s.try_into().unwrap() % (max - min + 1);
+    fn random_u64_loop(seed:u64,loop_num:u32,min:u64,max:u64) -> u64{
+        let mut i:u32 = 0_u32;
+        let mut s:u64 = seed;
+        loop{
+            if(i == loop_num){
+                break;
+            }
+            s = match core::integer::u128_checked_add(core::integer::u64_wide_mul(s,RANDOM_P1),RANDOM_P2) {
+                Option::Some(r) => (r & RANDOM_P3).try_into().unwrap(),
+                Option::None => 0,
+            };
+        };
+       
+        return MathU64Trait::add_u64(min,s % MathU64Trait::sub_u64(max,min));
     }
-    fn random_r(ref seed:u64,min:u64,max:u64) -> u64{
-        let s:u128 = ((seed * RANDOM_P1 + RANDOM_P2) & RANDOM_P3).into();
-        seed = s.try_into().unwrap();
-        return min + seed % (max - min + 1);
+
+    fn random_u64(ref seed:u64,min:u64,max:u64) -> u64{
+        seed = match core::integer::u128_checked_add(core::integer::u64_wide_mul(seed,RANDOM_P1),RANDOM_P2) {
+            Option::Some(r) => (r & RANDOM_P3).try_into().unwrap(),
+            Option::None => 0,
+        };
+        return MathU64Trait::add_u64(min,seed % MathU64Trait::sub_u64(max,min));
     }
 }
 
-
-trait RandomContainerTrait<T> {
-  fn random_array(ref seed:u64,data:@Array<T>)->Array<T>;
-  fn random_dict(ref seed:u64,ref data:Felt252Dict<T>,data_size:u32)->Felt252Dict<T>;
-}
-
-impl RandomContainerImpl<T,+Drop<T>, +Copy<T>, +Felt252DictValue<T>> of RandomContainerTrait<T>{
+#[generate_trait]
+impl RandomContainerImpl<T,+Drop<T>, +Copy<T>,+AddEq<T>,+PartialOrd<T>,+Into<T, felt252>, +Into<u8, T>,+Into<T, u64>,+PartialEq<T>, +Felt252DictValue<T>> of RandomContainerTrait<T>{
     fn random_array(ref seed:u64,data:@Array<T>)->Array<T>{
  
         let data_size = data.len();
 
-        assert(data_size > 1, 'random sequence len error');
+        assert(data_size != 0_u32, 'random sequence len error');
 
         let mut dict: Felt252Dict<T> = Default::default();
-        let mut i = 0;
+        let mut i:u32 = 0_u32;
 
         loop{
             if(i == data_size){
                 break;
             }
             dict.insert(i.into(),*data.at(i));
-            i += 1;
+            i.self_add_u32();
         };
 
-        let mut cur_pos:u64 = data_size.into()-1;
+        let mut cur_pos:u32 = data_size;
+        loop{
+            if(cur_pos == 0_u32){
+                break;
+            }
+             
+            let rand_pos:u64 = RandomTrait::random_u64(ref seed,0_u64,cur_pos.into());
+            
+            let v:T = dict.get(rand_pos.into());
+            cur_pos.self_sub_u32();
+            dict.insert(rand_pos.into(),dict.get(cur_pos.into()));
+            dict.insert(cur_pos.into(),v);
+        };
+
+        let mut arr: Array<T> = ArrayTrait::new();
+        i = 0_u32;
+        loop{
+            if(i == data_size){
+                break;
+            }
+            arr.append(dict.get(i.into()));
+            i.self_add_u32();
+        };
+        return arr;
+    }
+    fn random_ref_array(ref seed:u64,ref data:Array<T>)->Array<T>{
+ 
+        let data_size = data.len();
+
+        assert(data_size != 0_u32, 'random sequence len error');
+
+        let mut dict: Felt252Dict<T> = Default::default();
+        let mut i:u32 = 0_u32;
+
+        loop{
+            if(i == data_size){
+                break;
+            }
+            dict.insert(i.into(),data.pop_front().unwrap());
+            i.self_add_u32();
+        };
+
+        let mut cur_pos:u32 = data_size;
         loop{
             if(cur_pos == 0){
                 break;
             }
              
-            let rand_pos:u64 = RandomTrait::random_r(ref seed,0_u64,cur_pos);
+            let rand_pos:u64 = RandomTrait::random_u64(ref seed,0_u64,cur_pos.into());
             let v:T = dict.get(rand_pos.into());
+            cur_pos.self_sub_u32();
             dict.insert(rand_pos.into(),dict.get(cur_pos.into()));
             dict.insert(cur_pos.into(),v);
-            cur_pos -= 1;
         };
 
-        let mut arr = array![];
+        let mut arr: Array<T> = ArrayTrait::new();
         i = 0;
         loop{
             if(i == data_size){
                 break;
             }
             arr.append(dict.get(i.into()));
-            i += 1;
+            i.self_add_u32();
         };
         return arr;
     }
-    fn random_dict(ref seed:u64,ref data:Felt252Dict<T>,data_size:u32)->Felt252Dict<T>{
- 
-        assert(data_size > 1, 'random sequence len error');
+   
+    fn random_vector(ref seed:u64,ref data:Vector<T>)->Vector<T>{
+        let data_size = data.size();
+        assert(data_size != 0_u32, 'random sequence len error');
 
-        let mut dict: Felt252Dict<T> = Default::default();
-        let mut i = 0;
+        let mut result: Vector<T> = VectorTrait::<T>::new();
+        let mut i:u32 = 0_u32;
 
         loop{
             if(i == data_size){
                 break;
             }
-            let v = data.get(i.into());
-            dict.insert(i.into(),v);
-            i += 1;
+            result.push_back(data.at(i));
+            i.self_add_u32();
         };
-
-        let mut cur_pos:u64 = data_size.into()-1;
+ 
+        let mut cur_pos:u32 = data_size;
         loop{
             if(cur_pos == 0){
                 break;
             }
              
-            let rand_pos:u64 = RandomTrait::random_r(ref seed,0_u64,cur_pos);
+            let rand_pos:u64 = RandomTrait::random_u64(ref seed,0_u64,cur_pos.into());
+            cur_pos.self_sub_u32();
+            result.swap(cur_pos,rand_pos.try_into().unwrap());
+             
+        };
+        return result;
+    }
+    fn random_ref_vector(ref seed:u64,ref data:Vector<T>){
+        let data_size = data.size();
+        assert(data_size != 0_u32, 'random sequence len error');
+
+        let mut cur_pos:u32 = data_size;
+        loop{
+            if(cur_pos == 0){
+                break;
+            }
+            let rand_pos:u64 = RandomTrait::random_u64(ref seed,0_u64,cur_pos.into());
+            cur_pos.self_sub_u32();
+            data.swap(cur_pos,rand_pos.try_into().unwrap());
+             
+        };
+    }
+
+    fn random_dict(ref seed:u64,ref data:Felt252Dict<T>,data_size:u32)->Felt252Dict<T>{
+        
+        assert(data_size != 0_u32, 'random sequence len error');
+
+        let mut dict: Felt252Dict<T> = Default::default();
+        let mut i:u32 = 0_u32;
+
+        loop{
+            if(i == data_size){
+                break;
+            }
+            dict.insert(i.into(),data.get(i.into()));
+            i.self_add_u32(); 
+        };
+
+        let mut cur_pos:u32 = data_size;
+        loop{
+            if(cur_pos == 0_u32){
+                break;
+            }
+             
+            let rand_pos:u64 = RandomTrait::random_u64(ref seed,0_u64,cur_pos.into());
             let v:T = dict.get(rand_pos.into());
+            cur_pos.self_sub_u32();
             dict.insert(rand_pos.into(),dict.get(cur_pos.into()));
             dict.insert(cur_pos.into(),v);
-            cur_pos -= 1;
+            
         };
+
         return dict;
     }
+    fn random_ref_dict(ref seed:u64,ref data:Felt252Dict<T>,data_size:u32){
+        
+        assert(data_size != 0_u32, 'random sequence len error');
+
+        let mut cur_pos:u32 = data_size;
+        loop{
+            if(cur_pos == 0_u32){
+                break;
+            }
+             
+            let rand_pos:u64 = RandomTrait::random_u64(ref seed,0_u64,cur_pos.into());
+            let v:T = data.get(rand_pos.into());
+            cur_pos.self_sub_u32();
+
+            data.insert(rand_pos.into(),data.get(cur_pos.into()));
+            data.insert(cur_pos.into(),v);
+            
+        };
+    }
+}
+#[generate_trait]
+impl RandomArrayImpl of RandomArrayTrait{
+    fn random_number(ref seed:u64,size:u8)->Array<u8>{
+        assert(size != 0_u8, 'size error');
+        let mut dict: Felt252Dict<u8> = Default::default();
+        let mut i:u8 = 0_u8;
+
+        loop{
+            if(i == size){
+                break;
+            }
+            dict.insert(i.into(),i);
+            i.self_add_u8();
+        };
+
+        let mut cur_pos:u8 = size;
+        loop{
+            if(cur_pos == 0_u8){
+                break;
+            }
+             
+            let rand_pos:u64 = RandomTrait::random_u64(ref seed,0_u64,cur_pos.into());
+
+            let v = dict.get(rand_pos.into());
+            cur_pos.self_sub_u8();
+            dict.insert(rand_pos.into(),dict.get(cur_pos.into()));
+            dict.insert(cur_pos.into(),v);
+             
+        };
+
+        let mut arr: Array<u8> = ArrayTrait::new();
+        i = 0_u8.into();
+        loop{
+            if(i == size){
+                break;
+            }
+             
+            arr.append(dict.get(i.into()));
+            i.self_add_u8();
+        };
+        return arr;
+    }
+ 
 }
 
  

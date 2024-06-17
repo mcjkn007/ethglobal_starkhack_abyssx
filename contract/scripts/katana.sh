@@ -1,0 +1,1 @@
+katana --disable-fee --block-time 3000

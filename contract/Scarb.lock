@@ -6,14 +6,8 @@ name = "abyss_x"
 version = "0.6.0"
 dependencies = [
  "dojo",
- "origami",
  "token",
 ]
-
-[[package]]
-name = "cubit"
-version = "1.3.0"
-source = "git+https://github.com/influenceth/cubit.git#09cb8c2af6c0216315e0a880fd7198381c7b911c"
 
 [[package]]
 name = "dojo"
@@ -27,15 +21,6 @@ dependencies = [
 name = "dojo_plugin"
 version = "0.3.11"
 source = "git+https://github.com/dojoengine/dojo?tag=v0.3.11#1e651b5d4d3b79b14a7d8aa29a92062fcb9e6659"
-
-[[package]]
-name = "origami"
-version = "0.6.0"
-source = "git+https://github.com/dojoengine/origami.git#a9f6bcbe81c015d0571f885d7ccfd43fe55acd1b"
-dependencies = [
- "cubit",
- "dojo",
-]
 
 [[package]]
 name = "token"

@@ -3,37 +3,27 @@ use abyss_x::utils::dict_map::{DictMap,DictMapTrait};
 use abyss_x::utils::random::{RandomTrait,RandomContainerTrait};
 use abyss_x::utils::math::{MathU32Trait,MathU16Trait,MathU8Trait};
 
-use abyss_x::game::adventurer::{Adventurer,AdventurerBaseTrait,AdventurerTrait};
-use abyss_x::game::status::{Status,StatusTrait};
+use abyss_x::game::adventurer::{Adventurer,AdventurerTrait,AdventurerCommonTrait};
+use abyss_x::game::status::{StatusTrait};
 
 use abyss_x::game::attribute::{Attribute,AttributeTrait,CalAttributeTrait};
-use abyss_x::game::enemy::{Enemy,EnemyTrait,EnemyBaseTrait,EnemyCategory};
+use abyss_x::game::enemy::{Enemy,EnemyTrait,EnemyCategory};
 
-use abyss_x::game::damage::{DamageTrait};
 
-mod M1CardID{
-    const Attack:u8 = 1_u8;
-    const Defence:u8 = 2_u8;
-}
-
-mod M1CardValue{
-    const Attack:u16 = 6_u16;
-    const Defence:u16 = 5_u16;
-} 
-
-impl M1EnemyImpl of EnemyBaseTrait{
+use abyss_x::game::action::{ActionTrait,DamageTrait};
+ 
+impl M1ActionImpl of ActionTrait<Enemy,Adventurer>{
+    //邪教徒
     fn new()->Enemy{
         return Enemy{
             category:EnemyCategory::M1,
             attr:AttributeTrait::new(20),
         };
     }
- 
-    fn get_enemy_action(round:u8)->u8
-    {
-        return 1;
+    #[inline]
+    fn game_begin(ref self:Enemy,ref target:Adventurer){
+    
     }
-      
     fn round_begin(ref self:Enemy,ref target:Adventurer){
         self.attr.round_begin();
     }
@@ -41,16 +31,14 @@ impl M1EnemyImpl of EnemyBaseTrait{
         self.attr.round_end();
     }
 
-    fn use_card(ref self:Enemy,ref target:Adventurer,round:u8){
- 
-        let card_id:u8 = M1EnemyImpl::get_enemy_action(round);
-        if(card_id == M1CardID::Attack){
-            self.attack(ref target,card_id);
-           
-        }else if(card_id == M1CardID::Defence){
-            self.defence(card_id);
+    fn  action(ref self:Enemy,ref target:Adventurer,mut data:u16){
+        if(data == 0){
+            
+        }else{
+            let mut value = MathU16Trait::add_u16(6,2*data);
+            self.e_calculate_damage_dealt(ref value);
+            target.c_damage_taken(value);
         }
-         
     }
 }
 
@@ -72,13 +60,4 @@ impl M1DamageImpl of DamageTrait {
         self.sub_hp_and_armor(value); 
     }
 }
-
-#[generate_trait]
-impl M1UseCardImpl of M1UseCardTrait{
-    fn attack(ref self:Enemy,ref target:Adventurer,card_id:u8){
-        
-    }
-    fn defence(ref self:Enemy,card_id:u8){
-         
-    }
-}
+ 

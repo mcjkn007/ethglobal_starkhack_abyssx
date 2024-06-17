@@ -6,14 +6,12 @@ enum EventCode{
     None,
     Login,
     SetNickName,
-    SetUpDeck,
-    RenameDeck,
-    DeleteDeck,
     StartGame,
     GiveUpGame,
-    SelectNextStage,
     CheckBattleResult,
     ChooseEventBonus,
+    CampAction,
+    ChestAction
 }
 
 #[derive(Serde, Copy, Drop, Introspect,PartialEq)]
@@ -21,6 +19,33 @@ enum CardResult {
     Null,
     Consume,
     Discard,
+}
+
+#[derive(Serde, Copy, Drop, Introspect,PartialEq)]
+enum CampAciton {
+    Rest,
+    Awake,
+    DeleteCard,
+}
+impl U8IntoCampAciton of Into<u8, CampAciton> {
+    fn into(self: u8) -> CampAciton {
+        match self {
+            0 => CampAciton::Rest,
+            1 => CampAciton::Awake,
+            2 => CampAciton::DeleteCard,
+            _ => panic!("error"),
+        }
+    }
+}
+
+mod SeedDiff{
+    const Chest_Idols:u64 = 324;
+    const Boss_Idols:u64 = 1009;
+}
+
+mod DebuffCard{
+    const Burn:u8 = 201;
+    const BurnUp:u8 = 202;
 }
 
 const MAX_U8:u8 = 0xf_u8; 

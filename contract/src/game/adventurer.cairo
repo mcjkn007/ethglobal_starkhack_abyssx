@@ -6,16 +6,13 @@ use abyss_x::utils::constant::{HAND_CARD_NUMBER_MAX};
 
 use abyss_x::game::attribute::{Attribute,AttributeTrait};
 use abyss_x::game::enemy::{Enemy,EnemyTeam2,EnemyTeam3};
-use abyss_x::game::charactor::c1::{C1Impl,C1DamageImpl};
-use abyss_x::game::charactor::c2::{C2Impl,C2DamageImpl};
-use abyss_x::game::status::{Status};
-
+use abyss_x::game::charactor::c1::{C1ActionImpl,C1DamageImpl};
+use abyss_x::game::charactor::c2::{C2ActionImpl,C2DamageImpl};
+ 
 use abyss_x::models::role::{Role,RoleTrait};
+use abyss_x::models::card::{Card,CardTrait};
  
-
  
-const ADVTURER_C1:u8 = 0;
-const ADVTURER_C2:u8 = 1;
  
 #[derive(Destruct)]
 struct Adventurer{
@@ -29,77 +26,77 @@ struct Adventurer{
     right_cards:Array<u8>,
 }
 
-pub trait AdventurerBaseTrait {
-    fn new() -> Adventurer;
  
-    fn get_card_energy(card_id: u8) -> u16;
+pub trait AdventurerTrait<T> {
+    fn c_game_begin(ref self:Adventurer,ref target:T);
+    fn c_round_begin(ref self:Adventurer,ref target:T);
+    fn c_round_end(ref self:Adventurer,ref target:T);
 
-    fn game_begin_e1(ref self:Adventurer,ref target:Enemy);
-    fn game_begin_e2(ref self:Adventurer,ref target:EnemyTeam2);
-    fn game_begin_e3(ref self:Adventurer,ref target:EnemyTeam3);
-
-    fn round_begin_e1(ref self:Adventurer,ref target:Enemy);
-    fn round_begin_e2(ref self:Adventurer,ref target:EnemyTeam2);
-    fn round_begin_e3(ref self:Adventurer,ref target:EnemyTeam3);
-    
-    fn round_end_e1(ref self:Adventurer,ref target:Enemy);
-    fn round_end_e2(ref self:Adventurer,ref target:EnemyTeam2);
-    fn round_end_e3(ref self:Adventurer,ref target:EnemyTeam3);
-
-    fn use_card_e1(ref self:Adventurer,ref target:Enemy,opt:u16);
-    fn use_card_e2(ref self:Adventurer,ref target:EnemyTeam2,card_id:u8);
-    fn use_card_e3(ref self:Adventurer,ref target:EnemyTeam3,card_id:u8);
+    fn adv_action(ref self:Adventurer,ref target:T,opt:u16);
+}
+impl AdventurerImpl of AdventurerTrait<Enemy>{
+    #[inline]
+    fn c_game_begin(ref self:Adventurer,ref target:Enemy){
+        match self.category {
+            0 => C1ActionImpl::game_begin(ref self,ref target),
+            1 => C2ActionImpl::game_begin(ref self,ref target),
+            _ => panic!("error init exp"),
+        };
+    }
+    #[inline]
+    fn c_round_begin(ref self:Adventurer,ref target:Enemy){
+        match self.category {
+            0 => C1ActionImpl::round_begin(ref self,ref target),
+            1 => C2ActionImpl::round_begin(ref self,ref target),
+            _ => panic!("error init exp"),
+        };
+    }
+    #[inline]
+    fn c_round_end(ref self:Adventurer,ref target:Enemy){
+        match self.category {
+            0 => C1ActionImpl::round_end(ref self,ref target),
+            1 => C2ActionImpl::round_end(ref self,ref target),
+            _ => panic!("error init exp"),
+        };
+    }
+    #[inline]
+    fn adv_action(ref self:Adventurer,ref target:Enemy,opt:u16){
+        match self.category {
+            0 => C1ActionImpl::action(ref self,ref target,opt),
+            1 => C2ActionImpl::action(ref self,ref target,opt),
+            _ => panic!("error action exp")
+        };
+    }
 }
 
 #[generate_trait]
-impl AdventurerImpl of AdventurerTrait{
+impl AdventurerCommonImpl of AdventurerCommonTrait{
     #[inline]
     fn new(category:u8) -> Adventurer{
         return match category {
-            0 => C1Impl::new(),
-            1 => C2Impl::new(),
-            _ => panic!("error init exp"),
+            0 => panic!("error init"),
+            1 => C1ActionImpl::new(),
+            2 => C2ActionImpl::new(),
+            _ => panic!("error init"),
         };
     }
     #[inline]
-    fn init(ref self:Adventurer,ref role:Role){
-        self.seed = role.seed;
-             
-        self.attr.hp = role.hp;
-        self.attr.idols = role.idols;
+    fn init(ref self:Adventurer,seed:u64,idols:u64,ref role:Role,ref card:Card){
+        self.seed = seed;
+        self.attr.idols = idols;
 
-      //  let mut seed = role.seed+role.hp.into()+role.cur_stage.into();
+        self.attr.hp = role.hp.into();
+        self.attr.max_hp = role.max_hp.into();
+        self.attr.awake = role.awake;
+
+    //  let mut seed = role.seed+role.hp.into()+role.cur_stage.into();
         self.seed = 123;
- 
-        self.init_cards = role.get_cards();
+
+        self.init_cards = card.get_cards();
         
         self.left_cards = RandomArrayTrait::random_number(ref self.seed,self.init_cards.len());
-       
-          
-    }
-    #[inline]
-    fn c_game_begin_e1(ref self:Adventurer,ref target:Enemy){
-        match self.category {
-            0 => C1Impl::game_begin_e1(ref self,ref target),
-            1 => C2Impl::game_begin_e1(ref self,ref target),
-            _ => panic!("error init exp"),
-        };
-    }
-    #[inline]
-    fn c_round_begin_e1(ref self:Adventurer,ref target:Enemy){
-        match self.category {
-            0 => C1Impl::round_begin_e1(ref self,ref target),
-            1 => C2Impl::round_begin_e1(ref self,ref target),
-            _ => panic!("error init exp"),
-        };
-    }
-    #[inline]
-    fn c_round_end_e1(ref self:Adventurer,ref target:Enemy){
-        match self.category {
-            0 => C1Impl::round_end_e1(ref self,ref target),
-            1 => C2Impl::round_end_e1(ref self,ref target),
-            _ => panic!("error init exp"),
-        };
+    
+        
     }
     #[inline]
     fn c_calculate_damage_dealt(ref self:Adventurer,ref value:u16){
@@ -133,6 +130,7 @@ impl AdventurerImpl of AdventurerTrait{
             _ => panic!("error init exp"),
         };
     }
+   
     fn draw_cards_from_left(ref self:Adventurer,mut draw_count:u16){
         if(self.mid_cards.size() == HAND_CARD_NUMBER_MAX){
             return;
@@ -165,7 +163,7 @@ impl AdventurerImpl of AdventurerTrait{
             }
         };
     }
-    
+   
     fn draw_cards_from_right(ref self:Adventurer,mut draw_count:u32){
         if(self.mid_cards.size() == HAND_CARD_NUMBER_MAX){
             return;
@@ -190,6 +188,7 @@ impl AdventurerImpl of AdventurerTrait{
             }
         };
     }
+    #[inline]
     fn discard_card(ref self:Adventurer,card:u8){
         self.mid_cards.remove_value(card);
         self.right_cards.append(card);
@@ -198,6 +197,7 @@ impl AdventurerImpl of AdventurerTrait{
     fn consume_card(ref self:Adventurer,card:u8){
         self.mid_cards.remove_value(card);
     }
+    
     fn discard_cards(ref self:Adventurer){
         loop{
             if(self.mid_cards.empty()){
@@ -207,6 +207,7 @@ impl AdventurerImpl of AdventurerTrait{
             self.right_cards.append(self.mid_cards.pop_back_fast());
         };
     }
+   
     fn round_end_disard_cards(ref self:Adventurer){
         loop{
             if(self.mid_cards.empty()){
@@ -217,20 +218,8 @@ impl AdventurerImpl of AdventurerTrait{
         };
     }
      
-    #[inline]
-    fn explorer_e1_action(ref self:Adventurer,ref target:Enemy,opt:u16){
-        match self.category {
-            0 => C1Impl::use_card_e1(ref self,ref target,opt),
-            1 => C2Impl::use_card_e1(ref self,ref target,opt),
-            _ => panic!("error action exp")
-        };
-    }
-    fn explorer_e2_action(ref self:Adventurer,ref target:EnemyTeam2,opt:u16){
-        
-    }
-    fn explorer_e3_action(ref self:Adventurer,ref target:EnemyTeam3,opt:u16){
-        
-    }
+    
+   
 }
  
  

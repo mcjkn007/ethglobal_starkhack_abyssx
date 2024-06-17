@@ -3,23 +3,14 @@ use abyss_x::utils::dict_map::{DictMap,DictMapTrait};
 use abyss_x::utils::random::{RandomTrait,RandomContainerTrait};
 use abyss_x::utils::math::{MathU32Trait,MathU16Trait,MathU8Trait};
 
-use abyss_x::game::adventurer::{Adventurer,AdventurerBaseTrait,AdventurerTrait};
-use abyss_x::game::status::{Status,StatusTrait};
+use abyss_x::game::adventurer::{Adventurer,AdventurerTrait};
+use abyss_x::game::status::{StatusTrait};
 use abyss_x::game::attribute::{Attribute,AttributeTrait,CalAttributeTrait};
-use abyss_x::game::enemy::{Enemy,EnemyTrait,EnemyBaseTrait,EnemyCategory};
+use abyss_x::game::enemy::{Enemy,EnemyTrait,EnemyCategory};
 
-use abyss_x::game::damage::{DamageTrait};
+use abyss_x::game::action::{ActionTrait,DamageTrait};
 
-mod M2CardID{
-    const Attack:u8 = 1_u8;
-    const Defence:u8 = 2_u8;
-}
-
-mod M2CardValue{
-    const Attack:u16 = 6_u16;
-    const Defence:u16 = 5_u16;
-} 
-
+ 
 impl M2DamageImpl of DamageTrait {
     fn calculate_damage_dealt(ref self:Attribute,ref value:u16,){
         self.status.cal_damage_status(ref value);
@@ -40,7 +31,8 @@ impl M2DamageImpl of DamageTrait {
 }
 
 
-impl M2EnemyImpl of EnemyBaseTrait{
+impl M2ActionImpl of ActionTrait<Enemy,Adventurer>{
+    //大颚虫
     fn new() -> Enemy{
         let mut result = Enemy{
             category:EnemyCategory::M2,
@@ -50,9 +42,9 @@ impl M2EnemyImpl of EnemyBaseTrait{
         return result;
     } 
  
-    fn get_enemy_action(round:u8)->u8
-    {
-        return 1;
+    #[inline]
+    fn game_begin(ref self:Enemy,ref target:Adventurer){
+    
     }
     fn round_begin(ref self:Enemy,ref target:Adventurer){
         self.attr.round_begin();
@@ -60,7 +52,7 @@ impl M2EnemyImpl of EnemyBaseTrait{
     fn round_end(ref self:Enemy,ref target:Adventurer){
         self.attr.round_end();
     }
-    fn use_card(ref self:Enemy,ref target:Adventurer,round:u8){
+    fn action(ref self:Enemy,ref target:Adventurer,mut data:u16){
        
   
     }

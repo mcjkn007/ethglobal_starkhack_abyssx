@@ -156,6 +156,22 @@ impl MathU16Impl of MathU16Trait {
             }
         }
     }
+    #[inline]
+    fn self_add__u16(ref self:u16)->u16{
+        self = match core::integer::u16_checked_add(self,1_u16){
+            Option::Some(r) => r,
+            Option::None => MAX_U16
+        };
+        return self;
+    }
+    #[inline]
+    fn self_sub__u16(ref self:u16)->u16{
+        self = match core::integer::u16_checked_sub(self,1_u16){
+            Option::Some(r) => r,
+            Option::None => MIN_U16
+        };
+        return self;
+    }
 }
  
 #[generate_trait]

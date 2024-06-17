@@ -18,7 +18,8 @@ mod home {
     //use token::erc20::ERC20::interface::{ERC20ABI,ERC20ABIDispatcherTrait,ERC20ABIDispatcher};
     use starknet::{ContractAddress,SyscallResultTrait,SyscallResult, syscalls,get_caller_address,get_contract_address,get_block_timestamp,contract_address_const};
     use abyss_x::models::{
-        user::{User,UserState,UserTrait}
+        user::{User,UserState,UserTrait},
+        nickname::{NickName,NickNameTrait}
     };
 
     use abyss_x::utils::{
@@ -61,9 +62,10 @@ mod home {
 
             assert(user.state != UserState::NONE, 'user state is wrong');
 
-            user.nickname = nickname;
+            let mut name = get!(world, player, (NickName));
+            name.nickname = nickname;
 
-            set!(world,(user));
+            set!(world,(name));
 
             emit!(world,HomeEvent { player:player, event:EventCode::SetNickName});
         }

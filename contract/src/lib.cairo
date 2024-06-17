@@ -7,10 +7,14 @@ mod game{
     mod monster{
         mod m1;
         mod m2;
+        mod b1;
+        mod b2;
+        mod b3;
     }
+    mod action;
     mod adventurer;
     mod attribute;
-    mod damage;
+     
     mod status;
  
  
@@ -20,14 +24,17 @@ mod game{
 }
 
 mod models {
-    mod cardslot;
-    mod deck;
+    mod card;
+    mod idol;
+    mod nickname;
     mod role;
     mod user;
 }
 
 mod systems {
     mod battle;
+    mod camp;
+    mod chest;
     mod home;
 }
 mod utils{
@@ -50,6 +57,8 @@ mod tests {
     }
     mod systems {
         mod test_battle;
+        mod test_chest;
+      //  mod test_camp;
      //   mod test_home;
     }
     

@@ -6,12 +6,12 @@ use abyss_x::utils::math::{MathU32Trait,MathU16Trait,MathU8Trait};
 use abyss_x::utils::constant::{HAND_CARD_NUMBER_MAX};
 use abyss_x::utils::bit::{Bit128Trait};
 
-use abyss_x::game::adventurer::{Adventurer,AdventurerBaseTrait,AdventurerTrait};
+use abyss_x::game::adventurer::{Adventurer,AdventurerTrait,AdventurerCommonTrait};
 use abyss_x::game::attribute::{Attribute,AttributeTrait,CalAttributeTrait};
-use abyss_x::game::status::{Status,StatusTrait};
+use abyss_x::game::status::{StatusTrait};
 use abyss_x::game::enemy::{Enemy,EnemyTeam2,EnemyTeam3};
 
-use abyss_x::game::damage::{DamageTrait};
+use abyss_x::game::action::{ActionTrait,DamageTrait};
  
 mod C2CardID{
     const Attack:u8 = 1_u8;
@@ -62,7 +62,7 @@ impl C2DamageImpl of DamageTrait {
 }
 
 
-impl C2Impl of AdventurerBaseTrait{
+impl C2ActionImpl of ActionTrait<Adventurer,Enemy>{
     fn new() -> Adventurer{
         return Adventurer{
             seed:0,
@@ -75,6 +75,26 @@ impl C2Impl of AdventurerBaseTrait{
         };
     } 
  
+ 
+
+    fn game_begin(ref self:Adventurer,ref target:Enemy){}
+   
+
+    fn round_begin(ref self:Adventurer,ref target:Enemy){}
+   
+    fn round_end(ref self:Adventurer,ref target:Enemy){}
+
+    
+    fn action(ref self:Adventurer,ref target:Enemy,data:u16){
+        let card_index = (data/256_u16).try_into().unwrap();
+        println!("card_index c2 gas : {}", card_index);
+        assert(self.mid_cards.check_value(card_index), 'card void');
+ 
+    }
+}
+
+#[generate_trait]
+impl C2CardImpl of C2CardTrait{
     fn get_card_energy(card_id: u8) -> u16{
         return match card_id {
             0 => 1,
@@ -82,35 +102,4 @@ impl C2Impl of AdventurerBaseTrait{
             _ => 1
         };
     }
-
-    fn game_begin_e1(ref self:Adventurer,ref target:Enemy){}
-    fn game_begin_e2(ref self:Adventurer,ref target:EnemyTeam2){}
-    fn game_begin_e3(ref self:Adventurer,ref target:EnemyTeam3){}
-
-    fn round_begin_e1(ref self:Adventurer,ref target:Enemy){}
-    fn round_begin_e2(ref self:Adventurer,ref target:EnemyTeam2){}
-    fn round_begin_e3(ref self:Adventurer,ref target:EnemyTeam3){}
-    
-    fn round_end_e1(ref self:Adventurer,ref target:Enemy){}
-    fn round_end_e2(ref self:Adventurer,ref target:EnemyTeam2){}
-    fn round_end_e3(ref self:Adventurer,ref target:EnemyTeam3){}
-
-   
-    fn use_card_e1(ref self:Adventurer,ref target:Enemy,opt:u16){
-        let card_index = (opt/256_u16).try_into().unwrap();
-        println!("card_index c2 gas : {}", card_index);
-        assert(self.mid_cards.check_value(card_index), 'card void');
- 
-    }
-    fn use_card_e2(ref self:Adventurer,ref target:EnemyTeam2,card_id:u8){
-
-    }
-    fn use_card_e3(ref self:Adventurer,ref target:EnemyTeam3,card_id:u8){
-
-    }
-}
-
-#[generate_trait]
-impl C2UseCardImpl of C2UseCardTrait{
-    
 }

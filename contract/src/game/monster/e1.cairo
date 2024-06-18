@@ -46,12 +46,12 @@ impl E1ActionImpl of ActionTrait<Enemy,Adventurer>{
         }else if(self.round == 1 || self.round == 4 || self.round ==6){
             let mut value = 6;
             self.e_calculate_damage_dealt(ref value);
-            target.c_damage_taken(value);
+            target.c_damage_taken(ref self.attr,value);
             target.attr.status.insert(CommonStatus::Fragile,MathU16Trait::add_u16(target.attr.status.get(CommonStatus::Fragile),1));
         }else{
             let mut value = 14;
             self.e_calculate_damage_dealt(ref value);
-            target.c_damage_taken(value);
+            target.c_damage_taken(ref self.attr,value);
         }
     }
 }
@@ -60,18 +60,23 @@ impl E1DamageImpl of DamageTrait {
     fn calculate_damage_dealt(ref self:Attribute,ref value:u16,){
         self.status.cal_damage_status(ref value);
     }
-    fn  damage_taken(ref self:Attribute,mut value:u16){
+    fn damage_taken(ref self:Attribute,ref target:Attribute, mut value:u16){
         
         self.status.cal_damaged_status(ref value);
 
         self.sub_hp_and_armor(value); 
+        let thorns = self.status.get(CommonStatus::Thorns);
+        if(thorns.is_no_zero_u16()){
+            target.sub_hp_and_armor(thorns);
+        }
     }
 
     fn calculate_direct_damage_dealt(ref self:Attribute,ref value:u16){
 
     }
-    fn  direct_damage_taken(ref self:Attribute,mut value:u16){
+    fn direct_damage_taken(ref self:Attribute,mut value:u16){
         self.sub_hp_and_armor(value); 
+
     }
 }
  

@@ -45,7 +45,7 @@ impl C2DamageImpl of DamageTrait {
     fn calculate_damage_dealt(ref self:Attribute,ref value:u16,){
         self.status.cal_damage_status(ref value);
     }
-    fn  damage_taken(ref self:Attribute,mut value:u16){
+    fn  damage_taken(ref self:Attribute,ref target:Attribute, mut value:u16){
       
          
         self.status.cal_damaged_status(ref value);

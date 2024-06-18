@@ -43,7 +43,7 @@ impl M3ActionImpl of ActionTrait<Enemy,Adventurer>{
         }else{
             let mut value = 6;
             self.e_calculate_damage_dealt(ref value);
-            target.c_damage_taken(value);
+            target.c_damage_taken(ref self.attr,value);
         }
     }
 }
@@ -52,7 +52,7 @@ impl M3DamageImpl of DamageTrait {
     fn calculate_damage_dealt(ref self:Attribute,ref value:u16,){
         self.status.cal_damage_status(ref value);
     }
-    fn  damage_taken(ref self:Attribute,mut value:u16){
+    fn damage_taken(ref self:Attribute,ref target:Attribute, mut value:u16){
         
         self.status.cal_damaged_status(ref value);
 
@@ -60,16 +60,18 @@ impl M3DamageImpl of DamageTrait {
         if(self.hp.is_no_zero_u16()){
             self.check_attacked_armor();
         }
+        let thorns = self.status.get(CommonStatus::Thorns);
+        if(thorns.is_no_zero_u16()){
+            target.sub_hp_and_armor(thorns);
+        }
     }
 
     fn calculate_direct_damage_dealt(ref self:Attribute,ref value:u16){
 
     }
-    fn  direct_damage_taken(ref self:Attribute,mut value:u16){
+    fn  direct_damage_taken(ref self:Attribute, mut value:u16){
         self.sub_hp_and_armor(value); 
-        if(self.hp.is_no_zero_u16()){
-            self.check_attacked_armor();
-        }
+       
     }
     
 }

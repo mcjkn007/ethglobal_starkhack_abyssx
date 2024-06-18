@@ -123,11 +123,11 @@ impl AdventurerCommonImpl of AdventurerCommonTrait{
         };
     }
     #[inline]
-    fn c_damage_taken(ref self:Adventurer, value:u16){
+    fn c_damage_taken(ref self:Adventurer,ref target:Attribute, value:u16){
         match self.category {
             0 => panic!("c_damage_taken"),
-            1 => C1DamageImpl::damage_taken(ref self.attr, value),
-            2 => C2DamageImpl::damage_taken(ref self.attr, value),
+            1 => C1DamageImpl::damage_taken(ref self.attr,ref target, value),
+            2 => C2DamageImpl::damage_taken(ref self.attr,ref target, value),
             _ => panic!("c_damage_taken"),
         };
     }
@@ -141,11 +141,11 @@ impl AdventurerCommonImpl of AdventurerCommonTrait{
         };
     }
     #[inline]
-    fn c_direct_damage_taken(ref self:Adventurer, value:u16){
+    fn c_direct_damage_taken(ref self:Adventurer,value:u16){
         match self.category {
             0 => panic!("c_direct_damage_taken"),
             1 => C1DamageImpl::direct_damage_taken(ref self.attr, value),
-            2 => C2DamageImpl::direct_damage_taken(ref self.attr, value),
+            2 => C2DamageImpl::direct_damage_taken(ref self.attr,value),
             _ => panic!("c_calculate_direct_damage_dealt"),
         };
     }

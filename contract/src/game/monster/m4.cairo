@@ -43,18 +43,18 @@ impl M4ActionImpl of ActionTrait<Enemy,Adventurer>{
              if(r == 0 || r == 3){
                 let mut value = 1;
                 self.e_calculate_damage_dealt(ref value);
-                target.c_damage_taken(value);
-                target.c_damage_taken(value);
-                target.c_damage_taken(value);
-                target.c_damage_taken(value);
-                target.c_damage_taken(value);
+                target.c_damage_taken(ref self.attr,value);
+                target.c_damage_taken(ref self.attr,value);
+                target.c_damage_taken(ref self.attr,value);
+                target.c_damage_taken(ref self.attr,value);
+                target.c_damage_taken(ref self.attr,value);
 
              }else if(r == 1){
                 self.attr.status.insert(CommonStatus::Amplify_Damage,MathU16Trait::add_u16(self.attr.status.get(CommonStatus::Amplify_Damage),1));
              }else if(r == 2){
                 let mut value = 12;
                 self.e_calculate_damage_dealt(ref value);
-                target.c_damage_taken(value);
+                target.c_damage_taken(ref self.attr,value);
              }
         }else{
             let v = self.attr.status.get(EnemyStatus::Vertigo); 
@@ -66,7 +66,7 @@ impl M4ActionImpl of ActionTrait<Enemy,Adventurer>{
                 if(r == 1){
                     let mut value = 21;
                     self.e_calculate_damage_dealt(ref value);
-                    target.c_damage_taken(value);
+                    target.c_damage_taken(ref self.attr,value);
                 }else if(r == 2){
                     self.attr.status.insert(EnemyStatus::Fly,3);
                 }
@@ -80,7 +80,7 @@ impl M4DamageImpl of DamageTrait {
     fn calculate_damage_dealt(ref self:Attribute,ref value:u16,){
         self.status.cal_damage_status(ref value);
     }
-    fn  damage_taken(ref self:Attribute,mut value:u16){
+    fn damage_taken(ref self:Attribute,ref target:Attribute, mut value:u16){
         
         self.status.cal_damaged_status(ref value);
 
@@ -94,23 +94,18 @@ impl M4DamageImpl of DamageTrait {
         }
 
         self.sub_hp_and_armor(value); 
+        let thorns = self.status.get(CommonStatus::Thorns);
+        if(thorns.is_no_zero_u16()){
+            target.sub_hp_and_armor(thorns);
+        }
     }
 
     fn calculate_direct_damage_dealt(ref self:Attribute,ref value:u16){
 
     }
-    fn  direct_damage_taken(ref self:Attribute,mut value:u16){
-        
-        let fly = self.status.get(EnemyStatus::Fly);
-        if(fly.is_no_zero_u16()){
-            value /= 2;
-            if(fly == 1){
-                self.status.insert(EnemyStatus::Vertigo,1);    
-            }
-            self.status.insert(EnemyStatus::Fly,MathU16Trait::sub_u16(self.status.get(EnemyStatus::Fly),1));
-        }
-
+    fn  direct_damage_taken(ref self:Attribute, mut value:u16){
         self.sub_hp_and_armor(value); 
+       
     }
     
 }

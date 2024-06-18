@@ -188,7 +188,7 @@ impl C1DamageImpl of DamageTrait {
     fn calculate_damage_dealt(ref self:Attribute,ref value:u16){
         self.status.cal_damage_status(ref value);
     }
-    fn damage_taken(ref self:Attribute,mut value:u16){
+    fn damage_taken(ref self:Attribute,ref target:Attribute, mut value:u16){
         if(Bit32Trait::is_bit_fast(self.ability,C1Ability::Shield_Wall)){
             let mut s4 = self.status.get(C1Status::S4);
             if(s4.is_no_zero_u16()){
@@ -207,10 +207,14 @@ impl C1DamageImpl of DamageTrait {
             }
         }
 
-        self.status.cal_damaged_status(ref value);
-         
         if(self.sub_hp_and_armor(value)){
             self.check_taunt_ability();
+        }
+
+        self.status.cal_damaged_status(ref value);
+        let thorns = self.status.get(CommonStatus::Thorns);
+        if(thorns.is_no_zero_u16()){
+            target.sub_hp_and_armor(thorns);
         }
     }
 
@@ -362,16 +366,12 @@ impl C1CardImpl of C1CardTrait{
     }
     fn c1(ref self:Adventurer,ref target:Enemy)->CardResult{
         //造成 6 点伤害。
-        //let mut value:u16 = MathU16Trait::add_u16(6,self.attr.str);
         let mut value:u16 = 6;
 
         self.c_calculate_damage_dealt(ref value);
-        target.e_damage_taken(value);
+        target.e_damage_taken(ref self.attr,value);
 
         self.check_s1(ref target.attr,true);
-
-        self.c_direct_damage_taken(target.attr.status.get(CommonStatus::Thorns));
-
         self.attr.check_s7(ref target.attr);
 
         return self.check_burn_bridges_ability(CardResult::Discard);
@@ -379,8 +379,7 @@ impl C1CardImpl of C1CardTrait{
     #[inline]
     fn c2(ref self:Adventurer)->CardResult{
         //获得 5 点护甲。
-       // let mut value:u16 =  MathU16Trait::add_u16(5,self.attr.agi);
-       
+
         self.attr.c1_add_armor(5);
 
         return CardResult::Discard;
@@ -396,17 +395,15 @@ impl C1CardImpl of C1CardTrait{
     }
     fn c4(ref self:Adventurer,ref target:Enemy)->CardResult{
         //造成9点伤害，抽1牌
-       // let mut value:u16 =  MathU16Trait::add_u16(9,self.attr.str);
+
         let mut value:u16 = 9;
         
         self.c_calculate_damage_dealt(ref value);
-        target.e_damage_taken(value);
+        target.e_damage_taken(ref self.attr,value);
 
-        self.check_s1(ref target.attr,true);
-
-        self.c_direct_damage_taken(target.attr.status.get(CommonStatus::Thorns));
         self.draw_cards_from_left(1);
 
+        self.check_s1(ref target.attr,true);
         self.attr.check_s7(ref target.attr);
 
         return self.check_burn_bridges_ability(CardResult::Discard);
@@ -452,51 +449,37 @@ impl C1CardImpl of C1CardTrait{
     }
     fn c11(ref self:Adventurer,ref target:Enemy)->CardResult{
         //造成 15 点伤害。受到 3 点伤害。
-        //let mut value:u16 = MathU16Trait::add_u16(14,self.attr.str);
         let mut value:u16 = 15;
         self.attr.add_s10_damage(ref value);
 
-     
         self.c_calculate_damage_dealt(ref value);
-        target.e_damage_taken(value);
-
-        self.check_s1(ref target.attr,true);
+        target.e_damage_taken(ref self.attr,value);
 
         self.damage_by_card(3_u16);
 
-        self.c_direct_damage_taken(target.attr.status.get(CommonStatus::Thorns));
-         
+        self.check_s1(ref target.attr,true);
         self.attr.check_s7(ref target.attr);
 
         return self.check_burn_bridges_ability(CardResult::Discard);
     }
     fn c12(ref self:Adventurer,ref target:Enemy)->CardResult{
         //造成 12 点伤害。受到 3 点伤害。抽 1 张牌。
-       // let mut value:u16 = MathU16Trait::add_u16(12,self.attr.str);
-
         let mut value:u16 = 12;
         self.attr.add_s10_damage(ref value);
 
         self.c_calculate_damage_dealt(ref value);
-        target.e_damage_taken(value);
-
-        self.check_s1(ref target.attr,true);
-
-        
+        target.e_damage_taken(ref self.attr,value);
 
         self.damage_by_card(3_u16);
         self.draw_cards_from_left(1);
 
-        self.c_direct_damage_taken(target.attr.status.get(CommonStatus::Thorns));
-    
+        self.check_s1(ref target.attr,true);
         self.attr.check_s7(ref target.attr);
 
         return self.check_burn_bridges_ability(CardResult::Discard);
     }
     fn c13(ref self:Adventurer,ref target:Enemy)->CardResult{
         //造成12点伤害，受到3点伤害，执行x次。
-       // let mut value:u16 = MathU16Trait::add_u16(12,self.attr.str);
-
         let mut value:u16 = 12;
 
         self.attr.add_s10_damage(ref value);
@@ -509,13 +492,11 @@ impl C1CardImpl of C1CardTrait{
                 break;
             }
 
-            target.e_damage_taken(value);
-
-            self.check_s1(ref target.attr,true);
-
+            target.e_damage_taken(ref self.attr,value);
+         
             self.damage_by_card(3_u16);
 
-            self.c_direct_damage_taken(target.attr.status.get(CommonStatus::Thorns));
+            self.check_s1(ref target.attr,true);
 
             i.self_add_u16();
         };
@@ -527,58 +508,42 @@ impl C1CardImpl of C1CardTrait{
     }
     fn c14(ref self:Adventurer,ref target:Enemy)->CardResult{
         //对所有敌人造成3点伤害，免疫下次撞击牌伤害
-        //let mut value:u16 = MathU16Trait::add_u16(14,self.attr.str);
         let mut value:u16 = 3;
-
         self.c_calculate_damage_dealt(ref value);
-        target.e_damage_taken(value);
-
-        self.check_s1(ref target.attr,true);
+        target.e_damage_taken(ref self.attr,value);
 
         self.attr.status.insert(C1Status::S2,MathU16Trait::add_u16(self.attr.status.get(C1Status::S2),1));
 
-        self.c_direct_damage_taken(target.attr.status.get(CommonStatus::Thorns));
-     
+        self.check_s1(ref target.attr,true);
         self.attr.check_s7(ref target.attr);
 
         return self.check_burn_bridges_ability(CardResult::Discard);
     }
     fn c15(ref self:Adventurer,ref target:Enemy)->CardResult{
         //造成15点伤害，免疫下1次撞击牌伤害
-        //let mut value:u16 = MathU16Trait::add_u16(14,self.attr.str);
         let mut value:u16 = 15;
-
         self.c_calculate_damage_dealt(ref value);
-        target.e_damage_taken(value);
-
-        self.check_s1(ref target.attr,true);
+        target.e_damage_taken(ref self.attr,value);
 
         self.attr.status.insert(C1Status::S2,MathU16Trait::add_u16(self.attr.status.get(C1Status::S2),1));
 
-        self.c_direct_damage_taken(target.attr.status.get(CommonStatus::Thorns));
-     
+        self.check_s1(ref target.attr,true);
         self.attr.check_s7(ref target.attr);
 
         return self.check_burn_bridges_ability(CardResult::Discard);
     }
     fn c16(ref self:Adventurer,ref target:Enemy)->CardResult{
         //造成 14 点伤害。受到 3 点伤害。嗜血：不受到伤害。
-        //let mut value:u16 = MathU16Trait::add_u16(14,self.attr.str);
-
         let mut value:u16 =14;
-
         self.attr.add_s10_damage(ref value);
-
         self.c_calculate_damage_dealt(ref value);
-        target.e_damage_taken(value);
+        target.e_damage_taken(ref self.attr,value);
 
         match self.check_s1(ref target.attr,true){
             0 => self.damage_by_card(3_u16),
             _=> {},
         }
         
-        self.c_direct_damage_taken(target.attr.status.get(CommonStatus::Thorns));
-
         self.attr.check_s7(ref target.attr);
 
         return self.check_burn_bridges_ability(CardResult::Discard);
@@ -586,41 +551,31 @@ impl C1CardImpl of C1CardTrait{
 
     fn c17(ref self:Adventurer,ref target:Enemy)->CardResult{
         //造成 12 点伤害。受到 3 点伤害。嗜血：给予 1 层易伤。
-       // let mut value:u16 = MathU16Trait::add_u16(12,self.attr.str);
         let mut value:u16 = 12;
         self.attr.add_s10_damage(ref value);
-
         self.c_calculate_damage_dealt(ref value);
-        target.e_damage_taken(value);
+        target.e_damage_taken(ref self.attr,value);
+
+        self.damage_by_card(3_u16);
 
         match self.check_s1(ref target.attr,true) {
             0=> {},
             _=> target.attr.status.insert(CommonStatus::Fragile,MathU16Trait::add_u16(target.attr.status.get(CommonStatus::Fragile),1)),
         }
-        
-        self.damage_by_card(3_u16);
-
-        self.c_direct_damage_taken(target.attr.status.get(CommonStatus::Thorns));
-
         self.attr.check_s7(ref target.attr);
 
          return self.check_burn_bridges_ability(CardResult::Discard);
     }
     fn c18(ref self:Adventurer,ref target:Enemy)->CardResult{
         //造成18点伤害，受到3点伤害，本次消耗的流血伤害翻倍
-       // let mut value:u16 = MathU16Trait::add_u16(16,self.attr.str);
         let mut value:u16 = 18;
         self.attr.add_s10_damage(ref value);
-
         self.c_calculate_damage_dealt(ref value);
-       
-        target.e_damage_taken(value);
-        self.s1_damage_double(ref target.attr,true);
+        target.e_damage_taken(ref self.attr,value);
 
         self.damage_by_card(3);
 
-        self.c_direct_damage_taken(target.attr.status.get(CommonStatus::Thorns));
-
+        self.check_s1_double(ref target.attr,true);
         self.attr.check_s7(ref target.attr);
 
         return self.check_burn_bridges_ability(CardResult::Discard);
@@ -658,28 +613,20 @@ impl C1CardImpl of C1CardTrait{
     }
     fn c24(ref self:Adventurer,ref target:Enemy)->CardResult{
         //造成9点伤害，嗜血：回复6点生命，消耗
-       // let mut value:u16 = MathU16Trait::add_u16(4,self.attr.str);
         let mut value:u16 = 49;
         self.c_calculate_damage_dealt(ref value);
-        target.e_damage_taken(value);
+        target.e_damage_taken(ref self.attr,value);
 
         match self.check_s1(ref target.attr,true) {
             0=> {},
-            _=> {
-                self.attr.add_hp(6);
-            },
+            _=> self.attr.add_hp(6),
         }
-    
-        self.c_direct_damage_taken(target.attr.status.get(CommonStatus::Thorns));
-     
         self.attr.check_s7(ref target.attr);
 
         return CardResult::Consume;
     }
     fn c25(ref self:Adventurer,ref target:Enemy)->CardResult{
         //造成 5 点伤害。获得 5 点护甲。嗜血：效果翻倍。
-        //let mut damage:u16 = MathU16Trait::add_u16(5,self.attr.str);
-        //let mut armor:u16 = MathU16Trait::add_u16(5,self.attr.agi);
         let mut damage:u16 = 5;
         let mut armor:u16 = 5;
      
@@ -692,11 +639,8 @@ impl C1CardImpl of C1CardTrait{
         }
 
         self.c_calculate_damage_dealt(ref damage);
-        target.e_damage_taken(damage);
-
+        target.e_damage_taken(ref self.attr,damage);
         self.attr.c1_add_armor(armor);
-
-        self.c_direct_damage_taken(target.attr.status.get(CommonStatus::Thorns));
 
         self.attr.check_s7(ref target.attr);
 
@@ -704,11 +648,9 @@ impl C1CardImpl of C1CardTrait{
     }
     fn c26(ref self:Adventurer,ref target:Enemy)->CardResult{
         //造成9点伤害，嗜血：抽2张牌
-        
         let mut value:u16 = 12_u16;
-
         self.c_calculate_damage_dealt(ref value);
-        target.e_damage_taken(value); 
+        target.e_damage_taken(ref self.attr,value);
 
         match self.check_s1(ref target.attr,true)  {
             0=> {},
@@ -716,29 +658,20 @@ impl C1CardImpl of C1CardTrait{
                 self.draw_cards_from_left(2);
             },
         }
-
-        self.c_direct_damage_taken(target.attr.status.get(CommonStatus::Thorns));
-         
         self.attr.check_s7(ref target.attr);
 
         return self.check_burn_bridges_ability(CardResult::Discard);
     }
     fn c27(ref self:Adventurer,ref target:Enemy)->CardResult{
         //造成12点伤害，嗜血：不消耗能量。
-        
         let mut value:u16 = 12_u16;
-
-      
         self.c_calculate_damage_dealt(ref value);
-        target.e_damage_taken(value); 
+        target.e_damage_taken(ref self.attr,value);
 
         match self.check_s1(ref target.attr,true) {
             0=> {},
             _=> self.attr.energy.add_eq_u16(2),
         }
-        
-        self.c_direct_damage_taken(target.attr.status.get(CommonStatus::Thorns));
-
         self.attr.check_s7(ref target.attr);
 
         return self.check_burn_bridges_ability(CardResult::Discard);
@@ -746,58 +679,40 @@ impl C1CardImpl of C1CardTrait{
     
     fn c28(ref self:Adventurer,ref target:Enemy)->CardResult{
         //造成4点伤害，给予所有敌人8层流血
-       // let mut value:u16 = MathU16Trait::add_u16(4,self.attr.str);
-
         let mut value:u16 = 4_u16;
-
         self.c_calculate_damage_dealt(ref value);
-        target.e_damage_taken(value); 
+        target.e_damage_taken(ref self.attr,value);
 
         self.check_s1(ref target.attr,true);
-    
-        target.attr.add_bleed(8);
-
-        self.c_direct_damage_taken(target.attr.status.get(CommonStatus::Thorns));
-
         self.attr.check_s7(ref target.attr);
 
+        target.attr.add_bleed(8);
+ 
         return self.check_burn_bridges_ability(CardResult::Discard);
     }
     fn c29(ref self:Adventurer,ref target:Enemy)->CardResult{
         //造成 9 点伤害，不移除流血。
-      //  let mut value:u16 = MathU16Trait::add_u16(8,self.attr.str);
         let mut value:u16 = 9;
-        
-        
         self.c_calculate_damage_dealt(ref value);
-        target.e_damage_taken(value);
+        target.e_damage_taken(ref self.attr,value);
 
         self.check_s1(ref target.attr,false);
-        
-        self.c_direct_damage_taken(target.attr.status.get(CommonStatus::Thorns));
-
         self.attr.check_s7(ref target.attr); 
 
         return self.check_burn_bridges_ability(CardResult::Discard);
     }
     fn c30(ref self:Adventurer,ref target:Enemy)->CardResult{
         //造成6点伤害，嗜血：获得目标流血层数的护甲
-       // let mut value:u16 = MathU16Trait::add_u16(6,self.attr.str);
-
         let mut value:u16 = 6_u16;
-        
         self.c_calculate_damage_dealt(ref value);
-        target.e_damage_taken(value); 
+        target.e_damage_taken(ref self.attr,value);
 
         let  consume = self.check_s1(ref target.attr,true);
         if(consume.is_no_zero_u16()){
             self.attr.c1_add_armor(consume);
         }
-
         self.attr.check_s7(ref target.attr);
-
-        self.c_direct_damage_taken(target.attr.status.get(CommonStatus::Thorns));
-
+ 
         return self.check_burn_bridges_ability(CardResult::Discard);
     }
     fn c31(ref self:Adventurer,ref target:Enemy)->CardResult{
@@ -808,7 +723,6 @@ impl C1CardImpl of C1CardTrait{
     }
     fn c32(ref self:Adventurer,ref target:Enemy)->CardResult{
         //消耗目标身上的流血层数，获得等量的护甲。消耗
-
         let s1 = target.attr.status.get(C1Status::S1);
         if(s1.is_no_zero_u16()){
             target.attr.status.insert(C1Status::S1,0);
@@ -820,14 +734,11 @@ impl C1CardImpl of C1CardTrait{
  
     fn c33(ref self:Adventurer,ref target:Enemy)->CardResult{
         //触发流血伤害，消耗
-
         self.check_s1(ref target.attr,true);
-
         return CardResult::Consume;
     }
     fn c34(ref self:Adventurer,ref target:Enemy)->CardResult{
         //给予1层易伤，4层流血
-   
         target.attr.status.insert(CommonStatus::Fragile,MathU16Trait::add_u16(target.attr.status.get(CommonStatus::Fragile),1));
         target.attr.add_bleed(4);
 
@@ -836,54 +747,43 @@ impl C1CardImpl of C1CardTrait{
     fn c35(ref self:Adventurer)->CardResult{
         //给予流血时，额外给予 2 层。
         self.attr.status.insert(C1Status::S5,MathU16Trait::add_u16(self.attr.status.get(C1Status::S5),2)); 
-
         return CardResult::Consume;
     }
     #[inline]
     fn c36(ref self:Adventurer)->CardResult{
         //触发嗜血效果时，抽1张牌
         self.attr.status.insert(C1Status::S8,MathU16Trait::add_u16(self.attr.status.get(C1Status::S8),1)); 
-
         return CardResult::Consume;
     }
     fn c37(ref self:Adventurer)->CardResult{
         //你每打出一张攻击牌，给予目标敌人 1 层流血。
         self.attr.status.insert(C1Status::S7,MathU16Trait::add_u16(self.attr.status.get(C1Status::S7),1)); 
-
         return CardResult::Consume;
     }
     fn c38(ref self:Adventurer,ref target:Enemy)->CardResult{
         //对所有目标造成护甲值的伤害。消耗所有护甲。
-       // let mut value:u16 = MathU16Trait::add_u16(self.attr.armor,self.attr.str);
         let mut value:u16 = self.attr.armor;
         self.c_calculate_damage_dealt(ref value);
-        target.e_damage_taken(value);
-
-        self.check_s1(ref target.attr,true);
+        target.e_damage_taken(ref self.attr,value);
 
         self.attr.armor = 0_u16;
 
-        self.c_direct_damage_taken(target.attr.status.get(CommonStatus::Thorns));
-
+        self.check_s1(ref target.attr,true);
+        self.attr.check_s7(ref target.attr);
         return self.check_burn_bridges_ability(CardResult::Discard);
     }
     fn c39(ref self:Adventurer,ref target:Enemy)->CardResult{
         //对一个目标造成6点伤害。如果你有护甲，造成额外6点伤害。
         let mut value:u16 = 6;
-
         if(self.attr.armor.is_no_zero_u16()){
             value.add_eq_u16(6);
         }
-
         self.c_calculate_damage_dealt(ref value);
-        target.e_damage_taken(value);
+        target.e_damage_taken(ref self.attr,value);
 
         self.check_s1(ref target.attr,true);
-         
         self.attr.check_s7(ref target.attr);
-
-        self.c_direct_damage_taken(target.attr.status.get(CommonStatus::Thorns));
-
+ 
         return self.check_burn_bridges_ability(CardResult::Discard);
     }
     fn c40(ref self:Adventurer,ref target:Enemy)->CardResult{
@@ -893,14 +793,11 @@ impl C1CardImpl of C1CardTrait{
             value.add_eq_u16(6);
         }
         self.c_calculate_damage_dealt(ref value);
-        target.e_damage_taken(value);
+        target.e_damage_taken(ref self.attr,value);
 
         self.check_s1(ref target.attr,true);
-
         self.attr.check_s7(ref target.attr);
-
-        self.c_direct_damage_taken(target.attr.status.get(CommonStatus::Thorns));
-
+ 
         return self.check_burn_bridges_ability(CardResult::Discard);
     }
     fn c41(ref self:Adventurer,ref target:Enemy)->CardResult{
@@ -908,20 +805,18 @@ impl C1CardImpl of C1CardTrait{
         let mut value:u16 = 6;
         
         self.c_calculate_damage_dealt(ref value);
-        target.e_damage_taken(value);
-
-        self.check_s1(ref target.attr,true);
+        target.e_damage_taken(ref self.attr,value);
 
         if(self.attr.armor.is_no_zero_u16()){
             target.attr.status.insert(CommonStatus::Weak,MathU16Trait::add_u16(target.attr.status.get(CommonStatus::Weak),1));
         }
 
+        self.check_s1(ref target.attr,true);
         self.attr.check_s7(ref target.attr);
-
-        self.c_direct_damage_taken(target.attr.status.get(CommonStatus::Thorns));
 
         return self.check_burn_bridges_ability(CardResult::Discard);
     }
+    #[inline]
     fn c42(ref self:Adventurer)->CardResult{
         //获得8点护甲，抽1张牌
         self.attr.c1_add_armor(8);
@@ -929,6 +824,7 @@ impl C1CardImpl of C1CardTrait{
 
         return CardResult::Discard;
     }
+    #[inline]
     fn c43(ref self:Adventurer)->CardResult{
         //如果你有护甲，获得2点能量
         if(self.attr.armor.is_no_zero_u16()){
@@ -937,6 +833,7 @@ impl C1CardImpl of C1CardTrait{
 
         return CardResult::Discard;
     }
+    #[inline]
     fn c44(ref self:Adventurer)->CardResult{
         //抽2张牌，获得所抽卡费用的护甲
         self.draw_cards_from_left(2);
@@ -947,6 +844,7 @@ impl C1CardImpl of C1CardTrait{
 
         return CardResult::Discard;
     }
+    #[inline]
     fn c45(ref self:Adventurer)->CardResult{
         //消耗你所有手牌，每张被消耗的卡牌获得8点护甲，消耗
         let mut armor:u16 = 0;
@@ -1005,7 +903,6 @@ impl C1CardImpl of C1CardTrait{
 
 #[generate_trait]
 impl C1StatusImpl of C1StatusTrait {
-  
     #[inline]
     fn check_s1(ref self:Adventurer,ref target:Attribute,consume:bool)->u16{
         //流血
@@ -1021,7 +918,7 @@ impl C1StatusImpl of C1StatusTrait {
         return 0;
     }
     #[inline]
-    fn s1_damage_double(ref self:Adventurer,ref target:Attribute,consume:bool)->u16{
+    fn check_s1_double(ref self:Adventurer,ref target:Attribute,consume:bool)->u16{
         //流血
         let s1 = target.status.get(C1Status::S1)*2;
         if(s1.is_no_zero_u16()){
@@ -1034,17 +931,30 @@ impl C1StatusImpl of C1StatusTrait {
         }
         return 0;
     }
-   
     #[inline]
     fn add_bleed(ref self:Attribute,value:u16){
-        
         let mut s5:u16 = self.status.get(C1Status::S5);
         s5.add_eq_u16(value); 
         self.status.insert(C1Status::S1,MathU16Trait::add_u16(self.status.get(C1Status::S1),s5)); 
     }
     #[inline]
+    fn check_s7(ref self:Attribute,ref target:Attribute){
+        //你每打出一张攻击牌，给予目标敌人 1 层流血。
+        let s7:u16 = self.status.get(C1Status::S7);
+        if(s7.is_no_zero_u16()){
+            target.add_bleed(s7);
+        } 
+    }
+    #[inline]
+    fn check_s8(ref self:Adventurer){
+        //嗜血时，抽1张牌。
+        let s8:u16 = self.attr.status.get(C1Status::S8);
+        if(s8.is_no_zero_u16()){
+            self.draw_cards_from_left(s8);
+        }
+    }
+    #[inline]
     fn add_s10_damage(ref self:Attribute,ref value:u16){
-        
         let s10:u16 = self.status.get(C1Status::S10);
         if(s10.is_no_zero_u16()){
             value.add_eq_u16(s10*3);
@@ -1077,7 +987,6 @@ impl C1StatusImpl of C1StatusTrait {
             }
         }
     }
-      
     #[inline]
     fn c1_add_armor(ref self:Attribute,value:u16){
         let mut v = value;
@@ -1093,7 +1002,6 @@ impl C1StatusImpl of C1StatusTrait {
             Bit32Trait::clean_bit_fast(self.ability,C1Ability::Taunt);
         } 
     }
-    
     #[inline]
     fn check_burn_bridges_ability(ref self:Adventurer,card_result:CardResult)->CardResult{
         if(Bit32Trait::is_bit_fast(self.attr.ability,C1Ability::Burn_Bridges)){
@@ -1108,22 +1016,7 @@ impl C1StatusImpl of C1StatusTrait {
             self.status.insert(C1Status::S4,0);
         } 
     }
-    #[inline]
-    fn check_s8(ref self:Adventurer){
-        //嗜血时，抽1张牌。
-        let s8:u16 = self.attr.status.get(C1Status::S8);
-        if(s8.is_no_zero_u16()){
-            self.draw_cards_from_left(s8);
-        }
-    }
-    #[inline]
-    fn check_s7(ref self:Attribute,ref target:Attribute){
-        //你每打出一张攻击牌，给予目标敌人 1 层流血。
-        let s7:u16 = self.status.get(C1Status::S7);
-        if(s7.is_no_zero_u16()){
-            target.add_bleed(s7);
-        } 
-    }
+    
 }
 
  

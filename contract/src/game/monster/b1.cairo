@@ -46,12 +46,12 @@ impl B1ActionImpl of ActionTrait<Enemy,Adventurer>{
             let mut value:u16 = MathU16Trait::add_u16(target.attr.hp/12_u16,1);
             self.e_calculate_damage_dealt(ref value);
 
-            target.c_damage_taken(value);
-            target.c_damage_taken(value);
-            target.c_damage_taken(value);
-            target.c_damage_taken(value);
-            target.c_damage_taken(value);
-            target.c_damage_taken(value);
+            target.c_damage_taken(ref self.attr,value);
+            target.c_damage_taken(ref self.attr,value);
+            target.c_damage_taken(ref self.attr,value);
+            target.c_damage_taken(ref self.attr,value);
+            target.c_damage_taken(ref self.attr,value);
+            target.c_damage_taken(ref self.attr,value);
         }else{
             self.round.sub_eq_u16(2);
             let up:bool = self.round/7_u16 > 0;
@@ -60,7 +60,7 @@ impl B1ActionImpl of ActionTrait<Enemy,Adventurer>{
                     //造成6点伤害，在玩家弃牌堆加一张灼烧
                     let mut value = 6;
                     self.e_calculate_damage_dealt(ref value);
-                    target.c_damage_taken(value);
+                    target.c_damage_taken(ref self.attr,value);
                     if(up){
                         target.right_cards.append(DebuffCard::BurnUp);
                     }else{
@@ -72,14 +72,14 @@ impl B1ActionImpl of ActionTrait<Enemy,Adventurer>{
                     let mut value = 5;
                     self.e_calculate_damage_dealt(ref value);
         
-                    target.c_damage_taken(value);
-                    target.c_damage_taken(value);
+                    target.c_damage_taken(ref self.attr,value);
+                    target.c_damage_taken(ref self.attr,value);
                 },
                 2 => {
                     //造成6点伤害，在玩家弃牌堆加一张灼烧
                     let mut value = 6;
                     self.e_calculate_damage_dealt(ref value);
-                    target.c_damage_taken(value);
+                    target.c_damage_taken(ref self.attr,value);
                     if(up){
                         target.right_cards.append(DebuffCard::BurnUp);
                     }else{
@@ -96,14 +96,14 @@ impl B1ActionImpl of ActionTrait<Enemy,Adventurer>{
                     let mut value = 5;
                     self.e_calculate_damage_dealt(ref value);
         
-                    target.c_damage_taken(value);
-                    target.c_damage_taken(value);
+                    target.c_damage_taken(ref self.attr,value);
+                    target.c_damage_taken(ref self.attr,value);
                 },
                 5 => {
                     //造成6点伤害，在玩家弃牌堆加一张灼烧
                     let mut value = 6;
                     self.e_calculate_damage_dealt(ref value);
-                    target.c_damage_taken(value);
+                    target.c_damage_taken(ref self.attr,value);
                     if(up){
                         target.right_cards.append(DebuffCard::BurnUp);
                     }else{
@@ -114,8 +114,8 @@ impl B1ActionImpl of ActionTrait<Enemy,Adventurer>{
                     //造成2点伤害6次，并向弃牌堆加入3张升级后的灼烧
                     let mut value = 6;
                     self.e_calculate_damage_dealt(ref value);
-                    target.c_damage_taken(value);
-                    target.c_damage_taken(value);
+                    target.c_damage_taken(ref self.attr,value);
+                    target.c_damage_taken(ref self.attr,value);
 
                     target.right_cards.append(DebuffCard::BurnUp);
                     target.right_cards.append(DebuffCard::BurnUp);
@@ -132,18 +132,24 @@ impl B1DamageImpl of DamageTrait {
     fn calculate_damage_dealt(ref self:Attribute,ref value:u16,){
         self.status.cal_damage_status(ref value);
     }
-    fn  damage_taken(ref self:Attribute,mut value:u16){
+    fn damage_taken(ref self:Attribute,ref target:Attribute, mut value:u16){
         
         self.status.cal_damaged_status(ref value);
 
         self.sub_hp_and_armor(value); 
+        let thorns = self.status.get(CommonStatus::Thorns);
+        if(thorns.is_no_zero_u16()){
+            target.sub_hp_and_armor(thorns);
+        }
     }
 
     fn calculate_direct_damage_dealt(ref self:Attribute,ref value:u16){
 
     }
-    fn  direct_damage_taken(ref self:Attribute,mut value:u16){
+    fn direct_damage_taken(ref self:Attribute,mut value:u16){
         self.sub_hp_and_armor(value); 
+
+       
     }
 }
 

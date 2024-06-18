@@ -5,7 +5,7 @@
 trait IHome{
     fn login();
     fn set_name(name:felt252);
-    fn exchange_meme(meme_address:ContractAddress);
+    fn test(game_mode:u32);
 }
 
 // dojo decorator
@@ -73,14 +73,17 @@ mod home {
 
             emit!(world,HomeEvent { player:player, event:EventCode::SetNickName});
         }
-        fn exchange_meme(world: IWorldDispatcher,meme_address:ContractAddress){
-  
-           // let player = get_caller_address();
+        fn test(world: IWorldDispatcher,game_mode:u32){
+            let player = get_caller_address();
  
-           // let mut user = get!(world, player, (User));
-           // let token_dispatcher = ERC20ABIDispatcher { contract_address:meme_address };
-           // let a = token_dispatcher.totalSupply();
-           //  println!("{:?}", a);
+            let mut user = get!(world, player, (User));
+
+            assert(user.state != UserState::NONE, 'user state is wrong');
+
+            user.game_mode = game_mode.try_into().unwrap();
+            set!(world,(user));
+            
+            emit!(world,HomeEvent { player:player, event:EventCode::SetNickName});
         }
     }
 }

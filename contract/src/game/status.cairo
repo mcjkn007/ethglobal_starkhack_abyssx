@@ -13,7 +13,6 @@ mod CommonStatus{
     const Thorns:felt252 = 'c_thorns';//荆棘 受到3点伤害
     const Amplify_Damage:felt252 = 'c_amplify_damage';//伤害加深
 
-    
 }
  
 

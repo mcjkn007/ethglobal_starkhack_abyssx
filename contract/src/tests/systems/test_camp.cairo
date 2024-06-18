@@ -40,7 +40,7 @@ mod tests {
         home_system.login();
 
         let battle_system = IBattleDispatcher { contract_address:world.deploy_contract('battle', battle::TEST_CLASS_HASH.try_into().unwrap()) };
-        battle_system.start_game(1,0);
+        battle_system.start_game(1,1);
 
         // deploy systems contract
         let camp_system = ICampDispatcher { contract_address:world.deploy_contract('camp', camp::TEST_CLASS_HASH.try_into().unwrap()) };
@@ -48,7 +48,7 @@ mod tests {
         let mut initial = testing::get_available_gas();
         gas::withdraw_gas().unwrap();
  
-        camp_system.camp_action(0,1,1);
+        camp_system.camp_action(1,1);
         
         println!("camp_action gas : {}", initial-testing::get_available_gas());
         println!("---------test_camp_system_end----------");

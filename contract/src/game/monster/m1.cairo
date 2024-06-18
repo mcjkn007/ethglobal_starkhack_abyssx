@@ -17,7 +17,8 @@ impl M1ActionImpl of ActionTrait<Enemy,Adventurer>{
     fn new()->Enemy{
         return Enemy{
             category:EnemyCategory::M1,
-            attr:AttributeTrait::new(20),
+            round:0,
+            attr:AttributeTrait::new(54),
         };
     }
     #[inline]
@@ -30,9 +31,13 @@ impl M1ActionImpl of ActionTrait<Enemy,Adventurer>{
     fn round_end(ref self:Enemy,ref target:Adventurer){
         self.attr.round_end();
     }
+    fn action_feedback(ref self:Enemy,ref target:Adventurer,data:u16){
 
+    }
     fn  action(ref self:Enemy,ref target:Adventurer,mut data:u16){
-        if(data == 0){
+        self.round.add_eq_u16(data);
+    
+        if(self.round == 0){
             
         }else{
             let mut value = MathU16Trait::add_u16(6,2*data);

@@ -4,51 +4,59 @@ use abyss_x::utils::random::{RandomTrait,RandomContainerTrait};
 use abyss_x::utils::math::{MathU32Trait,MathU16Trait,MathU8Trait};
 
 use abyss_x::game::adventurer::{Adventurer,AdventurerTrait,AdventurerCommonTrait};
-use abyss_x::game::status::{CommonStatus,StatusTrait};
+use abyss_x::game::status::{StatusTrait};
 
 use abyss_x::game::attribute::{Attribute,AttributeTrait,CalAttributeTrait};
-use abyss_x::game::enemy::{Enemy,EnemyTrait,EnemyCategory,EnemyStatus,EnemyStatusTrait};
+use abyss_x::game::enemy::{Enemy,EnemyTrait,EnemyCategory,EnemyStatus};
 
-
+use abyss_x::game::status::{CommonStatus};
 use abyss_x::game::action::{ActionTrait,DamageTrait};
  
-impl M2ActionImpl of ActionTrait<Enemy,Adventurer>{
-    //红虱虫
+impl E1ActionImpl of ActionTrait<Enemy,Adventurer>{
+    //邪教徒
     fn new()->Enemy{
         return Enemy{
-            category:EnemyCategory::M2,
+            category:EnemyCategory::M1,
             round:0,
-            attr:AttributeTrait::new(10),
+            attr:AttributeTrait::new(54),
         };
     }
     #[inline]
     fn game_begin(ref self:Enemy,ref target:Adventurer){
-        self.attr.status.insert(EnemyStatus::Attacked_Armor,5);
+    
     }
     fn round_begin(ref self:Enemy,ref target:Adventurer){
         self.attr.round_begin();
-        
     }
     fn round_end(ref self:Enemy,ref target:Adventurer){
         self.attr.round_end();
     }
     fn action_feedback(ref self:Enemy,ref target:Adventurer,data:u16){
-
+        if(data == 2){
+            self.attr.status.insert(CommonStatus::Amplify_Damage,MathU16Trait::add_u16(self.attr.status.get(CommonStatus::Amplify_Damage),2));
+        }
+         
     }
     fn  action(ref self:Enemy,ref target:Adventurer,mut data:u16){
         self.round.add_eq_u16(data);
-    
-        if(self.round%4 == 1){
-            self.attr.status.insert(CommonStatus::Amplify_Damage,MathU16Trait::add_u16(self.attr.status.get(CommonStatus::Amplify_Damage),3));
-        }else{
+        self.round = self.round%8;
+        if(self.round == 0){
+            
+             
+        }else if(self.round == 1 || self.round == 4 || self.round ==6){
             let mut value = 6;
+            self.e_calculate_damage_dealt(ref value);
+            target.c_damage_taken(value);
+            target.attr.status.insert(CommonStatus::Fragile,MathU16Trait::add_u16(target.attr.status.get(CommonStatus::Fragile),1));
+        }else{
+            let mut value = 14;
             self.e_calculate_damage_dealt(ref value);
             target.c_damage_taken(value);
         }
     }
 }
 
-impl M2DamageImpl of DamageTrait {
+impl E1DamageImpl of DamageTrait {
     fn calculate_damage_dealt(ref self:Attribute,ref value:u16,){
         self.status.cal_damage_status(ref value);
     }
@@ -57,9 +65,6 @@ impl M2DamageImpl of DamageTrait {
         self.status.cal_damaged_status(ref value);
 
         self.sub_hp_and_armor(value); 
-        if(self.hp.is_no_zero_u16()){
-            self.check_attacked_armor();
-        }
     }
 
     fn calculate_direct_damage_dealt(ref self:Attribute,ref value:u16){
@@ -67,10 +72,6 @@ impl M2DamageImpl of DamageTrait {
     }
     fn  direct_damage_taken(ref self:Attribute,mut value:u16){
         self.sub_hp_and_armor(value); 
-        if(self.hp.is_no_zero_u16()){
-            self.check_attacked_armor();
-        }
     }
-    
 }
  

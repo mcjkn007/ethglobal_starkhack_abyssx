@@ -18,6 +18,7 @@ impl B1ActionImpl of ActionTrait<Enemy,Adventurer>{
     fn new()->Enemy{
         return Enemy{
             category:EnemyCategory::B1,
+            round:0,
             attr:AttributeTrait::new(250),
         };
     }
@@ -32,12 +33,15 @@ impl B1ActionImpl of ActionTrait<Enemy,Adventurer>{
     fn round_end(ref self:Enemy,ref target:Adventurer){
         self.attr.round_end();
     }
+    fn action_feedback(ref self:Enemy,ref target:Adventurer,data:u16){
 
-    fn action(ref self:Enemy,ref target:Adventurer,mut data:u16){
-        
-        if(data == 0){
+    }
+    fn action(ref self:Enemy,ref target:Adventurer,data:u16){
+        self.round.add_eq_u16(data);
+    
+        if(self.round == 0){  
             
-        }else if(data == 1){
+        }else if(self.round == 1){
             //第一轮 造成X点伤害6次。
             let mut value:u16 = MathU16Trait::add_u16(target.attr.hp/12_u16,1);
             self.e_calculate_damage_dealt(ref value);
@@ -49,9 +53,9 @@ impl B1ActionImpl of ActionTrait<Enemy,Adventurer>{
             target.c_damage_taken(value);
             target.c_damage_taken(value);
         }else{
-            data.sub_eq_u16(2);
-            let up:bool = data/7_u16 > 0;
-            match  data%7 {
+            self.round.sub_eq_u16(2);
+            let up:bool = self.round/7_u16 > 0;
+            match  self.round%7 {
                 0 => {
                     //造成6点伤害，在玩家弃牌堆加一张灼烧
                     let mut value = 6;

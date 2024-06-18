@@ -12,13 +12,13 @@ use abyss_x::game::enemy::{Enemy,EnemyTrait,EnemyCategory,EnemyStatus,EnemyStatu
 
 use abyss_x::game::action::{ActionTrait,DamageTrait};
  
-impl M2ActionImpl of ActionTrait<Enemy,Adventurer>{
-    //红虱虫
+impl M3ActionImpl of ActionTrait<Enemy,Adventurer>{
+    //绿虱虫
     fn new()->Enemy{
         return Enemy{
-            category:EnemyCategory::M2,
+            category:EnemyCategory::M3,
             round:0,
-            attr:AttributeTrait::new(10),
+            attr:AttributeTrait::new(11),
         };
     }
     #[inline]
@@ -37,9 +37,9 @@ impl M2ActionImpl of ActionTrait<Enemy,Adventurer>{
     }
     fn  action(ref self:Enemy,ref target:Adventurer,mut data:u16){
         self.round.add_eq_u16(data);
-    
-        if(self.round%4 == 1){
-            self.attr.status.insert(CommonStatus::Amplify_Damage,MathU16Trait::add_u16(self.attr.status.get(CommonStatus::Amplify_Damage),3));
+        let r = self.round%4;
+        if(r == 0 || r == 3){
+            target.attr.status.insert(CommonStatus::Weak,MathU16Trait::add_u16(target.attr.status.get(CommonStatus::Weak),2));
         }else{
             let mut value = 6;
             self.e_calculate_damage_dealt(ref value);
@@ -48,7 +48,7 @@ impl M2ActionImpl of ActionTrait<Enemy,Adventurer>{
     }
 }
 
-impl M2DamageImpl of DamageTrait {
+impl M3DamageImpl of DamageTrait {
     fn calculate_damage_dealt(ref self:Attribute,ref value:u16,){
         self.status.cal_damage_status(ref value);
     }

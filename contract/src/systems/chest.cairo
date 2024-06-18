@@ -46,7 +46,7 @@ mod chest {
     fn chest_action(world: IWorldDispatcher){
             let player = get_caller_address();
 
-           // UserTrait::read_user(world,player.into());
+            //UserTrait::read_user(world,player.into());
          
             let user:User = get!(world, player, (User));
 

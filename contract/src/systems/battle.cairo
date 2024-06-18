@@ -119,9 +119,8 @@ use core::traits::Into;
             let mut adv:Adventurer = AdventurerCommonTrait::new(user.role_category);
             adv.init(user.seed,idol.idols,ref role,ref card);
 
-            let mut enemy:Enemy = EnemyTrait::get_enemy(user.cur_stage.into());
+            let mut enemy:Enemy = EnemyTrait::get_stage_1_enemey();
  
-            let mut round:u16 = 0_u16;
             adv.c_game_begin(ref enemy);
             enemy.e_game_begin(ref adv);
             let mut opt_arr = opts;
@@ -132,13 +131,13 @@ use core::traits::Into;
                             adv.c_round_end(ref enemy);
                             //enemy action
                             enemy.e_round_begin(ref adv);
-                            enemy.enemy_action(ref adv,round.self_add__u16());
+                            enemy.enemy_action(ref adv,1);
                             enemy.e_round_end(ref adv);
                             
                             adv.c_round_begin(ref enemy);
                         }else{
                             //player action
-                            adv.adv_action(ref enemy,r);
+                            adv.c_adv_action(ref enemy,r);
                         }
                     },
                     Option::None => {
@@ -160,6 +159,7 @@ use core::traits::Into;
             set!(world,(role));
             set!(world,(user));
             set!(world,(card));
+            
             emit!(world,ActionEvent { player, event:EventCode::CheckBattleResult});
         }
     }

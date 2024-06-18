@@ -46,7 +46,7 @@ mod tests {
         initial = testing::get_available_gas();
         gas::withdraw_gas().unwrap();
 
-        home_system.set_nickname('black');
+        home_system.set_name('black');
         
         println!("set_nickname gas : {}", initial-testing::get_available_gas());
         println!("---------test_home_system_end----------");

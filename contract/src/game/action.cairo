@@ -8,6 +8,8 @@ pub trait ActionTrait<T,V> {
     fn round_begin(ref self:T,ref target:V);
     fn round_end(ref self:T,ref target:V);
 
+    fn action_feedback(ref self:T,ref target:V,data:u16);
+
     fn action(ref self:T,ref target:V,data:u16);
 }
 

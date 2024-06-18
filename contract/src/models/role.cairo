@@ -19,7 +19,6 @@ struct Role {
     awake:u16,
 
     blessing:u32,
-
 }
 
 mod RoleCategory{
@@ -40,43 +39,6 @@ impl RoleImpl of RoleTrait {
 
         self.blessing = 0;
  
-    }
-    fn get_cards(ref self:Role)->Array<u8>{
-        let mut result =  ArrayTrait::<u8>::new();
- 
-        //let mut cards:u256 = self.cards;
-        let mut cards:u256 = 0;
-        result.append((cards & 0xf_u256).try_into().unwrap());
-        loop{
-            if(cards == 0){
-                break;
-            }
-            cards /= POW_2_U256::_8;
-            let mut v:u8 = (cards & 0xf_u256).try_into().unwrap();
- 
-            if(v.is_zero_u8()){
-                break;
-            }
-            result.append(v);
-        };
-        return result;
-    }
-    fn get_cards_test(ref cards:u256)->Array<u8>{
-        let mut result =  ArrayTrait::<u8>::new();
-        result.append((cards & 0xf_u256).try_into().unwrap());
-        loop{
-            if(cards == 0){
-                break;
-            }
-            cards /= POW_2_U256::_8;
-            let mut v:u8 = (cards & 0xf_u256).try_into().unwrap();
- 
-            if(v.is_zero_u8()){
-                break;
-            }
-            result.append(v);
-        };
-        return result;
     }
     fn rest(ref self:Role){
         match core::integer::u8_checked_add(self.hp,self.max_hp/10*3){

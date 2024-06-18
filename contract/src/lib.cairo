@@ -7,26 +7,27 @@ mod game{
     mod monster{
         mod m1;
         mod m2;
+        mod m3;
+        mod m4;
+
+        mod e1;
+
         mod b1;
-        mod b2;
-        mod b3;
+  
     }
     mod action;
     mod adventurer;
     mod attribute;
      
     mod status;
- 
- 
-    mod enemy;
-    mod stage;
 
+    mod enemy;
 }
 
 mod models {
     mod card;
     mod idol;
-    mod nickname;
+    mod name;
     mod role;
     mod user;
 }

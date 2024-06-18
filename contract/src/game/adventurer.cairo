@@ -32,39 +32,54 @@ pub trait AdventurerTrait<T> {
     fn c_round_begin(ref self:Adventurer,ref target:T);
     fn c_round_end(ref self:Adventurer,ref target:T);
 
-    fn adv_action(ref self:Adventurer,ref target:T,opt:u16);
+    fn c_adv_action(ref self:Adventurer,ref target:T,opt:u16);
+    fn c_action_feedback(ref self:Adventurer,ref target:T,ref value:u16);
+
 }
 impl AdventurerImpl of AdventurerTrait<Enemy>{
     #[inline]
     fn c_game_begin(ref self:Adventurer,ref target:Enemy){
         match self.category {
-            0 => C1ActionImpl::game_begin(ref self,ref target),
-            1 => C2ActionImpl::game_begin(ref self,ref target),
-            _ => panic!("error init exp"),
+            0 => panic!("c_game_begin1"),
+            1 => C1ActionImpl::game_begin(ref self,ref target),
+            2 => C2ActionImpl::game_begin(ref self,ref target),
+            _ => panic!("c_game_begin2"),
         };
     }
     #[inline]
     fn c_round_begin(ref self:Adventurer,ref target:Enemy){
         match self.category {
-            0 => C1ActionImpl::round_begin(ref self,ref target),
-            1 => C2ActionImpl::round_begin(ref self,ref target),
-            _ => panic!("error init exp"),
+            0 => panic!("c_round_begin"),
+            1 => C1ActionImpl::round_begin(ref self,ref target),
+            2 => C2ActionImpl::round_begin(ref self,ref target),
+            _ => panic!("c_round_begin"),
         };
     }
     #[inline]
     fn c_round_end(ref self:Adventurer,ref target:Enemy){
         match self.category {
-            0 => C1ActionImpl::round_end(ref self,ref target),
-            1 => C2ActionImpl::round_end(ref self,ref target),
-            _ => panic!("error init exp"),
+            0 => panic!("c_round_end"),
+            1 => C1ActionImpl::round_end(ref self,ref target),
+            2 => C2ActionImpl::round_end(ref self,ref target),
+            _ => panic!("c_round_end"),
         };
     }
     #[inline]
-    fn adv_action(ref self:Adventurer,ref target:Enemy,opt:u16){
+    fn c_adv_action(ref self:Adventurer,ref target:Enemy,opt:u16){
         match self.category {
-            0 => C1ActionImpl::action(ref self,ref target,opt),
-            1 => C2ActionImpl::action(ref self,ref target,opt),
-            _ => panic!("error action exp")
+            0 => panic!("c_adv_action"),
+            1 => C1ActionImpl::action(ref self,ref target,opt),
+            2 => C2ActionImpl::action(ref self,ref target,opt),
+            _ => panic!("c_adv_action")
+        };
+    }
+    #[inline]
+    fn c_action_feedback(ref self:Adventurer,ref target:Enemy,ref value:u16){
+        match self.category {
+            0 => panic!("c_action_feedback"),
+            1 => C1ActionImpl::action_feedback(ref self,ref target,value),
+            2 => C2ActionImpl::action_feedback(ref self,ref target,value),
+            _ => panic!("c_action_feedback"),
         };
     }
 }
@@ -101,36 +116,40 @@ impl AdventurerCommonImpl of AdventurerCommonTrait{
     #[inline]
     fn c_calculate_damage_dealt(ref self:Adventurer,ref value:u16){
         match self.category {
-            0 => C1DamageImpl::calculate_damage_dealt(ref self.attr,ref value),
-            1 => C2DamageImpl::calculate_damage_dealt(ref self.attr,ref value),
-            _ => panic!("error init exp"),
+            0 => panic!("c_calculate_damage_dealt"),
+            1 => C1DamageImpl::calculate_damage_dealt(ref self.attr,ref value),
+            2 => C2DamageImpl::calculate_damage_dealt(ref self.attr,ref value),
+            _ => panic!("c_calculate_damage_dealt"),
         };
     }
     #[inline]
     fn c_damage_taken(ref self:Adventurer, value:u16){
         match self.category {
-            0 => C1DamageImpl::damage_taken(ref self.attr, value),
-            1 => C2DamageImpl::damage_taken(ref self.attr, value),
-            _ => panic!("error init exp"),
+            0 => panic!("c_damage_taken"),
+            1 => C1DamageImpl::damage_taken(ref self.attr, value),
+            2 => C2DamageImpl::damage_taken(ref self.attr, value),
+            _ => panic!("c_damage_taken"),
         };
     }
     #[inline]
     fn c_calculate_direct_damage_dealt(ref self:Adventurer,ref value:u16){
         match self.category {
-            0 => C1DamageImpl::calculate_direct_damage_dealt(ref self.attr,ref value),
-            1 => C2DamageImpl::calculate_direct_damage_dealt(ref self.attr,ref value),
-            _ => panic!("error init exp"),
+            0 => panic!("c_calculate_direct_damage_dealt"),
+            1 => C1DamageImpl::calculate_direct_damage_dealt(ref self.attr,ref value),
+            2 => C2DamageImpl::calculate_direct_damage_dealt(ref self.attr,ref value),
+            _ => panic!("c_calculate_direct_damage_dealt"),
         };
     }
     #[inline]
     fn c_direct_damage_taken(ref self:Adventurer, value:u16){
         match self.category {
-            0 => C1DamageImpl::direct_damage_taken(ref self.attr, value),
-            1 => C2DamageImpl::direct_damage_taken(ref self.attr, value),
-            _ => panic!("error init exp"),
+            0 => panic!("c_direct_damage_taken"),
+            1 => C1DamageImpl::direct_damage_taken(ref self.attr, value),
+            2 => C2DamageImpl::direct_damage_taken(ref self.attr, value),
+            _ => panic!("c_calculate_direct_damage_dealt"),
         };
     }
-   
+    
     fn draw_cards_from_left(ref self:Adventurer,mut draw_count:u16){
         if(self.mid_cards.size() == HAND_CARD_NUMBER_MAX){
             return;

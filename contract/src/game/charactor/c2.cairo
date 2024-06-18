@@ -67,7 +67,7 @@ impl C2ActionImpl of ActionTrait<Adventurer,Enemy>{
         return Adventurer{
             seed:0,
             attr:AttributeTrait::new(80),
-            category:1,
+            category:2,
             init_cards:ArrayTrait::<u8>::new(),
             left_cards:ArrayTrait::<u8>::new(),
             mid_cards:DictMapTrait::<u8>::new(),
@@ -84,7 +84,9 @@ impl C2ActionImpl of ActionTrait<Adventurer,Enemy>{
    
     fn round_end(ref self:Adventurer,ref target:Enemy){}
 
-    
+    fn action_feedback(ref self:Adventurer,ref target:Enemy,data:u16){
+
+    }
     fn action(ref self:Adventurer,ref target:Enemy,data:u16){
         let card_index = (data/256_u16).try_into().unwrap();
         println!("card_index c2 gas : {}", card_index);

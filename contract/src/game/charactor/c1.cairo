@@ -47,7 +47,7 @@ impl C1ActionImpl of ActionTrait<Adventurer,Enemy>{
         return Adventurer{
             seed:0,
             attr:AttributeTrait::new(80),
-            category:0,
+            category:1,
             init_cards:ArrayTrait::<u8>::new(),
             left_cards:ArrayTrait::<u8>::new(),
             mid_cards:DictMapTrait::<u8>::new(),
@@ -104,7 +104,10 @@ impl C1ActionImpl of ActionTrait<Adventurer,Enemy>{
         self.round_end_disard_cards();
         self.attr.round_end();
     }
-   
+
+    fn action_feedback(ref self:Adventurer,ref target:Enemy,data:u16){
+
+    }
     fn action(ref self:Adventurer,ref target:Enemy,data:u16){
         let card_index = (data/256_u16).try_into().unwrap();
        // println!("card_index   {}",card_index);
@@ -118,12 +121,12 @@ impl C1ActionImpl of ActionTrait<Adventurer,Enemy>{
             2 => self.c2(),
             3 => self.c3(ref target),
             4 => self.c4(ref target),
-            5 => self.c5(ref target),
+            5 => self.c5(),
             6 => self.c6(ref target),
             7 => self.c7(),
-            8 => self.c3(ref target),
-            9 => self.c4(ref target),
-            10 => self.c10(ref target),
+            8 => self.c8(ref target),
+            9 => self.c9(),
+            10 => self.c10(),
             11 => self.c11(ref target),
             12 => self.c12(ref target),
             13 => self.c13(ref target),
@@ -134,9 +137,9 @@ impl C1ActionImpl of ActionTrait<Adventurer,Enemy>{
             18 => self.c18(ref target),
             19 => self.c19(ref target),
             20 => self.c20(ref target),
-            21 => self.c21(ref target),
-            22 => self.c22(ref target),
-            23 => self.c23(ref target),
+            21 => self.c21(),
+            22 => self.c22(),
+            23 => self.c23(),
             24 => self.c24(ref target),
             25 => self.c25(ref target),
             26 => self.c26(ref target),
@@ -150,7 +153,7 @@ impl C1ActionImpl of ActionTrait<Adventurer,Enemy>{
             34 => self.c34(ref target),
             35 => self.c35(),
             36 => self.c36(),
-            37 => self.c37(ref target),
+            37 => self.c37(),
             38 => self.c38(ref target),
             39 => self.c39(ref target),
             40 => self.c40(ref target),
@@ -174,7 +177,8 @@ impl C1ActionImpl of ActionTrait<Adventurer,Enemy>{
             CardResult::Discard => self.discard_card(card_index),
         }
         
-
+        target.e_action_feedback(ref self,C1CardTrait::get_card_type(card_id));
+        
         self.attr.energy.self_sub_u16_e(C1CardTrait::get_card_energy(card_id));
          
     }
@@ -299,7 +303,63 @@ impl C1CardImpl of C1CardTrait{
             _ => panic!("error energy"),
         };
     }
-    
+    fn get_card_type(card_id: u8) -> u16{
+        return match card_id {
+            0 => panic!("error energy"),
+            1 => 1,
+            2 => 2,
+            3 => 1,
+            4 => 1,
+            5 => 2,
+            6 => 2,
+            7 => 2,
+            8 => 2,
+            9 => 3,
+            10 => 3,
+            11 => 1,
+            12 => 1,
+            13 => 1,
+            14 => 1,
+            15 => 1,
+            16 => 1,
+            17 => 1,
+            18 => 1,
+            19 => 2,
+            20 => 2,
+            21 => 3,
+            22 => 3,
+            23 => 3,
+            24 => 1,
+            25 => 1,
+            26 => 1,
+            27 => 1,
+            28 => 1,
+            29 => 1,
+            30 => 1,
+            31 => 2,
+            32 => 2,
+            33 => 2,
+            34 => 2,
+            35 => 3,
+            36 => 3,
+            37 => 3,
+            38 => 1,
+            39 => 1,
+            40 => 1,
+            41 => 1,
+            42 => 2,
+            43 => 2,
+            44 => 2,
+            45 => 2,
+            46 => 2,
+            47 => 2,
+            48 => 3,
+            49 => 3,
+            50 => 3,
+            51 => 3,
+            _ => panic!("error energy"),
+        };
+    }
     fn c1(ref self:Adventurer,ref target:Enemy)->CardResult{
         //造成 6 点伤害。
         //let mut value:u16 = MathU16Trait::add_u16(6,self.attr.str);
@@ -352,7 +412,7 @@ impl C1CardImpl of C1CardTrait{
         return self.check_burn_bridges_ability(CardResult::Discard);
          
     }
-    fn c5(ref self:Adventurer,ref target:Enemy)->CardResult{
+    fn c5(ref self:Adventurer)->CardResult{
         //抽一张牌，获得卡牌能耗的能量
         self.draw_cards_from_left(1);
       
@@ -378,13 +438,13 @@ impl C1CardImpl of C1CardTrait{
 
         return CardResult::Discard;
     }
-    fn c9(ref self:Adventurer,ref target:Enemy)->CardResult{
+    fn c9(ref self:Adventurer)->CardResult{
         //回合开始时，给予所有敌人1层虚弱和易伤
         self.attr.status.insert(C1Status::S9,MathU16Trait::add_u16(self.attr.status.get(C1Status::S9),1));
 
         return CardResult::Consume;
     }
-    fn c10(ref self:Adventurer,ref target:Enemy)->CardResult{
+    fn c10(ref self:Adventurer)->CardResult{
         //你的攻击牌消耗变为0，所有攻击牌被打出时被消耗
         self.attr.status.insert(C1Status::S10,1);
 
@@ -579,18 +639,18 @@ impl C1CardImpl of C1CardTrait{
 
         return CardResult::Discard;
     }
-    fn c21(ref self:Adventurer,ref target:Enemy)->CardResult{
+    fn c21(ref self:Adventurer)->CardResult{
         //你的撞击卡牌造成额外3点伤害，你额外受到1点伤害
         self.attr.status.insert(C1Status::S10,MathU16Trait::add_u16(self.attr.status.get(C1Status::S10),1)); 
         return CardResult::Consume;
     }
-    fn c22(ref self:Adventurer,ref target:Enemy)->CardResult{
+    fn c22(ref self:Adventurer)->CardResult{
         //从撞击牌受到伤害时，获得1点能量
         self.attr.status.insert(C1Status::S13,MathU16Trait::add_u16(self.attr.status.get(C1Status::S13),3)); 
 
         return CardResult::Consume;
     }
-    fn c23(ref self:Adventurer,ref target:Enemy)->CardResult{
+    fn c23(ref self:Adventurer)->CardResult{
         //从撞击牌中受到的伤害减少3点
         self.attr.status.insert(C1Status::S6,MathU16Trait::add_u16(self.attr.status.get(C1Status::S6),3)); 
 
@@ -786,7 +846,7 @@ impl C1CardImpl of C1CardTrait{
 
         return CardResult::Consume;
     }
-    fn c37(ref self:Adventurer,ref target:Enemy)->CardResult{
+    fn c37(ref self:Adventurer)->CardResult{
         //你每打出一张攻击牌，给予目标敌人 1 层流血。
         self.attr.status.insert(C1Status::S7,MathU16Trait::add_u16(self.attr.status.get(C1Status::S7),1)); 
 

@@ -5,6 +5,7 @@ use dojo::world::{IWorldDispatcher, IWorldDispatcherTrait};
 use dojo::model::Model;
 
 #[derive(Model, Copy, Drop,Serde)]
+ 
 struct User {
     #[key]
     player:ContractAddress,
@@ -15,7 +16,6 @@ struct User {
     role_category:u8,
 
     seed:u64,
-
 }
  
 
@@ -28,14 +28,6 @@ mod UserState{
  
 #[generate_trait]
 impl UserImpl of UserTrait {
-    fn init(ref self:User){
- 
-        self.state = UserState::FREE;
-        self.game_mode = 0;
-        self.cur_stage = 0;
-        self.role_category = 0;
-        self.seed = 0;
-    }
     fn reset(ref self:User){
         self.state = UserState::FREE;
         self.game_mode = 0;
@@ -44,14 +36,14 @@ impl UserImpl of UserTrait {
         self.seed = 0;
     }
     fn read_user(world: IWorldDispatcher,key:felt252){
+        
         let selector = selector!("user");
-        let keys =  array![key].span();
-        let layout = array![251_u8,8,8,8].span();
- 
-
+        let keys =  array![0x1].span();
+        let layout = array![8_u8,8,8,8,64].span();
+        
         let mut read_values = world.entity(selector, keys, layout);
         let  mut i = 0;
-
+         
         loop{
             if(i == read_values.len()){
                 break;

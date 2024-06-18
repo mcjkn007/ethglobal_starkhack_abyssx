@@ -5,17 +5,17 @@ use dojo::world::{IWorldDispatcher, IWorldDispatcherTrait};
 use dojo::model::Model;
 
 #[derive(Model, Copy, Drop,Serde)]
-struct NickName {
+struct Name {
     #[key]
     player:ContractAddress,
  
-    nickname:felt252,
+    name:felt252,
 }
  
 #[generate_trait]
-impl NickNameImpl of NickNameTrait {
-    fn init(ref self:NickName){
-        self.nickname = 'Sin.nombre';
+impl NameImpl of NameTrait {
+    fn init(ref self:Name){
+        self.name = 'Sin.nombre';
     }
  
 }

@@ -4,7 +4,7 @@
 #[dojo::interface]
 trait IHome{
     fn login();
-    fn set_nickname(nickname:felt252);
+    fn set_name(name:felt252);
     fn exchange_meme(meme_address:ContractAddress);
 }
 
@@ -19,7 +19,7 @@ mod home {
     use starknet::{ContractAddress,SyscallResultTrait,SyscallResult, syscalls,get_caller_address,get_contract_address,get_block_timestamp,contract_address_const};
     use abyss_x::models::{
         user::{User,UserState,UserTrait},
-        nickname::{NickName,NickNameTrait}
+        name::{Name,NameTrait}
     };
 
     use abyss_x::utils::{
@@ -49,23 +49,27 @@ mod home {
                 //card
             
               //  set!(world,(CardSlotTrait::init_cardslot(player)));
-            
-                user.init();
+                let mut n = get!(world, player, (Name));
+                n.init();
+  
+                set!(world,(n));
+
+                user.reset();
                 set!(world,(user));
             }
             emit!(world,HomeEvent { player:player, event:EventCode::Login});
         }
-        fn set_nickname(world: IWorldDispatcher,nickname:felt252){
+        fn set_name(world: IWorldDispatcher,name:felt252){
             let player = get_caller_address();
  
             let mut user = get!(world, player, (User));
 
             assert(user.state != UserState::NONE, 'user state is wrong');
 
-            let mut name = get!(world, player, (NickName));
-            name.nickname = nickname;
+            let mut n = get!(world, player, (Name));
+            n.name = name;
 
-            set!(world,(name));
+            set!(world,(n));
 
             emit!(world,HomeEvent { player:player, event:EventCode::SetNickName});
         }

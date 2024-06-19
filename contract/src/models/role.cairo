@@ -8,7 +8,7 @@ use abyss_x::utils::math::{MathU8Trait};
 
 use abyss_x::utils::constant::{POW_2_U256};
 
-#[derive(Copy, Drop, Serde)]
+#[derive(Copy, Drop, Serde,IntrospectPacked)]
 #[dojo::model]
 struct Role {
     #[key]
@@ -16,10 +16,13 @@ struct Role {
 
     hp:u8,
     max_hp:u8,
-    gold:u16,
-    awake:u16,
 
+    cur_stage:u8,
+
+    awake:u16,
     blessing:u32,
+    relic:u64,
+    seed:u64,
 }
 
 mod RoleCategory{
@@ -31,16 +34,21 @@ mod RoleCategory{
 
 #[generate_trait]
 impl RoleImpl of RoleTrait {
+    #[inline]
     fn reset(ref self:Role){
      
         self.hp = 0;
         self.max_hp = 0;
-        self.awake = 0;
-        self.gold = 0;
+      
+        self.cur_stage = 0;
 
+        self.awake = 0;
         self.blessing = 0;
+        self.relic = 0;
+        self.seed = 0;
  
     }
+    #[inline]
     fn rest(ref self:Role){
         match core::integer::u8_checked_add(self.hp,self.max_hp/10*3){
             Option::Some(r) =>{
@@ -55,6 +63,7 @@ impl RoleImpl of RoleTrait {
             }
         }
     }
+    #[inline]
     fn awake(ref self:Role,value:u8){
 
         assert(Bit16Trait::is_bit(self.awake,value) == false, 'awake wrong');

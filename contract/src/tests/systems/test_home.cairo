@@ -34,7 +34,7 @@ mod tests {
         let world = spawn_test_world(models);
 
         // deploy systems contract
-        let home_system = IHomeDispatcher { contract_address:world.deploy_contract('home', home::TEST_CLASS_HASH.try_into().unwrap()) };
+        let home_system = IHomeDispatcher { contract_address:world.deploy_contract('home', home::TEST_CLASS_HASH.try_into().unwrap(),array![].span()) };
         println!("---------test_home_system_begin----------");
         let mut initial = testing::get_available_gas();
         gas::withdraw_gas().unwrap();

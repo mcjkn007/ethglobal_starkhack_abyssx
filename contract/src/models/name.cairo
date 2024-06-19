@@ -4,7 +4,7 @@ use starknet::ContractAddress;
 use dojo::world::{IWorldDispatcher, IWorldDispatcherTrait};
 use dojo::model::Model;
 
-#[derive(Copy, Drop,Serde)]
+#[derive(Copy, Drop,Serde,IntrospectPacked)]
 #[dojo::model]
 struct Name {
     #[key]
@@ -15,6 +15,7 @@ struct Name {
  
 #[generate_trait]
 impl NameImpl of NameTrait {
+    #[inline]
     fn init(ref self:Name){
         self.name = 'Sin.nombre';
     }

@@ -18,17 +18,18 @@ mod game{
     mod action;
     mod adventurer;
     mod attribute;
-     
-    mod status;
-
     mod enemy;
+    mod status;
+    mod relic;
+ 
 }
 
 mod models {
     mod card;
-    mod idol;
+ 
     mod name;
     mod role;
+    //mod relic;
     mod user;
 }
 

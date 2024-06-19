@@ -1,13 +1,13 @@
 use abyss_x::game::adventurer::{Adventurer};
 use abyss_x::game::attribute::{Attribute,AttributeTrait};
  
-use abyss_x::game::monster::m1::{M1ActionImpl,M1DamageImpl};
-use abyss_x::game::monster::m2::{M2ActionImpl,M2DamageImpl};
-use abyss_x::game::monster::m3::{M3ActionImpl,M3DamageImpl};
-use abyss_x::game::monster::m4::{M4ActionImpl,M4DamageImpl};
+use abyss_x::game::monster::m1::{M1EntityImpl,M1ActionImpl,M1DamageImpl};
+use abyss_x::game::monster::m2::{M2EntityImpl,M2ActionImpl,M2DamageImpl};
+use abyss_x::game::monster::m3::{M3EntityImpl,M3ActionImpl,M3DamageImpl};
+use abyss_x::game::monster::m4::{M4EntityImpl,M4ActionImpl,M4DamageImpl};
 
-use abyss_x::game::monster::e1::{E1ActionImpl,E1DamageImpl};
-use abyss_x::game::monster::b1::{B1ActionImpl,B1DamageImpl};
+use abyss_x::game::monster::e1::{E1EntityImpl,E1ActionImpl,E1DamageImpl};
+use abyss_x::game::monster::b1::{B1EntityImpl,B1ActionImpl,B1DamageImpl};
 
 use abyss_x::utils::math::{MathU32Trait,MathU16Trait};
 use abyss_x::utils::constant::{HAND_CARD_NUMBER_MAX};
@@ -21,20 +21,17 @@ enum EnemyCategory{
 
     E1,
 
-    B1,
-    B2,
-    B3
+    B1
 }
 
  
+
 mod EnemyStatus{
     const Attacked_Armor:felt252 = 'e_attacked_armor';//蜷身 当受到 攻击 伤害时，蜷起身子并获得 n 点护甲
     const Fly:felt252 = 'e_fly';//飞行，受到伤害减少50%
     const Vertigo:felt252 = 'e_vertigo';//眩晕，停止一回合
     const Roar:felt252 = 'e_roar';//咆哮
-     
 }
- 
 
 #[derive(Destruct)]
 struct Enemy {
@@ -42,7 +39,6 @@ struct Enemy {
     round:u16,
     attr:Attribute
 }
-
 #[derive(Destruct)]
 struct EnemyTeam2 {
     e1:Enemy,
@@ -55,58 +51,60 @@ struct EnemyTeam3 {
     e2:Enemy,
     e3:Enemy
 }
- 
- 
- 
+
+
+
 #[generate_trait]
 impl EnemyImpl of EnemyTrait {
     #[inline]
     fn new(category:EnemyCategory) -> Enemy{
         return match category {
-            EnemyCategory::M1 => M1ActionImpl::new(),
-            EnemyCategory::M2 => M2ActionImpl::new(),
-            EnemyCategory::M3 => M3ActionImpl::new(),
-            EnemyCategory::M4 => M4ActionImpl::new(),
+            EnemyCategory::M1 => M1EntityImpl::new(),
+            EnemyCategory::M2 => M2EntityImpl::new(),
+            EnemyCategory::M3 => M3EntityImpl::new(),
+            EnemyCategory::M4 => M4EntityImpl::new(),
 
-            EnemyCategory::E1 => M4ActionImpl::new(),
+            EnemyCategory::E1 => E1EntityImpl::new(),
 
-            EnemyCategory::B1 => B1ActionImpl::new(),
+            EnemyCategory::B1 => B1EntityImpl::new(),
             _ => panic!("error init enemy"),
         };
     }
+
     #[inline]
     fn get_stage_1_enemey()->Enemy{
-        return Self::new(EnemyCategory::M1);
+        return EnemyTrait::new(EnemyCategory::M1);
     }
     #[inline]
     fn get_stage_2_enemey()->EnemyTeam2{
         return EnemyTeam2{
-            e1: Self::new(EnemyCategory::M2),
-            e2: Self::new(EnemyCategory::M3),
+            e1: EnemyTrait::new(EnemyCategory::M2),
+            e2: EnemyTrait::new(EnemyCategory::M3),
         };
     }
     #[inline]
     fn get_stage_3_enemey()->EnemyTeam2{
         return EnemyTeam2{
-            e1: Self::new(EnemyCategory::M1),
-            e2: Self::new(EnemyCategory::M1),
+            e1: EnemyTrait::new(EnemyCategory::M1),
+            e2: EnemyTrait::new(EnemyCategory::M1),
         };
     }
     #[inline]
     fn get_stage_4_enemey()->EnemyTeam2{
         return EnemyTeam2{
-            e1: Self::new(EnemyCategory::M4),
-            e2: Self::new(EnemyCategory::M4),
+            e1: EnemyTrait::new(EnemyCategory::M4),
+            e2: EnemyTrait::new(EnemyCategory::M4),
         };
     }
     #[inline]
     fn get_stage_5_enemey()->Enemy{
-        return Self::new(EnemyCategory::E1);
+        return EnemyTrait::new(EnemyCategory::E1);
     }
     #[inline]
     fn get_stage_7_enemey()->Enemy{
-        return Self::new(EnemyCategory::B1);
+        return EnemyTrait::new(EnemyCategory::B1);
     }
+
     #[inline]
     fn e_game_begin(ref self:Enemy,ref target:Adventurer){
         match self.category{ 
@@ -119,12 +117,14 @@ impl EnemyImpl of EnemyTrait {
 
             EnemyCategory::B1 => B1ActionImpl::game_begin(ref self,ref target),
 
-            _ =>  panic!("error action enemy"),
+            _ => {},
         };
     }
      
     #[inline]
     fn e_round_begin(ref self:Enemy,ref target:Adventurer){
+        self.attr.round_begin();
+
         match self.category{ 
             EnemyCategory::M1 => M1ActionImpl::round_begin(ref self,ref target),
             EnemyCategory::M2 => M2ActionImpl::round_begin(ref self,ref target),
@@ -135,12 +135,14 @@ impl EnemyImpl of EnemyTrait {
             
             EnemyCategory::B1 => B1ActionImpl::round_begin(ref self,ref target),
 
-            _ =>  panic!("error action enemy"),
+            _ => {},
         };
          
     }
     #[inline]
     fn e_round_end(ref self:Enemy,ref target:Adventurer){
+        self.attr.round_end();
+
         match self.category{ 
             EnemyCategory::M1 => M1ActionImpl::round_end(ref self,ref target),
             EnemyCategory::M2 => M2ActionImpl::round_end(ref self,ref target),
@@ -151,7 +153,7 @@ impl EnemyImpl of EnemyTrait {
 
             EnemyCategory::B1 => B1ActionImpl::round_end(ref self,ref target),
 
-            _ =>  panic!("error action enemy"),
+            _ => {},
         };
        
     }
@@ -167,7 +169,7 @@ impl EnemyImpl of EnemyTrait {
             
             EnemyCategory::B1 => B1DamageImpl::calculate_damage_dealt(ref self.attr,ref value),
 
-            _ =>  panic!("error action enemy"),
+            _ =>  {},
         };
     }
     #[inline]
@@ -182,7 +184,7 @@ impl EnemyImpl of EnemyTrait {
 
             EnemyCategory::B1 => B1DamageImpl::damage_taken(ref self.attr,ref target, value),
       
-            _ =>  panic!("error action enemy"),
+            _ => {},
         };
     }
     #[inline]
@@ -197,7 +199,7 @@ impl EnemyImpl of EnemyTrait {
 
             EnemyCategory::B1 => B1DamageImpl::calculate_direct_damage_dealt(ref self.attr,ref value),
 
-            _ =>  panic!("error action enemy"),
+            _ => {},
         };
     }
     #[inline]
@@ -212,7 +214,7 @@ impl EnemyImpl of EnemyTrait {
 
             EnemyCategory::B1 => B1DamageImpl::direct_damage_taken(ref self.attr,value),
 
-            _ =>  panic!("error action enemy"),
+            _ => {},
         };
     }
     #[inline]
@@ -227,7 +229,7 @@ impl EnemyImpl of EnemyTrait {
 
             EnemyCategory::B1 => B1ActionImpl::action(ref self,ref target,round),
 
-            _ =>  panic!("error action enemy"),
+            _ => {},
         };
     }
     #[inline]
@@ -242,7 +244,7 @@ impl EnemyImpl of EnemyTrait {
 
             EnemyCategory::B1 => B1ActionImpl::action_feedback(ref self,ref target,value),
 
-            _ =>  panic!("error action enemy"),
+            _ => {},
         };
     }
 }

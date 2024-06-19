@@ -65,7 +65,7 @@ mod camp {
                     card.delete_card(value);
                     set!(world,(card)); 
                 },
-                _ => panic!("error"),
+                _ => {},
         }
       
              

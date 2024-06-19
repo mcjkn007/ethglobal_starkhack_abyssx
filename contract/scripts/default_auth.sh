@@ -15,7 +15,7 @@ echo actions : $ACTIONS_ADDRESS
 echo "---------------------------------------------------------------------------"
 
 # List of the models.
-MODELS=("User" "Role" "Name" "Card" "Idol")
+MODELS=("User" "Role" "Name" "Card")
 
  
 # Give permission to the action system to write on all the models.

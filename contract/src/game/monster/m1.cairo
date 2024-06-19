@@ -6,14 +6,15 @@ use abyss_x::utils::math::{MathU32Trait,MathU16Trait,MathU8Trait};
 use abyss_x::game::adventurer::{Adventurer,AdventurerTrait,AdventurerCommonTrait};
 use abyss_x::game::status::{StatusTrait,CommonStatus};
 
-use abyss_x::game::attribute::{Attribute,AttributeTrait,CalAttributeTrait};
-use abyss_x::game::enemy::{Enemy,EnemyTrait,EnemyCategory};
+use abyss_x::game::attribute::{Attribute,AttributeState,AttributeTrait,CalAttributeTrait};
+use abyss_x::game::enemy::{Enemy,EnemyTrait,EnemyCategory,EnemyStatus};
 
 
-use abyss_x::game::action::{ActionTrait,DamageTrait};
+use abyss_x::game::action::{EntityTrait,ActionTrait,DamageTrait};
  
-impl M1ActionImpl of ActionTrait<Enemy,Adventurer>{
+impl M1EntityImpl of EntityTrait<Enemy>{
     //邪教徒
+    #[inline]
     fn new()->Enemy{
         return Enemy{
             category:EnemyCategory::M1,
@@ -21,15 +22,24 @@ impl M1ActionImpl of ActionTrait<Enemy,Adventurer>{
             attr:AttributeTrait::new(54),
         };
     }
+}
+
+impl M1ActionImpl of ActionTrait<Enemy,Adventurer>{
+   
     #[inline]
     fn game_begin(ref self:Enemy,ref target:Adventurer){
-    
+       
     }
+    #[inline]
+    fn game_end(ref self:Enemy,ref target:Adventurer){
+       
+    }
+
     fn round_begin(ref self:Enemy,ref target:Adventurer){
-        self.attr.round_begin();
+        
     }
     fn round_end(ref self:Enemy,ref target:Adventurer){
-        self.attr.round_end();
+ 
     }
     fn action_feedback(ref self:Enemy,ref target:Adventurer,data:u16){
 
@@ -60,6 +70,9 @@ impl M1DamageImpl of DamageTrait {
         if(thorns.is_no_zero_u16()){
             target.sub_hp_and_armor(thorns);
         }
+        if(self.hp.is_zero_u16()){
+            self.state = AttributeState::Death;
+        }
     }
 
     fn calculate_direct_damage_dealt(ref self:Attribute,ref value:u16){
@@ -67,7 +80,9 @@ impl M1DamageImpl of DamageTrait {
     }
     fn direct_damage_taken(ref self:Attribute,mut value:u16){
         self.sub_hp_and_armor(value); 
-
+        if(self.hp.is_zero_u16()){
+            self.state = AttributeState::Death;
+        }
        
     }
 }

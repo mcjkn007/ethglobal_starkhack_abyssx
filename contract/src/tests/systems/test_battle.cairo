@@ -35,10 +35,10 @@ mod tests {
         let world = spawn_test_world(models);
 
         // deploy systems contract
-        let home_system = IHomeDispatcher { contract_address:world.deploy_contract('home', home::TEST_CLASS_HASH.try_into().unwrap()) };
+        let home_system = IHomeDispatcher { contract_address:world.deploy_contract('home', home::TEST_CLASS_HASH.try_into().unwrap(),array![].span()) };
         home_system.login();
  
-        let battle_system = IBattleDispatcher { contract_address:world.deploy_contract('battle', battle::TEST_CLASS_HASH.try_into().unwrap()) };
+        let battle_system = IBattleDispatcher { contract_address:world.deploy_contract('battle', battle::TEST_CLASS_HASH.try_into().unwrap(),array![].span()) };
         println!("---------test_battle_system_begin----------");
          
         battle_system.start_game(1,1);

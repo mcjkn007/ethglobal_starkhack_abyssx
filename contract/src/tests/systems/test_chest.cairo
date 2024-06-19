@@ -36,14 +36,14 @@ mod tests {
         // deploy world with models
         let world = spawn_test_world(models);
 
-        let home_system = IHomeDispatcher { contract_address:world.deploy_contract('home', home::TEST_CLASS_HASH.try_into().unwrap()) };
+        let home_system = IHomeDispatcher { contract_address:world.deploy_contract('home', home::TEST_CLASS_HASH.try_into().unwrap(),array![].span()) };
         home_system.login();
 
-        let battle_system = IBattleDispatcher { contract_address:world.deploy_contract('battle', battle::TEST_CLASS_HASH.try_into().unwrap()) };
+        let battle_system = IBattleDispatcher { contract_address:world.deploy_contract('battle', battle::TEST_CLASS_HASH.try_into().unwrap(),array![].span()) };
         battle_system.start_game(1,1);
 
         // deploy systems contract
-        let chest_system = IChestDispatcher { contract_address:world.deploy_contract('chest', chest::TEST_CLASS_HASH.try_into().unwrap()) };
+        let chest_system = IChestDispatcher { contract_address:world.deploy_contract('chest', chest::TEST_CLASS_HASH.try_into().unwrap(),array![].span()) };
        
         let mut initial = testing::get_available_gas();
         gas::withdraw_gas().unwrap();

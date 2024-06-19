@@ -17,8 +17,7 @@ mod chest {
    use starknet::{ContractAddress,SyscallResultTrait,SyscallResult, syscalls,get_caller_address,get_contract_address,get_block_timestamp,contract_address_const};
    use abyss_x::models::{
        user::{User,UserState,UserTrait},
-       role::{Role},
-       idol::{Idol}
+       role::{Role}
    };
 
    use abyss_x::utils::{
@@ -53,10 +52,10 @@ mod chest {
             assert(user.state.into() == UserState::GAME, 'state is wrong');
 
          
-            let mut idol:Idol = get!(world,(player), (Idol));
+            let mut role:Role = get!(world,(player), (Role));
         
             //assert(role.cur_stage%2 == 1, 'stage category is wrong');
-            let mut seed:u64 = MathU64Trait::add_u64(user.seed,SeedDiff::Chest_Idols);
+            let mut seed:u64 = MathU64Trait::add_u64(role.seed,SeedDiff::Chest_Relic);
 
             let mut a = array![1_u8,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20];
             
@@ -64,8 +63,8 @@ mod chest {
             loop{
                 match arr.pop_front() {
                     Option::Some(r) => {
-                        if(Bit64Trait::is_bit(idol.idols,r) == false){
-                            idol.idols = Bit64Trait::set_bit(idol.idols,r);
+                        if(Bit64Trait::is_bit(role.relic,r) == false){
+                            role.relic = Bit64Trait::set_bit(role.relic,r);
                             break;
                         }
                     },
@@ -75,7 +74,7 @@ mod chest {
                 }
             };
 
-            set!(world,(idol)); 
+            set!(world,(role)); 
             emit!(world,ChestEvent { player:player, event:EventCode::ChestAction});
        }
      

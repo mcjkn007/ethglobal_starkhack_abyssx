@@ -12,10 +12,10 @@ use abyss_x::utils::bit::{Bit32Trait};
 
 
 use abyss_x::game::adventurer::{Adventurer,AdventurerTrait,AdventurerCommonTrait};
-use abyss_x::game::attribute::{Attribute,AttributeTrait,CalAttributeTrait};
+use abyss_x::game::attribute::{Attribute,AttributeState,AttributeTrait,CalAttributeTrait};
 use abyss_x::game::status::{CommonStatus,StatusTrait};
-use abyss_x::game::enemy::{Enemy,EnemyTeam2,EnemyTeam3,EnemyTrait};
-use abyss_x::game::action::{ActionTrait,DamageTrait};
+use abyss_x::game::enemy::{Enemy,EnemyTeam2,EnemyTrait};
+use abyss_x::game::action::{EntityTrait,ActionTrait,DamageTrait};
  
 mod C1Ability{
     const Armor_Double:u32 = 1;//双倍护甲
@@ -39,9 +39,188 @@ mod C1Status{
     const S12:felt252 = 'c1s12';//回合开始时如果你有护甲，获得1点能量
     const S13:felt252 = 'c1s13';//从撞击牌受到伤害时，获得1点能量
 }
- 
+impl C1DamageImpl of DamageTrait {
+    fn calculate_damage_dealt(ref self:Attribute,ref value:u16){
+        self.status.cal_damage_status(ref value);
+    }
+    fn damage_taken(ref self:Attribute,ref target:Attribute, mut value:u16){
+        if(Bit32Trait::is_bit_fast(self.ability,C1Ability::Shield_Wall)){
+            let mut s4 = self.status.get(C1Status::S4);
+            if(s4.is_no_zero_u16()){
+                //盾墙
+                match core::integer::u16_checked_sub(s4,value){
+                    Option::Some(r) => {
+                        self.status.insert(C1Status::S4,r);
+                    },
+                    Option::None => {
+                        self.status.insert(C1Status::S4,0);
+                        value = 0;
+                    },
+                };
+            }else{
+                value = 0;
+            }
+        }
 
-impl C1ActionImpl of ActionTrait<Adventurer,Enemy>{
+        if(self.sub_hp_and_armor(value)){
+            self.check_taunt_ability();
+        }
+
+        self.status.cal_damaged_status(ref value);
+        let thorns = self.status.get(CommonStatus::Thorns);
+        if(thorns.is_no_zero_u16()){
+            target.sub_hp_and_armor(thorns);
+        }
+    }
+
+    fn calculate_direct_damage_dealt(ref self:Attribute,ref value:u16){
+
+    }
+    fn direct_damage_taken(ref self:Attribute,mut value:u16){
+
+        if(Bit32Trait::is_bit_fast(self.ability,C1Ability::Shield_Wall)){
+            let mut s4 = self.status.get(C1Status::S4);
+            if(s4.is_no_zero_u16()){
+                //盾墙
+                match core::integer::u16_checked_sub(s4,value){
+                    Option::Some(r) => {
+                        self.status.insert(C1Status::S4,r);
+                    },
+                    Option::None => {
+                        self.status.insert(C1Status::S4,0);
+                        value = 0;
+                    },
+                };
+            }else{
+                value = 0;
+            }
+        }
+
+        if(self.sub_hp_and_armor(value)){
+            self.check_taunt_ability();
+        }
+    }
+}
+
+#[generate_trait]
+impl C1StatusImpl of C1StatusTrait {
+    #[inline]
+    fn check_s1(ref self:Adventurer,ref target:Attribute,consume:bool)->u16{
+        //流血
+        let s1 = target.status.get(C1Status::S1);
+        if(s1.is_no_zero_u16()){
+            target.sub_hp_and_armor(s1); 
+            self.check_s8();
+            if(consume){
+                target.status.insert(C1Status::S1,0);
+                return s1;
+            } 
+        }
+        return 0;
+    }
+    #[inline]
+    fn check_s1_double(ref self:Adventurer,ref target:Attribute,consume:bool)->u16{
+        //流血
+        let s1 = target.status.get(C1Status::S1)*2;
+        if(s1.is_no_zero_u16()){
+            target.sub_hp_and_armor(s1); 
+            self.check_s8();
+            if(consume){
+                target.status.insert(C1Status::S1,0);
+                return s1;
+            } 
+        }
+        return 0;
+    }
+    #[inline]
+    fn add_bleed(ref self:Attribute,value:u16){
+        let mut s5:u16 = self.status.get(C1Status::S5);
+        s5.add_eq_u16(value); 
+        self.status.insert(C1Status::S1,MathU16Trait::add_u16(self.status.get(C1Status::S1),s5)); 
+    }
+    #[inline]
+    fn check_s7(ref self:Attribute,ref target:Attribute){
+        //你每打出一张攻击牌，给予目标敌人 1 层流血。
+        let s7:u16 = self.status.get(C1Status::S7);
+        if(s7.is_no_zero_u16()){
+            target.add_bleed(s7);
+        } 
+    }
+    #[inline]
+    fn check_s8(ref self:Adventurer){
+        //嗜血时，抽1张牌。
+        let s8:u16 = self.attr.status.get(C1Status::S8);
+        if(s8.is_no_zero_u16()){
+            self.draw_cards_from_left(s8);
+        }
+    }
+    #[inline]
+    fn add_s10_damage(ref self:Attribute,ref value:u16){
+        let s10:u16 = self.status.get(C1Status::S10);
+        if(s10.is_no_zero_u16()){
+            value.add_eq_u16(s10*3);
+        }
+    }
+    #[inline]
+    fn damage_by_card(ref self:Adventurer,mut value:u16){
+        let s2 = self.attr.status.get(C1Status::S2);
+        if(s2.is_no_zero_u16()){
+            self.attr.status.insert(C1Status::S2,MathU16Trait::sub_u16(self.attr.status.get(C1Status::S2),1)); 
+        }else{
+            let s10 = self.attr.status.get(C1Status::S10);
+            //add
+            if(s10.is_no_zero_u16()){
+                value.add_eq_u16(s10);
+            }
+            let s6 = self.attr.status.get(C1Status::S6);
+            //sub
+            if(s6.is_no_zero_u16()){
+                value.sub_eq_u16(s6);
+            }
+            //受到伤害
+            let s13 = self.attr.status.get(C1Status::S13);
+            if(s13.is_no_zero_u16() && value.is_no_zero_u16()){
+                self.attr.energy.add_eq_u16(s13);
+                 
+            }
+            if(self.attr.sub_hp_and_armor(value)){
+                self.attr.check_taunt_ability();
+            }
+        }
+    }
+    #[inline]
+    fn c1_add_armor(ref self:Attribute,value:u16){
+        let mut v = value;
+        if(Bit32Trait::is_bit_fast(self.ability,C1Ability::Armor_Double)){
+            v.add_eq_u16(value);
+        }
+        self.status.cal_armor_status(ref v);
+        self.add_armor(v);
+    }
+    #[inline]
+    fn check_taunt_ability(ref self:Attribute){
+        if(Bit32Trait::is_bit_fast(self.ability,C1Ability::Taunt)){
+            Bit32Trait::clean_bit_fast(self.ability,C1Ability::Taunt);
+        } 
+    }
+    #[inline]
+    fn check_burn_bridges_ability(ref self:Adventurer,card_result:CardResult)->CardResult{
+        if(Bit32Trait::is_bit_fast(self.attr.ability,C1Ability::Burn_Bridges)){
+            return CardResult::Consume;
+        } 
+        return card_result;
+    }
+    #[inline]
+    fn check_shield_wall_ability(ref self:Attribute){
+        if(Bit32Trait::is_bit_fast(self.ability,C1Ability::Shield_Wall)){
+            self.remove_ability(C1Ability::Shield_Wall);
+            self.status.insert(C1Status::S4,0);
+        } 
+    }
+    
+}
+
+impl C1EntityImpl of EntityTrait<Adventurer> {
     #[inline]
     fn new()->Adventurer{
         return Adventurer{
@@ -54,18 +233,20 @@ impl C1ActionImpl of ActionTrait<Adventurer,Enemy>{
             right_cards:ArrayTrait::<u8>::new()
         };
     }
-   
+}
+ 
+impl C1Action1Impl of ActionTrait<Adventurer,Enemy>{
     #[inline]
     fn game_begin(ref self:Adventurer,ref target:Enemy){
-        self.draw_cards_from_left(self.attr.draw_cards);
+       
+    }
+    #[inline]
+    fn game_end(ref self:Adventurer,ref target:Enemy){
+       
     }
 
     fn round_begin(ref self:Adventurer,ref target:Enemy)
     {
-        
-        self.draw_cards_from_left(self.attr.draw_cards);
-
-        self.attr.round_begin();
         if(Bit32Trait::is_bit_fast(self.attr.ability,C1Ability::Taunt)){
             
         }else{
@@ -82,8 +263,8 @@ impl C1ActionImpl of ActionTrait<Adventurer,Enemy>{
 
         let s9 = self.attr.status.get(C1Status::S9);//回合开始时，给予所有敌人1层虚弱和易伤
         if(s9.is_no_zero_u16()){
-            target.attr.status.insert(CommonStatus::Weak,MathU16Trait::add_u16(target.attr.status.get(CommonStatus::Weak),1));
-            target.attr.status.insert(CommonStatus::Fragile,MathU16Trait::add_u16(target.attr.status.get(CommonStatus::Fragile),1));
+            target.attr.add_weak(1);
+            target.attr.add_fragile(1);
         }
         if(self.attr.armor.is_no_zero_u16()){
             let s11 = self.attr.status.get(C1Status::S11);//回合开始时如果你有护甲，对所有敌人造成6点伤害
@@ -101,8 +282,7 @@ impl C1ActionImpl of ActionTrait<Adventurer,Enemy>{
     }
 
     fn round_end(ref self:Adventurer,ref target:Enemy){
-        self.round_end_disard_cards();
-        self.attr.round_end();
+        
     }
 
     fn action_feedback(ref self:Adventurer,ref target:Enemy,data:u16){
@@ -184,66 +364,214 @@ impl C1ActionImpl of ActionTrait<Adventurer,Enemy>{
     }
 }
 
-impl C1DamageImpl of DamageTrait {
-    fn calculate_damage_dealt(ref self:Attribute,ref value:u16){
-        self.status.cal_damage_status(ref value);
+impl C1Action2Impl of ActionTrait<Adventurer,EnemyTeam2>{
+    #[inline]
+    fn game_begin(ref self:Adventurer,ref target:EnemyTeam2){
+       
     }
-    fn damage_taken(ref self:Attribute,ref target:Attribute, mut value:u16){
-        if(Bit32Trait::is_bit_fast(self.ability,C1Ability::Shield_Wall)){
-            let mut s4 = self.status.get(C1Status::S4);
-            if(s4.is_no_zero_u16()){
-                //盾墙
-                match core::integer::u16_checked_sub(s4,value){
-                    Option::Some(r) => {
-                        self.status.insert(C1Status::S4,r);
-                    },
-                    Option::None => {
-                        self.status.insert(C1Status::S4,0);
-                        value = 0;
-                    },
-                };
-            }else{
-                value = 0;
+    #[inline]
+    fn game_end(ref self:Adventurer,ref target:EnemyTeam2){
+       
+    }
+
+    fn round_begin(ref self:Adventurer,ref target:EnemyTeam2)
+    {
+        if(Bit32Trait::is_bit_fast(self.attr.ability,C1Ability::Taunt)){
+            
+        }else{
+            self.attr.armor = 0_u16;
+        }
+        
+        let s3:u16 = self.attr.status.get(C1Status::S3);//回合开始获得护甲
+        if(s3.is_no_zero_u16()){
+            self.attr.c1_add_armor(s3);
+            self.attr.status.insert(C1Status::S3,0);
+        }
+
+        self.attr.check_shield_wall_ability();//直到下回合开始，你最多受到10点伤害
+
+        let s9 = self.attr.status.get(C1Status::S9);//回合开始时，给予所有敌人1层虚弱和易伤
+        if(s9.is_no_zero_u16()){
+            if(target.e1.attr.state == AttributeState::Live){
+                target.e1.attr.add_weak(1);
+                target.e1.attr.add_fragile(1);
+            }
+            if(target.e2.attr.state == AttributeState::Live){
+                target.e2.attr.add_weak(1);
+                target.e2.attr.add_fragile(1);
             }
         }
-
-        if(self.sub_hp_and_armor(value)){
-            self.check_taunt_ability();
-        }
-
-        self.status.cal_damaged_status(ref value);
-        let thorns = self.status.get(CommonStatus::Thorns);
-        if(thorns.is_no_zero_u16()){
-            target.sub_hp_and_armor(thorns);
-        }
-    }
-
-    fn calculate_direct_damage_dealt(ref self:Attribute,ref value:u16){
-
-    }
-    fn direct_damage_taken(ref self:Attribute,mut value:u16){
-
-        if(Bit32Trait::is_bit_fast(self.ability,C1Ability::Shield_Wall)){
-            let mut s4 = self.status.get(C1Status::S4);
-            if(s4.is_no_zero_u16()){
-                //盾墙
-                match core::integer::u16_checked_sub(s4,value){
-                    Option::Some(r) => {
-                        self.status.insert(C1Status::S4,r);
-                    },
-                    Option::None => {
-                        self.status.insert(C1Status::S4,0);
-                        value = 0;
-                    },
-                };
-            }else{
-                value = 0;
+        if(self.attr.armor.is_no_zero_u16()){
+            let s11 = self.attr.status.get(C1Status::S11);//回合开始时如果你有护甲，对所有敌人造成6点伤害
+            if(s11.is_no_zero_u16())
+            {
+                if(target.e1.attr.state == AttributeState::Live){
+                    target.e1.e_direct_damage_taken(s11);
+                }
+                if(target.e2.attr.state == AttributeState::Live){
+                    target.e2.e_direct_damage_taken(s11);
+                }
+            }
+            let s12 = self.attr.status.get(C1Status::S12);//回合开始时如果你有护甲，获得1点能量
+            if(s12.is_no_zero_u16())
+            {
+               self.attr.energy.add_eq_u16(s12);
             }
         }
+         
+    }
 
-        if(self.sub_hp_and_armor(value)){
-            self.check_taunt_ability();
+    fn round_end(ref self:Adventurer,ref target:EnemyTeam2){
+        
+    }
+
+    fn action_feedback(ref self:Adventurer,ref target:EnemyTeam2,data:u16){
+
+    }
+    fn action(ref self:Adventurer,ref target:EnemyTeam2,data:u16){
+        let card_index = (data/256_u16).try_into().unwrap();
+       // println!("card_index   {}",card_index);
+        assert(self.mid_cards.check_value(card_index), 'card void');
+
+        let card_id = *self.init_cards.at(card_index.into());
+
+        let mut result = CardResult::Null;
+
+        if(card_id == 14){
+            result = self.c14_2(ref target)
+        }else if(card_id == 28){
+            result = self.c28_2(ref target)
+        }else if(card_id == 38){
+            result = self.c38_2(ref target)
+        }else{
+            if(data%256 == 0){
+                result = match card_id {
+                    0 => panic!("error"),
+                    1 => self.c1(ref target.e1),
+                    2 => self.c2(),
+                    3 => self.c3(ref target.e1),
+                    4 => self.c4(ref target.e1),
+                    5 => self.c5(),
+                    6 => self.c6(ref target.e1),
+                    7 => self.c7(),
+                    8 => self.c8(ref target.e1),
+                    9 => self.c9(),
+                    10 => self.c10(),
+                    11 => self.c11(ref target.e1),
+                    12 => self.c12(ref target.e1),
+                    13 => self.c13(ref target.e1),
+                    14 => panic!("error"),
+                    15 => self.c15(ref target.e1),
+                    16 => self.c16(ref target.e1),
+                    17 => self.c17(ref target.e1),
+                    18 => self.c18(ref target.e1),
+                    19 => self.c19(ref target.e1),
+                    20 => self.c20(ref target.e1),
+                    21 => self.c21(),
+                    22 => self.c22(),
+                    23 => self.c23(),
+                    24 => self.c24(ref target.e1),
+                    25 => self.c25(ref target.e1),
+                    26 => self.c26(ref target.e1),
+                    27 => self.c27(ref target.e1),
+                    28 => panic!("error"),
+                    29 => self.c29(ref target.e1),
+                    30 => self.c30(ref target.e1),
+                    31 => self.c31(ref target.e1),
+                    32 => self.c32(ref target.e1),
+                    33 => self.c33(ref target.e1),
+                    34 => self.c34(ref target.e1),
+                    35 => self.c35(),
+                    36 => self.c36(),
+                    37 => self.c37(),
+                    38 => panic!("error"),
+                    39 => self.c39(ref target.e1),
+                    40 => self.c40(ref target.e1),
+                    41 => self.c41(ref target.e1),
+                    42 => self.c42(),
+                    43 => self.c43(),
+                    44 => self.c44(),
+                    45 => self.c45(),
+                    46 => self.c46(),
+                    47 => self.c47(),
+                    48 => self.c48(),
+                    49 => self.c49(),
+                    50 => self.c50(),
+                    51 => self.c51(),
+                    _=> panic!("error"),
+                };
+                target.e1.e_action_feedback(ref self,C1CardImpl::get_card_type(card_id));
+            }
+            else {
+                result = match card_id {
+                    0 => panic!("error"),
+                    1 => self.c1(ref target.e2),
+                    2 => self.c2(),
+                    3 => self.c3(ref target.e2),
+                    4 => self.c4(ref target.e2),
+                    5 => self.c5(),
+                    6 => self.c6(ref target.e2),
+                    7 => self.c7(),
+                    8 => self.c8(ref target.e2),
+                    9 => self.c9(),
+                    10 => self.c10(),
+                    11 => self.c11(ref target.e2),
+                    12 => self.c12(ref target.e2),
+                    13 => self.c13(ref target.e2),
+                    14 => panic!("error"),
+                    15 => self.c15(ref target.e2),
+                    16 => self.c16(ref target.e2),
+                    17 => self.c17(ref target.e2),
+                    18 => self.c18(ref target.e2),
+                    19 => self.c19(ref target.e2),
+                    20 => self.c20(ref target.e2),
+                    21 => self.c21(),
+                    22 => self.c22(),
+                    23 => self.c23(),
+                    24 => self.c24(ref target.e2),
+                    25 => self.c25(ref target.e2),
+                    26 => self.c26(ref target.e2),
+                    27 => self.c27(ref target.e2),
+                    28 => panic!("error"),
+                    29 => self.c29(ref target.e2),
+                    30 => self.c30(ref target.e2),
+                    31 => self.c31(ref target.e2),
+                    32 => self.c32(ref target.e2),
+                    33 => self.c33(ref target.e2),
+                    34 => self.c34(ref target.e2),
+                    35 => self.c35(),
+                    36 => self.c36(),
+                    37 => self.c37(),
+                    38 => panic!("error"),
+                    39 => self.c39(ref target.e2),
+                    40 => self.c40(ref target.e2),
+                    41 => self.c41(ref target.e2),
+                    42 => self.c42(),
+                    43 => self.c43(),
+                    44 => self.c44(),
+                    45 => self.c45(),
+                    46 => self.c46(),
+                    47 => self.c47(),
+                    48 => self.c48(),
+                    49 => self.c49(),
+                    50 => self.c50(),
+                    51 => self.c51(),
+                    _=> panic!("error"),
+                };
+                target.e1.e_action_feedback(ref self,C1CardImpl::get_card_type(card_id));
+            } 
         }
+        
+         
+
+        match result {
+            CardResult::Null =>{},
+            CardResult::Consume => self.consume_card(card_index),
+            CardResult::Discard => self.discard_card(card_index),
+        }
+        
+        
+        self.attr.energy.self_sub_u16_e(C1CardImpl::get_card_energy(card_id)); 
     }
 }
 
@@ -252,7 +580,7 @@ impl C1CardImpl of C1CardTrait{
     #[inline]
     fn get_card_energy(card_id: u8) -> u16{
         return match card_id {
-            0 => panic!("error energy"),
+            0 => 1,
             1 => 1,
             2 => 1,
             3 => 1,
@@ -304,12 +632,12 @@ impl C1CardImpl of C1CardTrait{
             49 => 1,
             50 => 1,
             51 => 1,
-            _ => panic!("error energy"),
+            _ => 1,
         };
     }
     fn get_card_type(card_id: u8) -> u16{
         return match card_id {
-            0 => panic!("error energy"),
+            0 => 1,
             1 => 1,
             2 => 2,
             3 => 1,
@@ -361,7 +689,7 @@ impl C1CardImpl of C1CardTrait{
             49 => 3,
             50 => 3,
             51 => 3,
-            _ => panic!("error energy"),
+            _ => 1,
         };
     }
     fn c1(ref self:Adventurer,ref target:Enemy)->CardResult{
@@ -413,7 +741,7 @@ impl C1CardImpl of C1CardTrait{
         //抽一张牌，获得卡牌能耗的能量
         self.draw_cards_from_left(1);
       
-        self.attr.energy.add_eq_u16(Self::get_card_energy(self.mid_cards.at(self.mid_cards.size()-1)));
+        self.attr.energy.add_eq_u16(C1CardTrait::get_card_energy(self.mid_cards.at(self.mid_cards.size()-1)));
 
         return CardResult::Discard;
     }
@@ -431,7 +759,7 @@ impl C1CardImpl of C1CardTrait{
     }
     fn c8(ref self:Adventurer,ref target:Enemy)->CardResult{
         //给予2层易伤
-        target.attr.status.insert(CommonStatus::Fragile,MathU16Trait::add_u16(target.attr.status.get(CommonStatus::Fragile),2));
+        target.attr.add_fragile(2);
 
         return CardResult::Discard;
     }
@@ -519,6 +847,25 @@ impl C1CardImpl of C1CardTrait{
 
         return self.check_burn_bridges_ability(CardResult::Discard);
     }
+    fn c14_2(ref self:Adventurer,ref target:EnemyTeam2)->CardResult{
+        //对所有敌人造成3点伤害，免疫下次撞击牌伤害
+        let mut value:u16 = 3;
+        self.c_calculate_damage_dealt(ref value);
+        if(target.e1.attr.state == AttributeState::Live){
+            target.e1.e_damage_taken(ref self.attr,value);
+            self.check_s1(ref target.e1.attr,true);
+            self.attr.check_s7(ref target.e1.attr);
+        }
+        if(target.e2.attr.state == AttributeState::Live){
+            target.e2.e_damage_taken(ref self.attr,value);
+            self.check_s1(ref target.e2.attr,true);
+            self.attr.check_s7(ref target.e2.attr);
+        }
+
+        self.attr.status.insert(C1Status::S2,MathU16Trait::add_u16(self.attr.status.get(C1Status::S2),1));
+
+        return self.check_burn_bridges_ability(CardResult::Discard);
+    }
     fn c15(ref self:Adventurer,ref target:Enemy)->CardResult{
         //造成15点伤害，免疫下1次撞击牌伤害
         let mut value:u16 = 15;
@@ -560,7 +907,7 @@ impl C1CardImpl of C1CardTrait{
 
         match self.check_s1(ref target.attr,true) {
             0=> {},
-            _=> target.attr.status.insert(CommonStatus::Fragile,MathU16Trait::add_u16(target.attr.status.get(CommonStatus::Fragile),1)),
+            _=> target.attr.add_fragile(1),
         }
         self.attr.check_s7(ref target.attr);
 
@@ -690,6 +1037,26 @@ impl C1CardImpl of C1CardTrait{
  
         return self.check_burn_bridges_ability(CardResult::Discard);
     }
+    fn c28_2(ref self:Adventurer,ref target:EnemyTeam2)->CardResult{
+        //造成4点伤害，给予所有敌人8层流血
+        let mut value:u16 = 4_u16;
+        self.c_calculate_damage_dealt(ref value);
+        if(target.e1.attr.state == AttributeState::Live){
+            target.e1.e_damage_taken(ref self.attr,value);
+            self.check_s1(ref target.e1.attr,true);
+            self.attr.check_s7(ref target.e1.attr);
+            target.e1.attr.add_bleed(8);
+        }
+
+        if(target.e2.attr.state == AttributeState::Live){
+            target.e2.e_damage_taken(ref self.attr,value);
+            self.check_s1(ref target.e2.attr,true);
+            self.attr.check_s7(ref target.e2.attr);
+            target.e2.attr.add_bleed(8);
+        }
+
+        return self.check_burn_bridges_ability(CardResult::Discard);
+    }
     fn c29(ref self:Adventurer,ref target:Enemy)->CardResult{
         //造成 9 点伤害，不移除流血。
         let mut value:u16 = 9;
@@ -739,7 +1106,7 @@ impl C1CardImpl of C1CardTrait{
     }
     fn c34(ref self:Adventurer,ref target:Enemy)->CardResult{
         //给予1层易伤，4层流血
-        target.attr.status.insert(CommonStatus::Fragile,MathU16Trait::add_u16(target.attr.status.get(CommonStatus::Fragile),1));
+        target.attr.add_fragile(1);
         target.attr.add_bleed(4);
 
         return CardResult::Discard;
@@ -771,6 +1138,27 @@ impl C1CardImpl of C1CardTrait{
         self.check_s1(ref target.attr,true);
         self.attr.check_s7(ref target.attr);
         return self.check_burn_bridges_ability(CardResult::Discard);
+    }
+    fn c38_2(ref self:Adventurer,ref target:EnemyTeam2)->CardResult{
+        let mut value:u16 = self.attr.armor;
+        self.c_calculate_damage_dealt(ref value);
+        if(target.e1.attr.state == AttributeState::Live){
+            target.e1.e_damage_taken(ref self.attr,value);
+            self.check_s1(ref target.e1.attr,true);
+            self.attr.check_s7(ref target.e1.attr);
+        }
+        if(target.e2.attr.state == AttributeState::Live){
+            target.e2.e_damage_taken(ref self.attr,value);
+            self.check_s1(ref target.e2.attr,true);
+            self.attr.check_s7(ref target.e2.attr);
+        }
+
+        self.attr.armor = 0_u16;
+
+        
+        return self.check_burn_bridges_ability(CardResult::Discard);
+
+        
     }
     fn c39(ref self:Adventurer,ref target:Enemy)->CardResult{
         //对一个目标造成6点伤害。如果你有护甲，造成额外6点伤害。
@@ -808,7 +1196,7 @@ impl C1CardImpl of C1CardTrait{
         target.e_damage_taken(ref self.attr,value);
 
         if(self.attr.armor.is_no_zero_u16()){
-            target.attr.status.insert(CommonStatus::Weak,MathU16Trait::add_u16(target.attr.status.get(CommonStatus::Weak),1));
+            target.attr.add_weak(1);
         }
 
         self.check_s1(ref target.attr,true);
@@ -837,8 +1225,8 @@ impl C1CardImpl of C1CardTrait{
     fn c44(ref self:Adventurer)->CardResult{
         //抽2张牌，获得所抽卡费用的护甲
         self.draw_cards_from_left(2);
-        let mut armor:u16 = Self::get_card_energy(self.mid_cards.at(self.mid_cards.size()-1));
-        armor.add_eq_u16(Self::get_card_energy(self.mid_cards.at(self.mid_cards.size()-2)));
+        let mut armor:u16 = C1CardTrait::get_card_energy(self.mid_cards.at(self.mid_cards.size()-1));
+        armor.add_eq_u16(C1CardTrait::get_card_energy(self.mid_cards.at(self.mid_cards.size()-2)));
        
         self.attr.c1_add_armor(armor);
 
@@ -901,122 +1289,6 @@ impl C1CardImpl of C1CardTrait{
     }
 }
 
-#[generate_trait]
-impl C1StatusImpl of C1StatusTrait {
-    #[inline]
-    fn check_s1(ref self:Adventurer,ref target:Attribute,consume:bool)->u16{
-        //流血
-        let s1 = target.status.get(C1Status::S1);
-        if(s1.is_no_zero_u16()){
-            target.sub_hp_and_armor(s1); 
-            self.check_s8();
-            if(consume){
-                target.status.insert(C1Status::S1,0);
-                return s1;
-            } 
-        }
-        return 0;
-    }
-    #[inline]
-    fn check_s1_double(ref self:Adventurer,ref target:Attribute,consume:bool)->u16{
-        //流血
-        let s1 = target.status.get(C1Status::S1)*2;
-        if(s1.is_no_zero_u16()){
-            target.sub_hp_and_armor(s1); 
-            self.check_s8();
-            if(consume){
-                target.status.insert(C1Status::S1,0);
-                return s1;
-            } 
-        }
-        return 0;
-    }
-    #[inline]
-    fn add_bleed(ref self:Attribute,value:u16){
-        let mut s5:u16 = self.status.get(C1Status::S5);
-        s5.add_eq_u16(value); 
-        self.status.insert(C1Status::S1,MathU16Trait::add_u16(self.status.get(C1Status::S1),s5)); 
-    }
-    #[inline]
-    fn check_s7(ref self:Attribute,ref target:Attribute){
-        //你每打出一张攻击牌，给予目标敌人 1 层流血。
-        let s7:u16 = self.status.get(C1Status::S7);
-        if(s7.is_no_zero_u16()){
-            target.add_bleed(s7);
-        } 
-    }
-    #[inline]
-    fn check_s8(ref self:Adventurer){
-        //嗜血时，抽1张牌。
-        let s8:u16 = self.attr.status.get(C1Status::S8);
-        if(s8.is_no_zero_u16()){
-            self.draw_cards_from_left(s8);
-        }
-    }
-    #[inline]
-    fn add_s10_damage(ref self:Attribute,ref value:u16){
-        let s10:u16 = self.status.get(C1Status::S10);
-        if(s10.is_no_zero_u16()){
-            value.add_eq_u16(s10*3);
-        }
-    }
-    #[inline]
-    fn damage_by_card(ref self:Adventurer,mut value:u16){
-        let s2 = self.attr.status.get(C1Status::S2);
-        if(s2.is_no_zero_u16()){
-            self.attr.status.insert(C1Status::S2,MathU16Trait::sub_u16(self.attr.status.get(C1Status::S2),1)); 
-        }else{
-            let s10 = self.attr.status.get(C1Status::S10);
-            //add
-            if(s10.is_no_zero_u16()){
-                value.add_eq_u16(s10);
-            }
-            let s6 = self.attr.status.get(C1Status::S6);
-            //sub
-            if(s6.is_no_zero_u16()){
-                value.sub_eq_u16(s6);
-            }
-            //受到伤害
-            let s13 = self.attr.status.get(C1Status::S13);
-            if(s13.is_no_zero_u16() && value.is_no_zero_u16()){
-                self.attr.energy.add_eq_u16(s13);
-                 
-            }
-            if(self.attr.sub_hp_and_armor(value)){
-                self.attr.check_taunt_ability();
-            }
-        }
-    }
-    #[inline]
-    fn c1_add_armor(ref self:Attribute,value:u16){
-        let mut v = value;
-        if(Bit32Trait::is_bit_fast(self.ability,C1Ability::Armor_Double)){
-            v.add_eq_u16(value);
-        }
-        self.status.cal_armor_status(ref v);
-        self.add_armor(v);
-    }
-    #[inline]
-    fn check_taunt_ability(ref self:Attribute){
-        if(Bit32Trait::is_bit_fast(self.ability,C1Ability::Taunt)){
-            Bit32Trait::clean_bit_fast(self.ability,C1Ability::Taunt);
-        } 
-    }
-    #[inline]
-    fn check_burn_bridges_ability(ref self:Adventurer,card_result:CardResult)->CardResult{
-        if(Bit32Trait::is_bit_fast(self.attr.ability,C1Ability::Burn_Bridges)){
-            return CardResult::Consume;
-        } 
-        return card_result;
-    }
-    #[inline]
-    fn check_shield_wall_ability(ref self:Attribute){
-        if(Bit32Trait::is_bit_fast(self.ability,C1Ability::Shield_Wall)){
-            self.remove_ability(C1Ability::Shield_Wall);
-            self.status.insert(C1Status::S4,0);
-        } 
-    }
-    
-}
+ 
 
  

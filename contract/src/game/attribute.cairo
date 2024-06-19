@@ -1,15 +1,24 @@
+use core::traits::AddEq;
 use abyss_x::utils::math::MathU16Trait;
 use abyss_x::utils::pow::{Pow128Trait};
-use abyss_x::utils::bit::{Bit128Trait};
+use abyss_x::utils::bit::{Bit128Trait,Bit64Trait};
 use abyss_x::utils::constant::{MIN_U8,MAX_U8,MIN_U16,MAX_U16,POW_2_U128,HAND_CARD_NUMBER_INIT};
 use abyss_x::utils::math::{MathU8Trait};
 
-use abyss_x::game::status::{StatusTrait};
-use abyss_x::game::charactor::c1::{C1StatusTrait};
+use abyss_x::game::status::{CommonStatus,StatusTrait};
+use abyss_x::game::relic::{CommonRelic};
 
 
-#[derive(Destruct)]
+mod AttributeState{
+    const Null:u8 = 0;
+    const Live:u8 = 1;
+    const Death:u8 = 2;
+}
+
 struct Attribute {
+
+    state:u8,
+
     hp:u16,
     max_hp:u16,
 
@@ -21,11 +30,20 @@ struct Attribute {
     armor:u16,
 
     awake:u16,
+    blessing:u32,
     ability:u32,
 
-    idols:u64,
+    relic:u64,
+
+  
 
     status:Felt252Dict<u16>,
+}
+
+impl DestructAttribute of Destruct<Attribute> {
+    fn destruct(self: Attribute) nopanic {
+        self.status.squash();
+    }
 }
 
  
@@ -34,17 +52,21 @@ impl AttributeImpl of AttributeTrait {
     #[inline]
     fn new(hp:u16)->Attribute{
         return Attribute{
+            state:AttributeState::Live,
             hp:hp,
             max_hp:hp,
         
             energy:3,
             max_energy:3,
+
             draw_cards:5,
         
             armor:0,
+
             awake:0,
-            
-            idols:0,
+            blessing:0,
+            relic:0,
+
             ability:0,
 
             status:Default::default(),
@@ -135,6 +157,40 @@ impl AttributeImpl of AttributeTrait {
             }
         }
     }
+    #[inline]
+    fn add_energy(ref self:Attribute,value:u16){
+        match core::integer::u16_checked_add(self.energy,value){
+            Option::Some(r) =>{
+                self.energy = r;
+            },
+            Option::None =>{
+                self.energy = MAX_U16;
+            }
+        }
+    }
+    #[inline]
+    fn sub_energy(ref self:Attribute,value:u16){
+        match core::integer::u16_checked_sub(self.energy,value){
+            Option::Some(r) =>{
+                self.energy = r;
+            },
+            Option::None =>{
+                self.energy = MIN_U16;
+            }
+        }
+    }
+    #[inline]
+    fn add_max_energy(ref self:Attribute,value:u16){
+        match core::integer::u16_checked_add(self.max_energy,value){
+            Option::Some(r) =>{
+                self.max_energy = r;
+            },
+            Option::None =>{
+                self.max_energy = MAX_U16;
+            }
+        }
+    }
+ 
     
     #[inline]
     fn add_ability(ref self:Attribute,ability:u32){
@@ -145,14 +201,48 @@ impl AttributeImpl of AttributeTrait {
         self.ability  =  self.ability & ~ability;
     }
     #[inline]
+    fn game_begin(ref self:Attribute){
+     
+        //  
+
+        //在每场战斗开始时，额外抽 2 张牌。
+        match Bit64Trait::is_bit_fast(self.relic,CommonRelic::R1){
+            true => self.draw_cards.add_eq(2),
+            false => {}
+        }
+        self.status.game_begin();
+    }
+    #[inline]
+    fn game_end(ref self:Attribute){
+        //在战斗结束时，回复6点生命。
+        match Bit64Trait::is_bit_fast(self.relic,CommonRelic::R0){
+            true=> self.add_hp(6),
+            false => {}
+        }
+        self.status.game_end();
+    }
+    #[inline]
     fn round_begin(ref self:Attribute){
-        self.status.round_begin();
-        self.energy = self.max_energy;
+        //多余的能量可以留到下一回合。
+        match Bit64Trait::is_bit_fast(self.relic,CommonRelic::R5){
+            true=>  self.energy.add_eq_u16(self.max_energy),
+            false =>  self.energy = self.max_energy
+        }
+
         self.draw_cards = HAND_CARD_NUMBER_INIT;
+        self.status.round_begin();
     }
     #[inline]
     fn round_end(ref self:Attribute){
-      //  self.draw_cards.sub_eq_u16(self.status.fewer_cards.into());
+      // 如果你在回合结束时没有任何格挡，获得6点格挡。
+      match Bit64Trait::is_bit_fast(self.relic,CommonRelic::R3){
+        true=> {
+            if(self.armor.is_zero_u16()){
+                self.add_armor(6);
+            }
+        },
+        false => {}
+    }
         self.status.round_end();
     }
 }

@@ -6,14 +6,15 @@ use abyss_x::utils::math::{MathU32Trait,MathU16Trait,MathU8Trait};
 use abyss_x::game::adventurer::{Adventurer,AdventurerTrait,AdventurerCommonTrait};
 use abyss_x::game::status::{CommonStatus,StatusTrait};
 
-use abyss_x::game::attribute::{Attribute,AttributeTrait,CalAttributeTrait};
+use abyss_x::game::attribute::{Attribute,AttributeState,AttributeTrait,CalAttributeTrait};
 use abyss_x::game::enemy::{Enemy,EnemyTrait,EnemyCategory,EnemyStatus,EnemyStatusTrait};
 
 
-use abyss_x::game::action::{ActionTrait,DamageTrait};
+use abyss_x::game::action::{EntityTrait,ActionTrait,DamageTrait};
  
-impl M3ActionImpl of ActionTrait<Enemy,Adventurer>{
+impl M3EntityImpl of EntityTrait<Enemy>{
     //绿虱虫
+    #[inline]
     fn new()->Enemy{
         return Enemy{
             category:EnemyCategory::M3,
@@ -21,16 +22,23 @@ impl M3ActionImpl of ActionTrait<Enemy,Adventurer>{
             attr:AttributeTrait::new(11),
         };
     }
+}
+
+impl M3ActionImpl of ActionTrait<Enemy,Adventurer>{
+ 
     #[inline]
     fn game_begin(ref self:Enemy,ref target:Adventurer){
         self.attr.status.insert(EnemyStatus::Attacked_Armor,5);
     }
+    fn game_end(ref self:Enemy,ref target:Adventurer){
+
+    }
     fn round_begin(ref self:Enemy,ref target:Adventurer){
-        self.attr.round_begin();
+        
         
     }
     fn round_end(ref self:Enemy,ref target:Adventurer){
-        self.attr.round_end();
+     
     }
     fn action_feedback(ref self:Enemy,ref target:Adventurer,data:u16){
 
@@ -39,7 +47,7 @@ impl M3ActionImpl of ActionTrait<Enemy,Adventurer>{
         self.round.add_eq_u16(data);
         let r = self.round%4;
         if(r == 0 || r == 3){
-            target.attr.status.insert(CommonStatus::Weak,MathU16Trait::add_u16(target.attr.status.get(CommonStatus::Weak),2));
+            target.attr.add_weak(2);
         }else{
             let mut value = 6;
             self.e_calculate_damage_dealt(ref value);
@@ -64,6 +72,9 @@ impl M3DamageImpl of DamageTrait {
         if(thorns.is_no_zero_u16()){
             target.sub_hp_and_armor(thorns);
         }
+        if(self.hp.is_zero_u16()){
+            self.state = AttributeState::Death;
+        }
     }
 
     fn calculate_direct_damage_dealt(ref self:Attribute,ref value:u16){
@@ -71,7 +82,9 @@ impl M3DamageImpl of DamageTrait {
     }
     fn  direct_damage_taken(ref self:Attribute, mut value:u16){
         self.sub_hp_and_armor(value); 
-       
+        if(self.hp.is_zero_u16()){
+            self.state = AttributeState::Death;
+        }
     }
     
 }

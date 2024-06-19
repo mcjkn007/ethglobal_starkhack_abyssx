@@ -4,7 +4,7 @@ use starknet::ContractAddress;
 use dojo::world::{IWorldDispatcher, IWorldDispatcherTrait};
 use dojo::model::Model;
 
-#[derive(Copy, Drop,Serde)]
+#[derive(Copy, Drop,Serde,IntrospectPacked)]
 #[dojo::model]
 struct User {
     #[key]
@@ -12,10 +12,7 @@ struct User {
 
     state:u8,
     game_mode:u8,
-    cur_stage:u8,
     role_category:u8,
-
-    seed:u64,
 }
  
 
@@ -28,12 +25,12 @@ mod UserState{
  
 #[generate_trait]
 impl UserImpl of UserTrait {
+    #[inline]
     fn reset(ref self:User){
+
         self.state = UserState::FREE;
         self.game_mode = 0;
-        self.cur_stage = 0;
         self.role_category = 0;
-        self.seed = 0;
     }
     fn read_user(world: IWorldDispatcher,key:felt252){
         

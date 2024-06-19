@@ -1,5 +1,5 @@
 
-use abyss_x::utils::constant::{MIN_U8,MAX_U8,MIN_U16,MAX_U16,MIN_U32,MAX_U32,MIN_U64,MAX_U64};
+use abyss_x::utils::constant::{MIN_U8,MAX_U8,MIN_U16,MAX_U16,MIN_U32,MAX_U32,MIN_U64,MAX_U64,MIN_U128,MAX_U128};
 #[generate_trait]
 impl MathU8Impl of MathU8Trait {
     #[inline]
@@ -342,3 +342,94 @@ impl MathU64Impl of MathU64Trait {
     }
 }
  
+#[generate_trait]
+impl MathU128Impl of MathU128Trait {
+    #[inline]
+    fn is_zero_u128(ref self:u128)->bool{
+        return match self{
+            0 => true,
+            _ => false,
+        };
+    }
+    #[inline]
+    fn is_no_zero_u128(self:u128)->bool{
+        return match self{
+            0 => false,
+            _ => true,
+        };
+    }
+    #[inline]
+    fn add_u128(x:u128,y:u128)->u128{
+        return match core::integer::u128_checked_add(x,y){
+            Option::Some(r) => r,
+            Option::None => MAX_U128,
+        };
+    }
+    #[inline]
+    fn sub_u64(x:u128,y:u128)->u128{
+        return match core::integer::u128_checked_sub(x,y){
+            Option::Some(r) => r,
+            Option::None => MIN_U128,
+        };
+    }
+    #[inline]
+    fn add_eq_u128(ref self:u128,y:u128){
+        match core::integer::u128_checked_add(self,y){
+            Option::Some(r) =>{
+                self = r;
+            },
+            Option::None =>{
+                self = MAX_U128;
+            }
+        }
+    }
+    #[inline]
+    fn sub_eq_u128(ref self:u128,y:u128){
+        match core::integer::u128_checked_sub(self,y){
+            Option::Some(r) =>{
+                self = r;
+            },
+            Option::None =>{
+                self = MIN_U128;
+            }
+        }
+    }
+    #[inline]
+    fn self_add_u128(ref self:u128){
+        match core::integer::u128_checked_add(self,1){
+            Option::Some(r) =>{
+                self = r;
+            },
+            Option::None =>{
+                self = MAX_U128;
+            }
+        }
+    }
+    #[inline]
+    fn self_sub_u128(ref self:u128){
+        match core::integer::u128_checked_sub(self,1){
+            Option::Some(r) =>{
+                self = r;
+            },
+            Option::None =>{
+                self = MIN_U128;
+            }
+        }
+    }
+    #[inline]
+    fn self_add__u128(ref self:u128)->u128{
+        self = match core::integer::u128_checked_add(self,1){
+            Option::Some(r) => r,
+            Option::None => MAX_U128
+        };
+        return self;
+    }
+    #[inline]
+    fn self_sub__u128(ref self:u128)->u128{
+        self = match core::integer::u128_checked_sub(self,1){
+            Option::Some(r) => r,
+            Option::None => MIN_U128
+        };
+        return self;
+    }
+}

@@ -1,10 +1,13 @@
 
 use abyss_x::game::attribute::{Attribute,AttributeTrait};
 
-pub trait ActionTrait<T,V> {
-    fn new() -> T;
+pub trait EntityTrait<T> {
+    fn new()->T;
+}
 
+pub trait ActionTrait<T,V> {
     fn game_begin(ref self:T,ref target:V);
+    fn game_end(ref self:T,ref target:V);
     fn round_begin(ref self:T,ref target:V);
     fn round_end(ref self:T,ref target:V);
 

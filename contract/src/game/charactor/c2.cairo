@@ -9,9 +9,9 @@ use abyss_x::utils::bit::{Bit128Trait};
 use abyss_x::game::adventurer::{Adventurer,AdventurerTrait,AdventurerCommonTrait};
 use abyss_x::game::attribute::{Attribute,AttributeTrait,CalAttributeTrait};
 use abyss_x::game::status::{StatusTrait};
-use abyss_x::game::enemy::{Enemy,EnemyTeam2,EnemyTeam3};
+use abyss_x::game::enemy::{Enemy,EnemyTrait};
 
-use abyss_x::game::action::{ActionTrait,DamageTrait};
+use abyss_x::game::action::{EntityTrait,ActionTrait,DamageTrait};
  
 mod C2CardID{
     const Attack:u8 = 1_u8;
@@ -41,6 +41,21 @@ struct C2{
     right_cards:Array<u8>,
 }
 
+impl C2EntityImpl of EntityTrait<Adventurer> {
+    #[inline]
+    fn new()->Adventurer{
+        return Adventurer{
+            seed:0,
+            attr:AttributeTrait::new(80),
+            category:1,
+            init_cards:ArrayTrait::<u8>::new(),
+            left_cards:ArrayTrait::<u8>::new(),
+            mid_cards:DictMapTrait::<u8>::new(),
+            right_cards:ArrayTrait::<u8>::new()
+        };
+    }
+}
+
 impl C2DamageImpl of DamageTrait {
     fn calculate_damage_dealt(ref self:Attribute,ref value:u16,){
         self.status.cal_damage_status(ref value);
@@ -63,22 +78,15 @@ impl C2DamageImpl of DamageTrait {
 
 
 impl C2ActionImpl of ActionTrait<Adventurer,Enemy>{
-    fn new() -> Adventurer{
-        return Adventurer{
-            seed:0,
-            attr:AttributeTrait::new(80),
-            category:2,
-            init_cards:ArrayTrait::<u8>::new(),
-            left_cards:ArrayTrait::<u8>::new(),
-            mid_cards:DictMapTrait::<u8>::new(),
-            right_cards:ArrayTrait::<u8>::new(),
-        };
-    } 
  
- 
-
-    fn game_begin(ref self:Adventurer,ref target:Enemy){}
-   
+    #[inline]
+    fn game_begin(ref self:Adventurer,ref target:Enemy){
+       
+    }
+    #[inline]
+    fn game_end(ref self:Adventurer,ref target:Enemy){
+       
+    }
 
     fn round_begin(ref self:Adventurer,ref target:Enemy){}
    

@@ -6,13 +6,13 @@ use abyss_x::utils::math::{MathU32Trait,MathU16Trait,MathU8Trait};
 use abyss_x::game::adventurer::{Adventurer,AdventurerTrait,AdventurerCommonTrait};
 use abyss_x::game::status::{CommonStatus,StatusTrait};
 
-use abyss_x::game::attribute::{Attribute,AttributeTrait,CalAttributeTrait};
+use abyss_x::game::attribute::{Attribute,AttributeState,AttributeTrait,CalAttributeTrait};
 use abyss_x::game::enemy::{Enemy,EnemyTrait,EnemyCategory,EnemyStatus,EnemyStatusTrait};
 
 
-use abyss_x::game::action::{ActionTrait,DamageTrait};
- 
-impl M2ActionImpl of ActionTrait<Enemy,Adventurer>{
+use abyss_x::game::action::{EntityTrait,ActionTrait,DamageTrait};
+
+impl M2EntityImpl of EntityTrait<Enemy>{
     //红虱虫
     fn new()->Enemy{
         return Enemy{
@@ -21,16 +21,23 @@ impl M2ActionImpl of ActionTrait<Enemy,Adventurer>{
             attr:AttributeTrait::new(10),
         };
     }
+}
+
+impl M2ActionImpl of ActionTrait<Enemy,Adventurer>{
+    #[inline]
+    fn game_end(ref self:Enemy,ref target:Adventurer){
+       
+    }
     #[inline]
     fn game_begin(ref self:Enemy,ref target:Adventurer){
         self.attr.status.insert(EnemyStatus::Attacked_Armor,5);
     }
     fn round_begin(ref self:Enemy,ref target:Adventurer){
-        self.attr.round_begin();
+       
         
     }
     fn round_end(ref self:Enemy,ref target:Adventurer){
-        self.attr.round_end();
+   
     }
     fn action_feedback(ref self:Enemy,ref target:Adventurer,data:u16){
 
@@ -64,6 +71,9 @@ impl M2DamageImpl of DamageTrait {
         if(thorns.is_no_zero_u16()){
             target.sub_hp_and_armor(thorns);
         }
+        if(self.hp.is_zero_u16()){
+            self.state = AttributeState::Death;
+        }
     }
 
     fn calculate_direct_damage_dealt(ref self:Attribute,ref value:u16){
@@ -74,7 +84,9 @@ impl M2DamageImpl of DamageTrait {
         if(self.hp.is_no_zero_u16()){
             self.check_attacked_armor();
         }
-       
+        if(self.hp.is_zero_u16()){
+            self.state = AttributeState::Death;
+        }
     }
     
 }

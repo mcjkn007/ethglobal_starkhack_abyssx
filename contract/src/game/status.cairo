@@ -1,9 +1,9 @@
 use core::dict::Felt252DictTrait;
 use abyss_x::utils::math::{MathU8Trait,MathU16Trait};
 
-
+use abyss_x::utils::bit::{Bit64Trait};
 use abyss_x::game::attribute::{Attribute,AttributeTrait};
-
+use abyss_x::game::relic::{CommonRelic};
  
 mod CommonStatus{
     const Weak:felt252 = 'c_weak';//虚弱 造成伤害-25
@@ -18,6 +18,36 @@ mod CommonStatus{
 
 #[generate_trait]
 impl StatusImpl of StatusTrait {
+    #[inline]
+    fn add_weak(ref self:Attribute,value:u16){
+        match Bit64Trait::is_bit_fast(self.relic,CommonRelic::R8){
+            true=> {},
+            false =>  self.status.insert(CommonStatus::Weak,MathU16Trait::add_u16(self.status.get(CommonStatus::Weak),value)),
+        }
+    }
+    #[inline]
+    fn add_fragile(ref self:Attribute,value:u16){
+        match Bit64Trait::is_bit_fast(self.relic,CommonRelic::R9){
+            true=> {},
+            false =>  self.status.insert(CommonStatus::Fragile,MathU16Trait::add_u16(self.status.get(CommonStatus::Fragile),value)),
+        }
+    }
+    #[inline]
+    fn add_fear(ref self:Attribute,value:u16){
+        match Bit64Trait::is_bit_fast(self.relic,CommonRelic::R10){
+            true=> {},
+            false =>  self.status.insert(CommonStatus::Fear,MathU16Trait::add_u16(self.status.get(CommonStatus::Fear),value)),
+        }
+    }
+    #[inline]
+    fn add_thorns(ref self:Attribute,value:u16){
+        self.status.insert(CommonStatus::Thorns,MathU16Trait::add_u16(self.status.get(CommonStatus::Thorns),value));
+    }
+    #[inline]
+    fn add_amplify_damage(ref self:Attribute,value:u16){
+        self.status.insert(CommonStatus::Amplify_Damage,MathU16Trait::add_u16(self.status.get(CommonStatus::Amplify_Damage),value));
+    }
+
     #[inline]
     fn cal_damage_status(ref self:Felt252Dict<u16>,ref value:u16){
         let ad = self.get(CommonStatus::Amplify_Damage);
@@ -49,6 +79,14 @@ impl StatusImpl of StatusTrait {
             },
         }
        
+    }
+    #[inline]
+    fn game_begin(ref self:Felt252Dict<u16>){
+      
+    }
+    #[inline]
+    fn game_end(ref self:Felt252Dict<u16>){
+     
     }
     #[inline]
     fn round_begin(ref self:Felt252Dict<u16>){

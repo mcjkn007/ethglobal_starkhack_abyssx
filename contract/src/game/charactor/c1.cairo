@@ -177,9 +177,9 @@ impl C1ActionImpl of ActionTrait<Adventurer,Enemy>{
             CardResult::Discard => self.discard_card(card_index),
         }
         
-        target.e_action_feedback(ref self,C1CardTrait::get_card_type(card_id));
+        target.e_action_feedback(ref self,C1CardImpl::get_card_type(card_id));
         
-        self.attr.energy.self_sub_u16_e(C1CardTrait::get_card_energy(card_id));
+        self.attr.energy.self_sub_u16_e(C1CardImpl::get_card_energy(card_id));
          
     }
 }
@@ -413,7 +413,7 @@ impl C1CardImpl of C1CardTrait{
         //抽一张牌，获得卡牌能耗的能量
         self.draw_cards_from_left(1);
       
-        self.attr.energy.add_eq_u16(C1CardTrait::get_card_energy(self.mid_cards.at(self.mid_cards.size()-1)));
+        self.attr.energy.add_eq_u16(Self::get_card_energy(self.mid_cards.at(self.mid_cards.size()-1)));
 
         return CardResult::Discard;
     }
@@ -837,8 +837,8 @@ impl C1CardImpl of C1CardTrait{
     fn c44(ref self:Adventurer)->CardResult{
         //抽2张牌，获得所抽卡费用的护甲
         self.draw_cards_from_left(2);
-        let mut armor:u16 = C1CardTrait::get_card_energy(self.mid_cards.at(self.mid_cards.size()-1));
-        armor.add_eq_u16(C1CardTrait::get_card_energy(self.mid_cards.at(self.mid_cards.size()-2)));
+        let mut armor:u16 = Self::get_card_energy(self.mid_cards.at(self.mid_cards.size()-1));
+        armor.add_eq_u16(Self::get_card_energy(self.mid_cards.at(self.mid_cards.size()-2)));
        
         self.attr.c1_add_armor(armor);
 

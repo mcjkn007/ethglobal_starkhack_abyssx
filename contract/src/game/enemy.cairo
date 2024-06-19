@@ -76,36 +76,36 @@ impl EnemyImpl of EnemyTrait {
     }
     #[inline]
     fn get_stage_1_enemey()->Enemy{
-        return EnemyTrait::new(EnemyCategory::M1);
+        return Self::new(EnemyCategory::M1);
     }
     #[inline]
     fn get_stage_2_enemey()->EnemyTeam2{
         return EnemyTeam2{
-            e1: EnemyTrait::new(EnemyCategory::M2),
-            e2: EnemyTrait::new(EnemyCategory::M3),
+            e1: Self::new(EnemyCategory::M2),
+            e2: Self::new(EnemyCategory::M3),
         };
     }
     #[inline]
     fn get_stage_3_enemey()->EnemyTeam2{
         return EnemyTeam2{
-            e1: EnemyTrait::new(EnemyCategory::M1),
-            e2: EnemyTrait::new(EnemyCategory::M1),
+            e1: Self::new(EnemyCategory::M1),
+            e2: Self::new(EnemyCategory::M1),
         };
     }
     #[inline]
     fn get_stage_4_enemey()->EnemyTeam2{
         return EnemyTeam2{
-            e1: EnemyTrait::new(EnemyCategory::M4),
-            e2: EnemyTrait::new(EnemyCategory::M4),
+            e1: Self::new(EnemyCategory::M4),
+            e2: Self::new(EnemyCategory::M4),
         };
     }
     #[inline]
     fn get_stage_5_enemey()->Enemy{
-        return EnemyTrait::new(EnemyCategory::E1);
+        return Self::new(EnemyCategory::E1);
     }
     #[inline]
     fn get_stage_7_enemey()->Enemy{
-        return EnemyTrait::new(EnemyCategory::B1);
+        return Self::new(EnemyCategory::B1);
     }
     #[inline]
     fn e_game_begin(ref self:Enemy,ref target:Adventurer){

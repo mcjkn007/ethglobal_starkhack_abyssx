@@ -4,8 +4,8 @@ use starknet::ContractAddress;
 use dojo::world::{IWorldDispatcher, IWorldDispatcherTrait};
 use dojo::model::Model;
 
-#[derive(Model, Copy, Drop,Serde)]
- 
+#[derive(Copy, Drop,Serde)]
+#[dojo::model]
 struct User {
     #[key]
     player:ContractAddress,
@@ -37,21 +37,6 @@ impl UserImpl of UserTrait {
     }
     fn read_user(world: IWorldDispatcher,key:felt252){
         
-        let selector = selector!("user");
-        let keys =  array![0x1].span();
-        let layout = array![8_u8,8,8,8,64].span();
-        
-        let mut read_values = world.entity(selector, keys, layout);
-        let  mut i = 0;
-         
-        loop{
-            if(i == read_values.len()){
-                break;
-            }
-            let v = *read_values.at(i);
-            println!("-----chest_action--- {} ",v);
-            i += 1;
-        };
-        
+      
     }
 }

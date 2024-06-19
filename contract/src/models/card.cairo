@@ -6,7 +6,8 @@ use abyss_x::utils::math::{MathU8Trait};
 
 use abyss_x::utils::constant::{POW_2_U256};
 
-#[derive(Model, Copy, Drop, Serde)]
+#[derive(Copy, Drop, Serde)]
+#[dojo::model]
 struct Card {
     #[key]
     player: ContractAddress,

@@ -12,15 +12,7 @@ trait IBattle {
 // dojo decorator
 #[dojo::contract]
 mod battle {
-    use core::array::ArrayTrait;
-use core::traits::Destruct;
-use core::traits::TryInto;
-use core::traits::Into;
-    use core::traits::Index;
-    use core::option::OptionTrait;
-    use core::serde::Serde;
 
-  
     use starknet::{ContractAddress,SyscallResultTrait, syscalls,get_caller_address,get_contract_address,get_block_timestamp};
     use abyss_x::game::{
         adventurer::{Adventurer,AdventurerTrait,AdventurerCommonTrait},

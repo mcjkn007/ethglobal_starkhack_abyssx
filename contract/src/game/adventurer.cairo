@@ -149,7 +149,7 @@ impl AdventurerCommonImpl of AdventurerCommonTrait{
             _ => panic!("c_calculate_direct_damage_dealt"),
         };
     }
-    
+    #[inline]
     fn draw_cards_from_left(ref self:Adventurer,mut draw_count:u16){
         if(self.mid_cards.size() == HAND_CARD_NUMBER_MAX){
             return;
@@ -182,7 +182,7 @@ impl AdventurerCommonImpl of AdventurerCommonTrait{
             }
         };
     }
-   
+    #[inline]
     fn draw_cards_from_right(ref self:Adventurer,mut draw_count:u32){
         if(self.mid_cards.size() == HAND_CARD_NUMBER_MAX){
             return;
@@ -216,7 +216,7 @@ impl AdventurerCommonImpl of AdventurerCommonTrait{
     fn consume_card(ref self:Adventurer,card:u8){
         self.mid_cards.remove_value(card);
     }
-    
+    #[inline]
     fn discard_cards(ref self:Adventurer){
         loop{
             if(self.mid_cards.empty()){
@@ -226,7 +226,7 @@ impl AdventurerCommonImpl of AdventurerCommonTrait{
             self.right_cards.append(self.mid_cards.pop_back_fast());
         };
     }
-   
+    #[inline]
     fn round_end_disard_cards(ref self:Adventurer){
         loop{
             if(self.mid_cards.empty()){

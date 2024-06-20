@@ -4,12 +4,11 @@ use abyss_x::utils::random::{RandomTrait,RandomContainerTrait};
 use abyss_x::utils::math::{MathU32Trait,MathU16Trait,MathU8Trait};
 
 use abyss_x::game::adventurer::{Adventurer,AdventurerTrait,AdventurerCommonTrait};
-use abyss_x::game::status::{StatusTrait};
-
+ 
 use abyss_x::game::attribute::{Attribute,AttributeState,AttributeTrait,CalAttributeTrait};
 use abyss_x::game::enemy::{Enemy,EnemyTrait,EnemyCategory,EnemyStatus};
-
-use abyss_x::game::status::{CommonStatus};
+use abyss_x::game::relic::{RelicCategory,RelicTrait};
+use abyss_x::game::status::{StatusCategory,StatusTrait};
 use abyss_x::game::action::{EntityTrait,ActionTrait,DamageTrait};
  
 impl E1EntityImpl of EntityTrait<Enemy>{
@@ -42,7 +41,7 @@ impl E1ActionImpl of ActionTrait<Enemy,Adventurer>{
     }
     fn action_feedback(ref self:Enemy,ref target:Adventurer,data:u16){
         if(data == 2){
-            self.attr.status.insert(CommonStatus::Amplify_Damage,MathU16Trait::add_u16(self.attr.status.get(CommonStatus::Amplify_Damage),2));
+            self.attr.add_ad(2);
         }
          
     }
@@ -56,7 +55,10 @@ impl E1ActionImpl of ActionTrait<Enemy,Adventurer>{
             let mut value = 6;
             self.e_calculate_damage_dealt(ref value);
             target.c_damage_taken(ref self.attr,value);
-            target.attr.add_fragile(1);
+            if(target.check_relic_9() == false){
+                target.attr.add_fragile(1);
+            }
+             
         }else{
             let mut value = 14;
             self.e_calculate_damage_dealt(ref value);
@@ -74,7 +76,7 @@ impl E1DamageImpl of DamageTrait {
         self.status.cal_damaged_status(ref value);
 
         self.sub_hp_and_armor(value); 
-        let thorns = self.status.get(CommonStatus::Thorns);
+        let thorns = self.status.get(StatusCategory::Thorns);
         if(thorns.is_no_zero_u16()){
             target.sub_hp_and_armor(thorns);
         }

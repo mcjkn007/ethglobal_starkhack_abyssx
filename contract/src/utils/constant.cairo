@@ -24,14 +24,14 @@ enum CardResult {
 #[derive(Serde, Copy, Drop, Introspect,PartialEq)]
 enum CampAciton {
     Rest,
-    Awake,
+    Talent,
     DeleteCard,
 }
 impl U8IntoCampAciton of Into<u8, CampAciton> {
     fn into(self: u8) -> CampAciton {
         match self {
             0 => CampAciton::Rest,
-            1 => CampAciton::Awake,
+            1 => CampAciton::Talent,
             2 => CampAciton::DeleteCard,
             _ => panic!("error"),
         }

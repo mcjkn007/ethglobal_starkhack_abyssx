@@ -19,8 +19,9 @@ struct Role {
 
     cur_stage:u8,
 
-    awake:u16,
+    talent:u16,
     blessing:u32,
+
     relic:u64,
     seed:u64,
 }
@@ -42,7 +43,7 @@ impl RoleImpl of RoleTrait {
       
         self.cur_stage = 0;
 
-        self.awake = 0;
+        self.talent = 0;
         self.blessing = 0;
         self.relic = 0;
         self.seed = 0;
@@ -50,7 +51,7 @@ impl RoleImpl of RoleTrait {
     }
     #[inline]
     fn rest(ref self:Role){
-        match core::integer::u8_checked_add(self.hp,self.max_hp/10*3){
+        match core::integer::u8_checked_add(self.hp,self.max_hp/4){
             Option::Some(r) =>{
                 if(r > self.max_hp){
                     self.hp = self.max_hp;
@@ -64,11 +65,11 @@ impl RoleImpl of RoleTrait {
         }
     }
     #[inline]
-    fn awake(ref self:Role,value:u8){
+    fn talent(ref self:Role,value:u8){
 
-        assert(Bit16Trait::is_bit(self.awake,value) == false, 'awake wrong');
+        assert(Bit16Trait::is_bit(self.talent,value) == false, 'Talent wrong');
      
-        self.awake = Bit16Trait::set_bit(self.awake,value);
+        self.talent = Bit16Trait::set_bit(self.talent,value);
     }
     
 }

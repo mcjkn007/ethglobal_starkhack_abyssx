@@ -5,9 +5,8 @@ use abyss_x::utils::bit::{Bit128Trait,Bit64Trait};
 use abyss_x::utils::constant::{MIN_U8,MAX_U8,MIN_U16,MAX_U16,POW_2_U128,HAND_CARD_NUMBER_INIT};
 use abyss_x::utils::math::{MathU8Trait};
 
-use abyss_x::game::status::{CommonStatus,StatusTrait};
-use abyss_x::game::relic::{CommonRelic};
-
+use abyss_x::game::status::{StatusCategory,StatusTrait};
+ 
 
 mod AttributeState{
     const Null:u8 = 0;
@@ -21,21 +20,10 @@ struct Attribute {
 
     hp:u16,
     max_hp:u16,
-
-    energy:u16,
-    max_energy:u16,
-
-    draw_cards:u16,
-
+ 
     armor:u16,
 
-    awake:u16,
-    blessing:u32,
     ability:u32,
-
-    relic:u64,
-
-  
 
     status:Felt252Dict<u16>,
 }
@@ -55,17 +43,8 @@ impl AttributeImpl of AttributeTrait {
             state:AttributeState::Live,
             hp:hp,
             max_hp:hp,
-        
-            energy:3,
-            max_energy:3,
-
-            draw_cards:5,
-        
+ 
             armor:0,
-
-            awake:0,
-            blessing:0,
-            relic:0,
 
             ability:0,
 
@@ -157,41 +136,7 @@ impl AttributeImpl of AttributeTrait {
             }
         }
     }
-    #[inline]
-    fn add_energy(ref self:Attribute,value:u16){
-        match core::integer::u16_checked_add(self.energy,value){
-            Option::Some(r) =>{
-                self.energy = r;
-            },
-            Option::None =>{
-                self.energy = MAX_U16;
-            }
-        }
-    }
-    #[inline]
-    fn sub_energy(ref self:Attribute,value:u16){
-        match core::integer::u16_checked_sub(self.energy,value){
-            Option::Some(r) =>{
-                self.energy = r;
-            },
-            Option::None =>{
-                self.energy = MIN_U16;
-            }
-        }
-    }
-    #[inline]
-    fn add_max_energy(ref self:Attribute,value:u16){
-        match core::integer::u16_checked_add(self.max_energy,value){
-            Option::Some(r) =>{
-                self.max_energy = r;
-            },
-            Option::None =>{
-                self.max_energy = MAX_U16;
-            }
-        }
-    }
- 
-    
+
     #[inline]
     fn add_ability(ref self:Attribute,ability:u32){
         self.ability  =  self.ability & ability;
@@ -202,47 +147,18 @@ impl AttributeImpl of AttributeTrait {
     }
     #[inline]
     fn game_begin(ref self:Attribute){
-     
-        //  
-
-        //在每场战斗开始时，额外抽 2 张牌。
-        match Bit64Trait::is_bit_fast(self.relic,CommonRelic::R1){
-            true => self.draw_cards.add_eq(2),
-            false => {}
-        }
         self.status.game_begin();
     }
     #[inline]
     fn game_end(ref self:Attribute){
-        //在战斗结束时，回复6点生命。
-        match Bit64Trait::is_bit_fast(self.relic,CommonRelic::R0){
-            true=> self.add_hp(6),
-            false => {}
-        }
         self.status.game_end();
     }
     #[inline]
     fn round_begin(ref self:Attribute){
-        //多余的能量可以留到下一回合。
-        match Bit64Trait::is_bit_fast(self.relic,CommonRelic::R5){
-            true=>  self.energy.add_eq_u16(self.max_energy),
-            false =>  self.energy = self.max_energy
-        }
-
-        self.draw_cards = HAND_CARD_NUMBER_INIT;
         self.status.round_begin();
     }
     #[inline]
     fn round_end(ref self:Attribute){
-      // 如果你在回合结束时没有任何格挡，获得6点格挡。
-      match Bit64Trait::is_bit_fast(self.relic,CommonRelic::R3){
-        true=> {
-            if(self.armor.is_zero_u16()){
-                self.add_armor(6);
-            }
-        },
-        false => {}
-    }
         self.status.round_end();
     }
 }

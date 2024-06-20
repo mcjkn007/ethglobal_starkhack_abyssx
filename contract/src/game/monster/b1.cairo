@@ -6,7 +6,7 @@ use abyss_x::utils::random::{RandomTrait,RandomContainerTrait};
 use abyss_x::utils::math::{MathU32Trait,MathU16Trait,MathU8Trait};
 
 use abyss_x::game::adventurer::{Adventurer,AdventurerTrait,AdventurerCommonTrait};
-use abyss_x::game::status::{CommonStatus,StatusTrait};
+use abyss_x::game::status::{StatusCategory,StatusTrait};
 
 use abyss_x::game::attribute::{Attribute,AttributeState,AttributeTrait,CalAttributeTrait};
 use abyss_x::game::enemy::{Enemy,EnemyTrait,EnemyCategory,EnemyStatus};
@@ -96,7 +96,7 @@ impl B1ActionImpl of ActionTrait<Enemy,Adventurer>{
                 },
                 3 => {
                     //获得2点力量，12点格挡
-                    self.attr.status.insert(CommonStatus::Amplify_Damage,MathU16Trait::add_u16(self.attr.status.get(CommonStatus::Amplify_Damage),2));
+                    self.attr.add_ad(2);
                     self.attr.b1_add_armor(12);
                 },
                 4 => {
@@ -145,7 +145,7 @@ impl B1DamageImpl of DamageTrait {
         self.status.cal_damaged_status(ref value);
 
         self.sub_hp_and_armor(value); 
-        let thorns = self.status.get(CommonStatus::Thorns);
+        let thorns = self.status.get(StatusCategory::Thorns);
         if(thorns.is_no_zero_u16()){
             target.sub_hp_and_armor(thorns);
         }

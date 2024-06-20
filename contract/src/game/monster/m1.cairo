@@ -4,7 +4,7 @@ use abyss_x::utils::random::{RandomTrait,RandomContainerTrait};
 use abyss_x::utils::math::{MathU32Trait,MathU16Trait,MathU8Trait};
 
 use abyss_x::game::adventurer::{Adventurer,AdventurerTrait,AdventurerCommonTrait};
-use abyss_x::game::status::{StatusTrait,CommonStatus};
+use abyss_x::game::status::{StatusTrait,StatusCategory};
 
 use abyss_x::game::attribute::{Attribute,AttributeState,AttributeTrait,CalAttributeTrait};
 use abyss_x::game::enemy::{Enemy,EnemyTrait,EnemyCategory,EnemyStatus};
@@ -66,7 +66,7 @@ impl M1DamageImpl of DamageTrait {
         self.status.cal_damaged_status(ref value);
 
         self.sub_hp_and_armor(value); 
-        let thorns = self.status.get(CommonStatus::Thorns);
+        let thorns = self.status.get(StatusCategory::Thorns);
         if(thorns.is_no_zero_u16()){
             target.sub_hp_and_armor(thorns);
         }

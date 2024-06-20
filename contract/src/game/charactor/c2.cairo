@@ -28,19 +28,7 @@ mod C2CardValue{
     const Attack:u16 = 6_u16;
     const Defence:u16 = 5_u16;
 } 
-
-#[derive(Destruct)]
-struct C2{
-    seed:u64,
-    attr:Attribute,
-    category:u8,
  
-    init_cards:Array<u8>,
-    left_cards:Array<u8>,
-    mid_cards:DictMap<u8>,
-    right_cards:Array<u8>,
-}
-
 impl C2EntityImpl of EntityTrait<Adventurer> {
     #[inline]
     fn new()->Adventurer{
@@ -48,6 +36,12 @@ impl C2EntityImpl of EntityTrait<Adventurer> {
             seed:0,
             attr:AttributeTrait::new(80),
             category:1,
+            energy:3,
+            max_energy:3,
+            draw_cards:5,
+            talent:0,
+            blessing:0,
+            relic:0,
             init_cards:ArrayTrait::<u8>::new(),
             left_cards:ArrayTrait::<u8>::new(),
             mid_cards:DictMapTrait::<u8>::new(),

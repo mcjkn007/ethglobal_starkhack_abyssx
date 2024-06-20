@@ -1,0 +1,8 @@
+ls filter=lfs diff=lfs merge=lfs -text
+libdojo_a filter=lfs diff=lfs merge=lfs -text
+libdojo_a.dll filter=lfs diff=lfs merge=lfs -text
+libdojo_a.a filter=lfs diff=lfs merge=lfs -text
+libdojo_c.a filter=lfs diff=lfs merge=lfs -text
+libdojo_c.dlll filter=lfs diff=lfs merge=lfs -text
+Client/Assets/Dojo/Plugins/Windows/libdojo_c.dll filter=lfs diff=lfs merge=lfs -text
+Client/Assets/Dojo/Plugins/Windows/libdojo_c.a filter=lfs diff=lfs merge=lfs -text

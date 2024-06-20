@@ -38,13 +38,13 @@ impl ArrayMapImpl<T,+Drop<T>, +Copy<T>,+PartialEq<T>,+Into<T,u8>,+Into<u8,T>,+In
     }
     #[inline]
     fn empty(self:@ ArrayMap<T>) -> bool{
-        return (*self.size).is_zero_u32();
+        return (*self.size) == 0;
     }
     fn at(ref self:ArrayMap<T>, index: u32)->T{
         return *self.value.at(index);
     }
     fn check_value(ref self:ArrayMap<T>, value: T)->bool{
-        return self.map & Pow128Trait::fast_pow_2(value.into()) != 0_u128;
+        return self.map & Pow128Trait::fast_pow_2(value.into()) > 0;
     }
     fn remove_value(ref self:ArrayMap<T>, value: T){
         self.map = self.map & ~Pow128Trait::fast_pow_2(value.into());
@@ -62,7 +62,7 @@ impl ArrayMapImpl<T,+Drop<T>, +Copy<T>,+PartialEq<T>,+Into<T,u8>,+Into<u8,T>,+In
         loop{
             match self.value.pop_front() {
                 Option::Some(r) => {
-                    if(self.map & Pow128Trait::fast_pow_2(r.into()) != 0_u128){
+                    if(self.map & Pow128Trait::fast_pow_2(r.into()) > 0){
                         self.map = self.map & ~Pow128Trait::fast_pow_2(r.into());
                         v = r.into();
                         self.size.self_sub_u32();

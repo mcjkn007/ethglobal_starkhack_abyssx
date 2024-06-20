@@ -8,11 +8,11 @@ use abyss_x::utils::pow::{Pow256Trait,Pow128Trait,Pow64Trait,Pow32Trait,Pow16Tra
 impl Bit256Impl of Bit256Trait {
     #[inline]
     fn is_bit(bit:u256,n:u8)->bool{
-       return bit & Pow256Trait::fast_pow_2(n) != 0;
+       return bit & Pow256Trait::fast_pow_2(n) > 0;
     }
     #[inline]
     fn is_bit_fast(bit:u256,mask:u256)->bool{
-        return bit & mask != 0;
+        return bit & mask > 0;
     }
     #[inline]
     fn set_bit(bit:u256,n:u8)->u256{
@@ -69,11 +69,11 @@ impl Bit256Impl of Bit256Trait {
 impl Bit128Impl of Bit128Trait {
     #[inline]
     fn is_bit(bit:u128,n:u8)->bool{
-        return bit & Pow128Trait::fast_pow_2(n) != 0;
+        return bit & Pow128Trait::fast_pow_2(n) > 0;
     }
     #[inline]
     fn is_bit_fast(bit:u128,mask:u128)->bool{
-        return bit & mask != 0;
+        return bit & mask > 0;
     }
     #[inline]
     fn set_bit(bit:u128,n:u8)->u128{
@@ -125,11 +125,11 @@ impl Bit128Impl of Bit128Trait {
 impl Bit64Impl of Bit64Trait {
     #[inline]
     fn is_bit(bit:u64,n:u8)->bool{
-        return bit & Pow64Trait::fast_pow_2(n) != 0;
+        return bit & Pow64Trait::fast_pow_2(n) > 0;
     }
     #[inline]
     fn is_bit_fast(bit:u64,mask:u64)->bool{
-        return bit & mask != 0;
+        return bit & mask > 0;
     }
     #[inline]
     fn set_bit(bit:u64,n:u8)->u64{
@@ -181,11 +181,11 @@ impl Bit64Impl of Bit64Trait {
 impl Bit32Impl of Bit32Trait {
     #[inline]
     fn is_bit(bit:u32,n:u8)->bool{
-        return bit & Pow32Trait::fast_pow_2(n) != 0;
+        return bit & Pow32Trait::fast_pow_2(n) > 0;
     }
     #[inline]
     fn is_bit_fast(bit:u32,mask:u32)->bool{
-        return bit & mask != 0;
+        return bit & mask > 0;
     }
     #[inline]
     fn set_bit(bit:u32,n:u8)->u32{
@@ -237,11 +237,11 @@ impl Bit32Impl of Bit32Trait {
 impl Bit16Impl of Bit16Trait {
     #[inline]
     fn is_bit(bit:u16,n:u8)->bool{
-        return bit & Pow16Trait::fast_pow_2(n) != 0;
+        return bit & Pow16Trait::fast_pow_2(n) > 0;
     }
     #[inline]
     fn is_bit_fast(bit:u16,mask:u16)->bool{
-        return bit & mask != 0;
+        return bit & mask > 0;
     }
     #[inline]
     fn set_bit(bit:u16,n:u8)->u16{

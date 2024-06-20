@@ -69,15 +69,12 @@ impl M3DamageImpl of DamageTrait {
         self.status.cal_damaged_status(ref value);
 
         self.sub_hp_and_armor(value); 
-        if(self.hp.is_no_zero_u16()){
+        if(self.hp > 0){
             self.check_attacked_armor();
         }
         let thorns = self.status.get(StatusCategory::Thorns);
-        if(thorns.is_no_zero_u16()){
+        if(thorns > 0){
             target.sub_hp_and_armor(thorns);
-        }
-        if(self.hp.is_zero_u16()){
-            self.state = AttributeState::Death;
         }
     }
 
@@ -86,9 +83,6 @@ impl M3DamageImpl of DamageTrait {
     }
     fn  direct_damage_taken(ref self:Attribute, mut value:u16){
         self.sub_hp_and_armor(value); 
-        if(self.hp.is_zero_u16()){
-            self.state = AttributeState::Death;
-        }
     }
     
 }

@@ -34,7 +34,7 @@ impl DictMapImpl<T, +Drop<T>, +Copy<T>,+PartialEq<T>,+Felt252DictValue<T>,+Into<
     }
     #[inline]
     fn empty(self:@DictMap<T>) -> bool{
-        return (*self.size).is_zero_u32();
+        return (*self.size) == 0;
     }
     #[inline]
     fn at(ref self:DictMap<T>, index: u32)->T{
@@ -42,7 +42,7 @@ impl DictMapImpl<T, +Drop<T>, +Copy<T>,+PartialEq<T>,+Felt252DictValue<T>,+Into<
     }
     #[inline]
     fn check_value(ref self:DictMap<T>, value: T)->bool{
-        return self.value.get(value.into()).is_no_zero_u32();
+        return self.value.get(value.into()) > 0;
     }
     #[inline]
     fn remove_value(ref self:DictMap<T>, value: T){

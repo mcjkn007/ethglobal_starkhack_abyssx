@@ -19,7 +19,7 @@ use abyss_x::utils::math::{MathU8Trait};
     #[available_gas(1_000_000_000)]
     fn test_eq_zero_u8() {
         let mut c:u8 = 1;
-        if(c.is_zero_u8()){
+        if(c == 0){
             c += 1;
         }else{
             c -= 1;

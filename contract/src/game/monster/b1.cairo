@@ -146,12 +146,10 @@ impl B1DamageImpl of DamageTrait {
 
         self.sub_hp_and_armor(value); 
         let thorns = self.status.get(StatusCategory::Thorns);
-        if(thorns.is_no_zero_u16()){
+        if(thorns > 0){
             target.sub_hp_and_armor(thorns);
         }
-        if(self.hp.is_zero_u16()){
-            self.state = AttributeState::Death;
-        }
+       
     }
 
     fn calculate_direct_damage_dealt(ref self:Attribute,ref value:u16){
@@ -159,10 +157,6 @@ impl B1DamageImpl of DamageTrait {
     }
     fn direct_damage_taken(ref self:Attribute,mut value:u16){
         self.sub_hp_and_armor(value); 
-        if(self.hp.is_zero_u16()){
-            self.state = AttributeState::Death;
-        }
-       
     }
 }
 

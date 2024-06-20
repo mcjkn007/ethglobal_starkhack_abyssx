@@ -13,11 +13,10 @@ use abyss_x::utils::constant::{POW_2_U256};
 struct Role {
     #[key]
     player: ContractAddress,
-
-    hp:u8,
-    max_hp:u8,
-
     cur_stage:u8,
+
+    hp:u16,
+    max_hp:u16,
 
     talent:u16,
     blessing:u32,
@@ -51,7 +50,7 @@ impl RoleImpl of RoleTrait {
     }
     #[inline]
     fn rest(ref self:Role){
-        match core::integer::u8_checked_add(self.hp,self.max_hp/4){
+        match core::integer::u16_checked_add(self.hp,self.max_hp/4){
             Option::Some(r) =>{
                 if(r > self.max_hp){
                     self.hp = self.max_hp;

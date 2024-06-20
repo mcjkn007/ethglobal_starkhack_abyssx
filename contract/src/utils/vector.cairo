@@ -40,7 +40,7 @@ impl VectorImpl<T,+Drop<T>, +Copy<T>,+Felt252DictValue<T>> of VectorTrait<T> {
     }
     #[inline]
     fn empty(self:@ Vector<T>) -> bool{
-        return (*self.size).is_zero_u32();
+        return (*self.size) == 0;
     }
     fn at(ref self:Vector<T>, index: u32)->T{
         return self.vector.get(index.into());
@@ -128,7 +128,7 @@ impl Vector2Impl<T,+Drop<T>, +Copy<T>,+Felt252DictValue<T>> of Vector2Trait<T> {
     }
     #[inline]
     fn empty(self:@ Vector2<T>) -> bool{
-        return (*self.size).is_zero_u32();
+        return (*self.size) == 0;
     }
     fn at(ref self:Vector2<T>, index: u32)->Nullable<T>{
         return self.vector.get(index.into());

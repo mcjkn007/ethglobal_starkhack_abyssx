@@ -32,7 +32,7 @@ impl CardImpl of CardTrait {
             cards /= POW_2_U256::_8;
             let mut v:u8 = (cards & 0xf).try_into().unwrap();
     
-            if(v.is_no_zero_u8()){
+            if(v > 0){
                 result.append(v);
             }
         };

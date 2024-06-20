@@ -116,7 +116,7 @@ mod battle {
             loop{
                 match opt_arr.pop_front() {
                     Option::Some(r) => {
-                        if(r.is_zero_u16()){
+                        if(r == 0){
                             adv.c_round_end(ref enemy);
                             //enemy action
                             enemy.e_round_begin(ref adv);
@@ -137,10 +137,13 @@ mod battle {
             }; 
             
            // println!("enemy.hp : {}", enemy.attr.hp);
-            if (enemy.attr.state == AttributeState::Death && adv.attr.hp.is_no_zero_u16()){
+            if (enemy.attr.state == AttributeState::Death
+                && adv.attr.state == AttributeState::Live
+                ){
+
                 role.cur_stage.self_add_u8();
-                role.hp = adv.attr.hp.try_into().unwrap();
-                role.max_hp = adv.attr.max_hp.hp.try_into().unwrap();
+                role.hp = adv.attr.hp;
+                role.max_hp = adv.attr.max_hp;
 
             }else{
                 println!("enemy.hp : {}", enemy.attr.hp);
@@ -175,7 +178,7 @@ mod battle {
             loop{
                 match opt_arr.pop_front() {
                     Option::Some(r) => {
-                        if(r.is_zero_u16()){
+                        if(r == 0){
                             adv.c_round_end(ref enemy_team);
                             //enemy action
                             enemy_team.e1.e_round_begin(ref adv);
@@ -201,10 +204,14 @@ mod battle {
             }; 
             
            // println!("enemy.hp : {}", enemy.attr.hp);
-            if (enemy_team.e1.attr.state == AttributeState::Death && enemy_team.e2.attr.state == AttributeState::Death && adv.attr.hp.is_no_zero_u16()){
+            if (enemy_team.e1.attr.state == AttributeState::Death 
+                && enemy_team.e2.attr.state == AttributeState::Death
+                && adv.attr.state == AttributeState::Live
+            ){
+               
                 role.cur_stage.self_add_u8();
-                role.hp = adv.attr.hp.hp.try_into().unwrap();
-                role.max_hp = adv.attr.max_hp.hp.try_into().unwrap();
+                role.hp = adv.attr.hp;
+                role.max_hp = adv.attr.max_hp;
             }else{
               
                //assert(false, 'opt error');

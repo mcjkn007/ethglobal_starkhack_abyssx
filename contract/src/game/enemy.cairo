@@ -254,7 +254,7 @@ impl EnemyStatusImpl of EnemyStatusTrait{
     #[inline]
     fn check_attacked_armor(ref self:Attribute){
         let buff = self.status.get(EnemyStatus::Attacked_Armor);
-        if(buff.is_no_zero_u16()){
+        if(buff > 0){
             self.add_armor(buff);
             self.status.insert(EnemyStatus::Attacked_Armor,0);
         }

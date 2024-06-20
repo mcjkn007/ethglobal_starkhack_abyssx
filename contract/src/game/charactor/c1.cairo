@@ -17,7 +17,8 @@ use abyss_x::game::status::{StatusCategory,StatusTrait};
 use abyss_x::game::enemy::{Enemy,EnemyTeam2,EnemyTrait};
 use abyss_x::game::action::{EntityTrait,ActionTrait,DamageTrait};
 use abyss_x::game::talent::{TalentTrait};
- 
+use abyss_x::game::relic::{RelicCategory,RelicTrait};
+
 mod C1Ability{
     const Armor_Double:u32 = 1;//双倍护甲
     const Taunt:u32 = 2;//嘲笑
@@ -47,7 +48,7 @@ impl C1DamageImpl of DamageTrait {
     fn damage_taken(ref self:Attribute,ref target:Attribute, mut value:u16){
         if(Bit32Trait::is_bit_fast(self.ability,C1Ability::Shield_Wall)){
             let mut s4 = self.status.get(C1Status::S4);
-            if(s4.is_no_zero_u16()){
+            if(s4 > 0){
                 //盾墙
                 match core::integer::u16_checked_sub(s4,value){
                     Option::Some(r) => {
@@ -62,14 +63,14 @@ impl C1DamageImpl of DamageTrait {
                 value = 0;
             }
         }
-
+        
         if(self.sub_hp_and_armor(value)){
             self.check_taunt_ability();
         }
 
         self.status.cal_damaged_status(ref value);
         let thorns = self.status.get(StatusCategory::Thorns);
-        if(thorns.is_no_zero_u16()){
+        if(thorns > 0){
             target.sub_hp_and_armor(thorns);
         }
     }
@@ -81,7 +82,7 @@ impl C1DamageImpl of DamageTrait {
 
         if(Bit32Trait::is_bit_fast(self.ability,C1Ability::Shield_Wall)){
             let mut s4 = self.status.get(C1Status::S4);
-            if(s4.is_no_zero_u16()){
+            if(s4 > 0){
                 //盾墙
                 match core::integer::u16_checked_sub(s4,value){
                     Option::Some(r) => {
@@ -109,7 +110,7 @@ impl C1StatusImpl of C1StatusTrait {
     fn check_s1(ref self:Adventurer,ref target:Attribute,consume:bool)->u16{
         //流血
         let s1 = target.status.get(C1Status::S1);
-        if(s1.is_no_zero_u16()){
+        if(s1 > 0){
             target.sub_hp_and_armor(s1); 
             self.check_s8();
             if(consume){
@@ -123,7 +124,7 @@ impl C1StatusImpl of C1StatusTrait {
     fn check_s1_double(ref self:Adventurer,ref target:Attribute,consume:bool)->u16{
         //流血
         let s1 = target.status.get(C1Status::S1)*2;
-        if(s1.is_no_zero_u16()){
+        if(s1 > 0){
             target.sub_hp_and_armor(s1); 
             self.check_s8();
             if(consume){
@@ -143,7 +144,7 @@ impl C1StatusImpl of C1StatusTrait {
     fn check_s7(ref self:Attribute,ref target:Attribute){
         //你每打出一张攻击牌，给予目标敌人 1 层流血。
         let s7:u16 = self.status.get(C1Status::S7);
-        if(s7.is_no_zero_u16()){
+        if(s7 > 0){
             target.add_bleed(s7);
         } 
     }
@@ -151,36 +152,36 @@ impl C1StatusImpl of C1StatusTrait {
     fn check_s8(ref self:Adventurer){
         //嗜血时，抽1张牌。
         let s8:u16 = self.attr.status.get(C1Status::S8);
-        if(s8.is_no_zero_u16()){
+        if(s8 > 0){
             self.draw_cards_from_left(s8);
         }
     }
     #[inline]
     fn add_s10_damage(ref self:Attribute,ref value:u16){
         let s10:u16 = self.status.get(C1Status::S10);
-        if(s10.is_no_zero_u16()){
+        if(s10 > 0){
             value.add_eq_u16(s10*3);
         }
     }
     #[inline]
     fn damage_by_card(ref self:Adventurer,mut value:u16){
         let s2 = self.attr.status.get(C1Status::S2);
-        if(s2.is_no_zero_u16()){
+        if(s2 > 0){
             self.attr.status.insert(C1Status::S2,MathU16Trait::sub_u16(self.attr.status.get(C1Status::S2),1)); 
         }else{
             let s10 = self.attr.status.get(C1Status::S10);
             //add
-            if(s10.is_no_zero_u16()){
+            if(s10 > 0){
                 value.add_eq_u16(s10);
             }
             let s6 = self.attr.status.get(C1Status::S6);
             //sub
-            if(s6.is_no_zero_u16()){
+            if(s6 > 0){
                 value.sub_eq_u16(s6);
             }
             //受到伤害
             let s13 = self.attr.status.get(C1Status::S13);
-            if(s13.is_no_zero_u16() && value.is_no_zero_u16()){
+            if(s13 > 0 && value > 0){
                 self.energy.add_eq_u16(s13);
                  
             }
@@ -236,6 +237,8 @@ impl C1EntityImpl of EntityTrait<Adventurer> {
             talent:0,
             blessing:0,
             relic:0,
+            relic_flag:0,
+
             init_cards:ArrayTrait::<u8>::new(),
             left_cards:ArrayTrait::<u8>::new(),
             mid_cards:DictMapTrait::<u8>::new(),
@@ -263,7 +266,7 @@ impl C1Action1Impl of ActionTrait<Adventurer,Enemy>{
         }
         
         let s3:u16 = self.attr.status.get(C1Status::S3);//回合开始获得护甲
-        if(s3.is_no_zero_u16()){
+        if(s3 > 0){
             self.attr.c1_add_armor(s3);
             self.attr.status.insert(C1Status::S3,0);
         }
@@ -271,18 +274,18 @@ impl C1Action1Impl of ActionTrait<Adventurer,Enemy>{
         self.attr.check_shield_wall_ability();//直到下回合开始，你最多受到10点伤害
 
         let s9 = self.attr.status.get(C1Status::S9);//回合开始时，给予所有敌人1层虚弱和易伤
-        if(s9.is_no_zero_u16()){
+        if(s9 > 0){
             target.attr.add_weak(1);
             target.attr.add_fragile(1);
         }
-        if(self.attr.armor.is_no_zero_u16()){
+        if(self.attr.armor > 0){
             let s11 = self.attr.status.get(C1Status::S11);//回合开始时如果你有护甲，对所有敌人造成6点伤害
-            if(s11.is_no_zero_u16())
+            if(s11 > 0)
             {
                 target.e_direct_damage_taken(s11);
             }
             let s12 = self.attr.status.get(C1Status::S12);//回合开始时如果你有护甲，获得1点能量
-            if(s12.is_no_zero_u16())
+            if(s12 > 0)
             {
                self.energy.add_eq_u16(s12);
             }
@@ -303,7 +306,9 @@ impl C1Action1Impl of ActionTrait<Adventurer,Enemy>{
         assert(self.mid_cards.check_value(card_index), 'card void');
 
         let card_id = *self.init_cards.at(card_index.into());
-  
+        let card_category = C1CardImpl::get_card_category(card_id);
+         
+
         let result = match card_id {
             0 => panic!("error"),
             1 => self.c1(ref target),
@@ -359,17 +364,29 @@ impl C1Action1Impl of ActionTrait<Adventurer,Enemy>{
             51 => self.c51(),
             _=> panic!("error"),
         };
-        
+        target.e_action_feedback(ref self,card_category);
+
         match result {
             CardResult::Null =>{},
             CardResult::Consume => self.consume_card(card_index),
             CardResult::Discard => self.discard_card(card_index),
         }
-        
-        target.e_action_feedback(ref self,C1CardImpl::get_card_type(card_id));
-        
-        self.energy.self_sub_u16_e(C1CardImpl::get_card_energy(card_id));
+
+        match card_category {
+            0 =>{},
+            1 =>self.check_relic_18(),
+            2 =>self.check_relic_19(),
+            3 =>self.check_relic_20(),
+            _ =>{},
+        }
+        let mut energy = C1CardImpl::get_card_energy(card_id);
+        if(C1CardImpl::get_card_rarity(card_id) == 3){
+            //你的橙色牌费用减一。
+            self.check_relic_12(ref energy);
+        }
          
+        //当你使用卡牌时，消耗能量变为受到伤害
+        self.check_relic_1(energy);
     }
 }
 
@@ -392,7 +409,7 @@ impl C1Action2Impl of ActionTrait<Adventurer,EnemyTeam2>{
         }
         
         let s3:u16 = self.attr.status.get(C1Status::S3);//回合开始获得护甲
-        if(s3.is_no_zero_u16()){
+        if(s3 > 0){
             self.attr.c1_add_armor(s3);
             self.attr.status.insert(C1Status::S3,0);
         }
@@ -400,7 +417,7 @@ impl C1Action2Impl of ActionTrait<Adventurer,EnemyTeam2>{
         self.attr.check_shield_wall_ability();//直到下回合开始，你最多受到10点伤害
 
         let s9 = self.attr.status.get(C1Status::S9);//回合开始时，给予所有敌人1层虚弱和易伤
-        if(s9.is_no_zero_u16()){
+        if(s9 > 0){
             if(target.e1.attr.state == AttributeState::Live){
                 target.e1.attr.add_weak(1);
                 target.e1.attr.add_fragile(1);
@@ -410,9 +427,9 @@ impl C1Action2Impl of ActionTrait<Adventurer,EnemyTeam2>{
                 target.e2.attr.add_fragile(1);
             }
         }
-        if(self.attr.armor.is_no_zero_u16()){
+        if(self.attr.armor > 0){
             let s11 = self.attr.status.get(C1Status::S11);//回合开始时如果你有护甲，对所有敌人造成6点伤害
-            if(s11.is_no_zero_u16())
+            if(s11 > 0)
             {
                 if(target.e1.attr.state == AttributeState::Live){
                     target.e1.e_direct_damage_taken(s11);
@@ -422,7 +439,7 @@ impl C1Action2Impl of ActionTrait<Adventurer,EnemyTeam2>{
                 }
             }
             let s12 = self.attr.status.get(C1Status::S12);//回合开始时如果你有护甲，获得1点能量
-            if(s12.is_no_zero_u16())
+            if(s12 > 0)
             {
                self.energy.add_eq_u16(s12);
             }
@@ -443,6 +460,7 @@ impl C1Action2Impl of ActionTrait<Adventurer,EnemyTeam2>{
         assert(self.mid_cards.check_value(card_index), 'card void');
 
         let card_id = *self.init_cards.at(card_index.into());
+        let card_category = C1CardImpl::get_card_category(card_id);
 
         let mut result = CardResult::Null;
 
@@ -509,7 +527,7 @@ impl C1Action2Impl of ActionTrait<Adventurer,EnemyTeam2>{
                     51 => self.c51(),
                     _=> panic!("error"),
                 };
-                target.e1.e_action_feedback(ref self,C1CardImpl::get_card_type(card_id));
+                target.e1.e_action_feedback(ref self,card_category);
             }
             else {
                 result = match card_id {
@@ -567,20 +585,29 @@ impl C1Action2Impl of ActionTrait<Adventurer,EnemyTeam2>{
                     51 => self.c51(),
                     _=> panic!("error"),
                 };
-                target.e1.e_action_feedback(ref self,C1CardImpl::get_card_type(card_id));
+                target.e1.e_action_feedback(ref self,card_category);
             } 
         }
-        
-         
-
+ 
         match result {
             CardResult::Null =>{},
             CardResult::Consume => self.consume_card(card_index),
             CardResult::Discard => self.discard_card(card_index),
         }
-        
-        
-        self.energy.self_sub_u16_e(C1CardImpl::get_card_energy(card_id)); 
+
+        match card_category {
+            0 =>{},
+            1 =>self.check_relic_18(),
+            2 =>self.check_relic_19(),
+            3 =>self.check_relic_20(),
+            _ =>{},
+        }
+
+        let mut energy = C1CardImpl::get_card_energy(card_id);
+        if(C1CardImpl::get_card_rarity(card_id) == 3){
+            //你的橙色牌费用减一。
+            self.check_relic_12(ref energy);
+        }
     }
 }
 
@@ -644,9 +671,9 @@ impl C1CardImpl of C1CardTrait{
             _ => 1,
         };
     }
-    fn get_card_type(card_id: u8) -> u16{
+    fn get_card_category(card_id: u8) -> u16{
         return match card_id {
-            0 => 1,
+            0 => 0,
             1 => 1,
             2 => 2,
             3 => 1,
@@ -697,6 +724,63 @@ impl C1CardImpl of C1CardTrait{
             48 => 3,
             49 => 3,
             50 => 3,
+            51 => 3,
+            _ => 1,
+        };
+    }
+    fn get_card_rarity(card_id: u8) -> u16{
+        return match card_id {
+            0 => 0,
+            1 => 1,
+            2 => 1,
+            3 => 3,
+            4 => 1,
+            5 => 2,
+            6 => 3,
+            7 => 1,
+            8 => 1,
+            9 => 3,
+            10 => 2,
+            11 => 1,
+            12 => 1,
+            13 => 2,
+            14 => 1,
+            15 => 1,
+            16 => 2,
+            17 => 2,
+            18 => 2,
+            19 => 2,
+            20 => 1,
+            21 => 2,
+            22 => 3,
+            23 => 3,
+            24 => 3,
+            25 => 1,
+            26 => 1,
+            27 => 2,
+            28 => 2,
+            29 => 3,
+            30 => 2,
+            31 => 1,
+            32 => 3,
+            33 => 3,
+            34 => 1,
+            35 => 1,
+            36 => 3,
+            37 => 2,
+            38 => 2,
+            39 => 1,
+            40 => 2,
+            41 => 1,
+            42 => 1,
+            43 => 2,
+            44 => 2,
+            45 => 3,
+            46 => 2,
+            47 => 3,
+            48 => 2,
+            49 => 3,
+            50 => 2,
             51 => 3,
             _ => 1,
         };
@@ -1101,7 +1185,7 @@ impl C1CardImpl of C1CardTrait{
         target.e_damage_taken(ref self.attr,value);
 
         let  consume = self.check_s1(ref target.attr,true);
-        if(consume.is_no_zero_u16()){
+        if(consume > 0){
             self.attr.c1_add_armor(consume);
         }
         self.attr.check_s7(ref target.attr);
@@ -1117,7 +1201,7 @@ impl C1CardImpl of C1CardTrait{
     fn c32(ref self:Adventurer,ref target:Enemy)->CardResult{
         //消耗目标身上的流血层数，获得等量的护甲。消耗
         let s1 = target.attr.status.get(C1Status::S1);
-        if(s1.is_no_zero_u16()){
+        if(s1 > 0){
             target.attr.status.insert(C1Status::S1,0);
             self.attr.c1_add_armor(s1);
         }
@@ -1191,7 +1275,7 @@ impl C1CardImpl of C1CardTrait{
     fn c39(ref self:Adventurer,ref target:Enemy)->CardResult{
         //对一个目标造成6点伤害。如果你有护甲，造成额外6点伤害。
         let mut value:u16 = 6;
-        if(self.attr.armor.is_no_zero_u16()){
+        if(self.attr.armor > 0){
             value.add_eq_u16(6);
         }
         self.check_talent_1(ref value);
@@ -1208,7 +1292,7 @@ impl C1CardImpl of C1CardTrait{
         //造成18点伤害，如果目标有护甲，造成额外6点伤害。
         let mut value:u16 = 6;
        
-        if(target.attr.armor.is_no_zero_u16()){
+        if(target.attr.armor > 0){
             value.add_eq_u16(6);
         }
         self.check_talent_1(ref value);
@@ -1228,7 +1312,7 @@ impl C1CardImpl of C1CardTrait{
         self.c_calculate_damage_dealt(ref value);
         target.e_damage_taken(ref self.attr,value);
 
-        if(self.attr.armor.is_no_zero_u16()){
+        if(self.attr.armor > 0){
             target.attr.add_weak(1);
         }
 
@@ -1250,7 +1334,7 @@ impl C1CardImpl of C1CardTrait{
     #[inline]
     fn c43(ref self:Adventurer)->CardResult{
         //如果你有护甲，获得2点能量
-        if(self.attr.armor.is_no_zero_u16()){
+        if(self.attr.armor > 0){
             self.energy.add_eq_u16(2);
         }
 

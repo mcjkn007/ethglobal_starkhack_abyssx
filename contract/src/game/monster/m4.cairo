@@ -45,7 +45,7 @@ impl M4ActionImpl of ActionTrait<Enemy,Adventurer>{
     fn  action(ref self:Enemy,ref target:Adventurer,mut data:u16){
         let fly = self.attr.status.get(EnemyStatus::Fly);
         self.round.add_eq_u16(data);
-        if(fly.is_no_zero_u16()){
+        if(fly > 0){
             let r = self.round%4;
              if(r == 0 || r == 3){
                 let mut value = 1;
@@ -93,7 +93,7 @@ impl M4DamageImpl of DamageTrait {
         self.status.cal_damaged_status(ref value);
 
         let fly = self.status.get(EnemyStatus::Fly);
-        if(fly.is_no_zero_u16()){
+        if(fly > 0){
             value /= 2;
             if(fly == 1){
                 self.status.insert(EnemyStatus::Vertigo,1);    
@@ -103,11 +103,8 @@ impl M4DamageImpl of DamageTrait {
 
         self.sub_hp_and_armor(value); 
         let thorns = self.status.get(StatusCategory::Thorns);
-        if(thorns.is_no_zero_u16()){
+        if(thorns > 0){
             target.sub_hp_and_armor(thorns);
-        }
-        if(self.hp.is_zero_u16()){
-            self.state = AttributeState::Death;
         }
     }
 
@@ -116,9 +113,6 @@ impl M4DamageImpl of DamageTrait {
     }
     fn  direct_damage_taken(ref self:Attribute, mut value:u16){
         self.sub_hp_and_armor(value); 
-        if(self.hp.is_zero_u16()){
-            self.state = AttributeState::Death;
-        }
     }
     
 }

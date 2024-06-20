@@ -43,11 +43,15 @@ mod RelicCategory{
 #[generate_trait]
 impl RelicImpl of RelicTrait {
     #[inline]
-    fn check_relic_1(ref self:Adventurer){
-        //在战斗结束时，回复6点生命。
-        match Bit64Trait::is_bit_fast(self.relic,RelicCategory::R1){
-            true=> self.attr.add_hp(6),
-            false => {}
+    fn check_relic_1(ref self:Adventurer, value:u16){
+        //当你使用卡牌时，消耗能量变为受到伤害. 
+         match Bit64Trait::is_bit_fast(self.relic,RelicCategory::R1){
+            true=> {
+                self.attr.sub_hp_and_armor(value);
+            },
+            false => {
+                self.sub_energy(value);
+            }
         }
     }
     #[inline]
@@ -59,16 +63,20 @@ impl RelicImpl of RelicTrait {
         }
     }
     #[inline]
-    fn check_relic_3(ref self:Adventurer){
-        
-         
+    fn check_relic_3(ref self:Adventurer)->bool{
+        //每回合使用的第一张牌不会进入弃牌堆。
+        if(Bit64Trait::is_bit_fast(self.relic_flag,RelicCategory::R3)){
+            self.relic_flag = Bit64Trait::clean_bit_fast(self.relic_flag,RelicCategory::R3);
+            return true;
+        }
+        return false;
     }
     #[inline]
     fn check_relic_4(ref self:Adventurer){
-        //如果你在回合结束时没有任何格挡，获得6点格挡。
+        //在回合结束时，如果你有护甲，获得6点格挡。
         match Bit64Trait::is_bit_fast(self.relic,RelicCategory::R4){
-            true=> {
-                if(self.attr.armor.is_zero_u16()){
+            true => {
+                if(self.attr.armor > 0){
                     self.attr.add_armor(6);
                 }
             },
@@ -92,14 +100,24 @@ impl RelicImpl of RelicTrait {
         }
     }
     #[inline]
-    fn check_relic_7(ref self:Adventurer){
-        //精英敌人在被打败时多掉落一件遗物。
-       
+    fn check_relic_7(ref self:Adventurer,ref value:u16){
+        //对敌人造成伤害时候，额外增加1点伤害
+        match Bit64Trait::is_bit_fast(self.relic,RelicCategory::R7){
+            true=>  {
+                value.add_eq_u16(1);
+            },
+            false =>{}
+        }
     }
     #[inline]
     fn check_relic_8(ref self:Adventurer){
-        //可以将卡牌奖励转变为+2最大生命值。
-       
+        //在每回合结束时，回复2点生命。
+        match Bit64Trait::is_bit_fast(self.relic,RelicCategory::R8){
+            true=>  {
+                self.attr.add_hp(2);
+            },
+            false =>{}
+        }
     }
     #[inline]
     fn check_relic_9(ref self:Adventurer)->bool{
@@ -117,28 +135,115 @@ impl RelicImpl of RelicTrait {
         return Bit64Trait::is_bit_fast(self.relic,RelicCategory::R11);
     }
     #[inline]
-    fn check_relic_12(ref self:Adventurer){
-        //现在你可以在休息处发现遗物。
-       
-    }
-    #[inline]
-    fn check_relic_13(ref self:Adventurer,category:EnemyCategory){
-        if(category== EnemyCategory::B1){
-            //在Boss战与精英战中，你的最大能量+1
-            match Bit64Trait::is_bit_fast(self.relic,RelicCategory::R13){
-                true => self.add_max_energy(1),
-                false => {}
-            }
+    fn check_relic_12(ref self:Adventurer,ref value:u16){
+        //你的橙色牌费用减一。
+        match Bit64Trait::is_bit_fast(self.relic,RelicCategory::R12){
+            true =>{
+                value.sub_eq_u16(1);
+            },  
+            false => {}
         }
     }
     #[inline]
-    fn check_relic_14(ref self:Adventurer){
-        //在战斗开始时，将2张伤口放入你的抽牌堆，你的最大能量+1
+    fn check_relic_13(ref self:Adventurer,ref enemy:Enemy){
+        //在每场战斗开始时，所有敌人获得1点伤害加深，你的最大能量+1
+        match Bit64Trait::is_bit_fast(self.relic,RelicCategory::R13){
+            true =>{
+                enemy.attr.add_ad(2);
+                self.add_max_energy(1);
+            },  
+            false => {}
+        }
+    }
+    #[inline]
+    fn check_relic_14(ref self:Adventurer,init:bool){
+        //在回合结束时，受到3点伤害，你的最大能量+1
         match Bit64Trait::is_bit_fast(self.relic,RelicCategory::R13){
             true => {
-                self.init_cards.append(DebuffCard::Wound);
-                self.init_cards.append(DebuffCard::Wound);
-                self.add_max_energy(1);
+                match init {
+                    true=> {
+                        self.add_max_energy(1);
+                    },
+                    false=> {
+                        self.attr.sub_hp_and_armor(3);
+                    },
+                }
+                
+            },
+            false => {}
+        }
+    }
+    #[inline]
+    fn check_relic_15(ref self:Adventurer,init:bool){
+        //在每场战斗开始时，最大生命减少10点，战斗结束后恢复，你的最大能量+1
+        match Bit64Trait::is_bit_fast(self.relic,RelicCategory::R15){
+            true => {
+                match init {
+                    true=> {
+                        self.attr.sub_hp_max(10);
+                        self.add_max_energy(1);
+                    },
+                    false=> {
+                        self.attr.add_hp_max(10);
+                    },
+                }
+                
+            },
+            false => {}
+        }
+    }
+    #[inline]
+    fn check_relic_16(ref self:Adventurer,init:bool){
+        //在回合开始时，抽牌数-1。你的最大能量+1
+        match Bit64Trait::is_bit_fast(self.relic,RelicCategory::R16){
+            true => {
+                match init {
+                    true=> {
+                        self.add_max_energy(1);
+                    },
+                    false=> {
+                        self.draw_cards.sub_eq_u16(1);
+                    },
+                }
+                
+            },
+            false => {}
+        }
+    }
+    #[inline]
+    fn check_relic_17(ref self:Adventurer)->bool{
+        //你使用的牌会进入抽牌堆底。
+        return Bit64Trait::is_bit_fast(self.relic,RelicCategory::R17);
+    }
+    #[inline]
+    fn check_relic_18(ref self:Adventurer){
+        //你每打出一张攻击牌，本回合获得1点能量，但是会获得一层虚弱。
+        match Bit64Trait::is_bit_fast(self.relic,RelicCategory::R20){
+            true => {
+               self.add_energy(1);
+               self.attr.add_weak(1);
+            },
+            false => {}
+        }
+    }
+    #[inline]
+    fn check_relic_19(ref self:Adventurer){
+        //你每打出一张技能牌，本回合获得1点能量，但是会获得一层脆弱。
+        match Bit64Trait::is_bit_fast(self.relic,RelicCategory::R18){
+            true => {
+               self.add_energy(1);
+               self.attr.add_fear(1);
+            },
+            false => {}
+        }
+    }
+    #[inline]
+    fn check_relic_20(ref self:Adventurer){
+        //你每打出一张能力牌，本回合获得1点能量，但是会获得一层易碎。
+        match Bit64Trait::is_bit_fast(self.relic,RelicCategory::R19){
+            true => {
+               self.add_energy(1);
+               self.attr.add_fragile(1);
             },
             false => {}
         }

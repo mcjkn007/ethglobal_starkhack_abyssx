@@ -3,20 +3,6 @@ use abyss_x::utils::constant::{MIN_U8,MAX_U8,MIN_U16,MAX_U16,MIN_U32,MAX_U32,MIN
 #[generate_trait]
 impl MathU8Impl of MathU8Trait {
     #[inline]
-    fn is_zero_u8(self:u8)->bool{
-        return match self{
-            0 => true,
-            _ => false,
-        };
-    }
-    #[inline]
-    fn is_no_zero_u8( self:u8)->bool{
-        return match self{
-            0 => false,
-            _ => true,
-        };
-    }
-    #[inline]
     fn add_u8(x:u8,y:u8)->u8{
         return match core::integer::u8_checked_add(x,y){
             Option::Some(r) => r,
@@ -89,20 +75,6 @@ impl MathU8Impl of MathU8Trait {
  
 #[generate_trait]
 impl MathU16Impl of MathU16Trait {
-    #[inline]
-    fn is_zero_u16(self:u16)->bool{
-        return match self{
-            0 => true,
-            _ => false,
-        };
-    }
-    #[inline]
-    fn is_no_zero_u16(self:u16)->bool{
-        return match self{
-            0 => false,
-            _ => true,
-        };
-    }
     #[inline]
     fn add_u16(x:u16,y:u16)->u16{
         return match core::integer::u16_checked_add(x,y){
@@ -177,20 +149,6 @@ impl MathU16Impl of MathU16Trait {
 #[generate_trait]
 impl MathU32Impl of MathU32Trait {
     #[inline]
-    fn is_zero_u32(self:u32)->bool{
-        return match self{
-            0 => true,
-            _ => false,
-        };
-    }
-    #[inline]
-    fn is_no_zero_u32(self:u32)->bool{
-        return match self{
-            0 => false,
-            _ => true,
-        };
-    }
-    #[inline]
     fn add_u32(x:u32,y:u32)->u32{
         return match core::integer::u32_checked_add(x,y){
             Option::Some(r) => r,
@@ -252,20 +210,6 @@ impl MathU32Impl of MathU32Trait {
  
 #[generate_trait]
 impl MathU64Impl of MathU64Trait {
-    #[inline]
-    fn is_zero_u64(ref self:u64)->bool{
-        return match self{
-            0 => true,
-            _ => false,
-        };
-    }
-    #[inline]
-    fn is_no_zero_u64(self:u64)->bool{
-        return match self{
-            0 => false,
-            _ => true,
-        };
-    }
     #[inline]
     fn add_u64(x:u64,y:u64)->u64{
         return match core::integer::u64_checked_add(x,y){
@@ -344,20 +288,6 @@ impl MathU64Impl of MathU64Trait {
  
 #[generate_trait]
 impl MathU128Impl of MathU128Trait {
-    #[inline]
-    fn is_zero_u128(ref self:u128)->bool{
-        return match self{
-            0 => true,
-            _ => false,
-        };
-    }
-    #[inline]
-    fn is_no_zero_u128(self:u128)->bool{
-        return match self{
-            0 => false,
-            _ => true,
-        };
-    }
     #[inline]
     fn add_u128(x:u128,y:u128)->u128{
         return match core::integer::u128_checked_add(x,y){

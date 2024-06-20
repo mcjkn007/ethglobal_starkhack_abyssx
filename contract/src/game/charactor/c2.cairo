@@ -42,6 +42,7 @@ impl C2EntityImpl of EntityTrait<Adventurer> {
             talent:0,
             blessing:0,
             relic:0,
+            relic_flag:0,
             init_cards:ArrayTrait::<u8>::new(),
             left_cards:ArrayTrait::<u8>::new(),
             mid_cards:DictMapTrait::<u8>::new(),

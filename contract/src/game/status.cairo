@@ -86,15 +86,15 @@ impl StatusImpl of StatusTrait {
     #[inline]
     fn round_end(ref self:Felt252Dict<u16>){
         let s1:u16 = self.get(StatusCategory::Weak);
-        if(s1.is_no_zero_u16()){
+        if(s1 > 0){
             self.insert(StatusCategory::Weak,MathU16Trait::sub_u16(s1,1));
         }
         let s2:u16 = self.get(StatusCategory::Fragile);
-        if(s2.is_no_zero_u16()){
+        if(s2 > 0){
             self.insert(StatusCategory::Fragile,MathU16Trait::sub_u16(s2,1));
         }
         let s3:u16 = self.get(StatusCategory::Fear);
-        if(s3.is_no_zero_u16()){
+        if(s3 > 0){
             self.insert(StatusCategory::Fear,MathU16Trait::sub_u16(s3,1));
         }
     }

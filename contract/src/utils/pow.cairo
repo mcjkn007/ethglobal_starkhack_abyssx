@@ -10,7 +10,7 @@ impl PowImpl<T,+Drop<T>, +Copy<T>,+MulEq::<T>,+Into<u8,T>> of PowTrait<T> {
         let mut result: T = 1_u8.into();
         let mut n = n;
         loop {
-            if (n % 2 != 0) {
+            if (n % 2 > 0) {
                 result *= b;
             }
             n /= 2;

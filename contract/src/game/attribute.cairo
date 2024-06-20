@@ -71,9 +71,13 @@ impl AttributeImpl of AttributeTrait {
         match core::integer::u16_checked_sub(self.hp,value){
             Option::Some(r) =>{
                 self.hp = r;
+                if(r == 0){
+                    self.state = AttributeState::Death;
+                }
             },
             Option::None =>{
                 self.hp = MIN_U16;
+                self.state = AttributeState::Death;
             }
         }
     }
@@ -90,9 +94,13 @@ impl AttributeImpl of AttributeTrait {
                 match core::integer::u16_checked_sub(self.hp,value){
                     Option::Some(r) =>{
                         self.hp = r;
+                        if(r == 0){
+                            self.state = AttributeState::Death;
+                        }
                     },
                     Option::None =>{
                         self.hp = MIN_U16;
+                        self.state = AttributeState::Death;
                     }
                 }
                 return true;
@@ -110,6 +118,20 @@ impl AttributeImpl of AttributeTrait {
             }
         }
         if(self.hp > self.max_hp){
+            self.hp = self.max_hp;
+        }
+    }
+    #[inline]
+    fn add_hp_max(ref self:Attribute,value:u16){
+        match core::integer::u16_checked_add(self.max_hp,value){
+            Option::Some(r) =>{
+                self.max_hp = r;
+            },
+            Option::None =>{
+                self.max_hp = MAX_U16;
+            }
+        }
+        if(self.hp == self.max_hp){
             self.hp = self.max_hp;
         }
     }

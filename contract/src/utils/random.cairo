@@ -67,12 +67,12 @@ impl RandomContainerImpl<T,+Drop<T>, +Copy<T>,+AddEq<T>,+PartialOrd<T>,+Into<T, 
                 break;
             } 
         
-            let mut rand_pos:u64 =  MathU64Trait::add_u64(RandomTrait::random_u64(ref seed,0_u64,cur_pos.into()),1_u64);
+            let mut rand_pos:u64 =  MathU64Trait::add_u64(RandomTrait::random_u64(ref seed,0_u64,cur_pos.into()),1);
             let v:u8 = dict.get(rand_pos.try_into().unwrap());
-            if(v.is_zero_u8()){
-                result.append(*data.at((MathU64Trait::sub_u64(rand_pos,1_u64)).try_into().unwrap()));
+            if(v == 0){
+                result.append(*data.at((MathU64Trait::sub_u64(rand_pos,1)).try_into().unwrap()));
             }else{
-                result.append(*data.at((MathU8Trait::sub_u8(v,1_u8)).try_into().unwrap()));
+                result.append(*data.at((MathU8Trait::sub_u8(v,1)).try_into().unwrap()));
             }
             dict.insert(rand_pos.try_into().unwrap(),cur_pos.try_into().unwrap());
             cur_pos.self_sub_u32();
@@ -85,7 +85,7 @@ impl RandomContainerImpl<T,+Drop<T>, +Copy<T>,+AddEq<T>,+PartialOrd<T>,+Into<T, 
         
         let mut cur_pos:u32 = data_size;
         loop{
-            if(cur_pos.is_zero_u32()){
+            if(cur_pos == 0){
                 break;
             }
              
@@ -109,16 +109,16 @@ impl RandomArrayImpl of RandomArrayTrait{
         let mut result: Array<u8> = ArrayTrait::new();
         loop{
             if(cur_pos == 1_u32){
-                result.append(MathU8Trait::sub_u8(dict.get(1).into(),1_u8));
+                result.append(MathU8Trait::sub_u8(dict.get(1).into(),1));
                 break;
             } 
         
-            let mut rand_pos:u64 =  MathU64Trait::add_u64(RandomTrait::random_u64(ref seed,0_u64,cur_pos.into()),1_u64);
+            let mut rand_pos:u64 =  MathU64Trait::add_u64(RandomTrait::random_u64(ref seed,0_u64,cur_pos.into()),1);
             let v:u8 = dict.get(rand_pos.try_into().unwrap());
-            if(v.is_zero_u8()){
-                result.append((MathU64Trait::sub_u64(rand_pos,1_u64)).try_into().unwrap());
+            if(v == 0){
+                result.append((MathU64Trait::sub_u64(rand_pos,1)).try_into().unwrap());
             }else{
-                result.append((MathU8Trait::sub_u8(v,1_u8)).try_into().unwrap());
+                result.append((MathU8Trait::sub_u8(v,1)).try_into().unwrap());
             }
             dict.insert(rand_pos.try_into().unwrap(),cur_pos.try_into().unwrap());
             cur_pos.self_sub_u32();

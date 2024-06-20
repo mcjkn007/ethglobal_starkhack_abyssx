@@ -13,9 +13,10 @@ use abyss_x::utils::bit::{Bit32Trait};
 
 use abyss_x::game::adventurer::{Adventurer,AdventurerTrait,AdventurerCommonTrait};
 use abyss_x::game::attribute::{Attribute,AttributeState,AttributeTrait,CalAttributeTrait};
-use abyss_x::game::status::{CommonStatus,StatusTrait};
+use abyss_x::game::status::{StatusCategory,StatusTrait};
 use abyss_x::game::enemy::{Enemy,EnemyTeam2,EnemyTrait};
 use abyss_x::game::action::{EntityTrait,ActionTrait,DamageTrait};
+use abyss_x::game::talent::{TalentTrait};
  
 mod C1Ability{
     const Armor_Double:u32 = 1;//双倍护甲
@@ -67,7 +68,7 @@ impl C1DamageImpl of DamageTrait {
         }
 
         self.status.cal_damaged_status(ref value);
-        let thorns = self.status.get(CommonStatus::Thorns);
+        let thorns = self.status.get(StatusCategory::Thorns);
         if(thorns.is_no_zero_u16()){
             target.sub_hp_and_armor(thorns);
         }
@@ -180,7 +181,7 @@ impl C1StatusImpl of C1StatusTrait {
             //受到伤害
             let s13 = self.attr.status.get(C1Status::S13);
             if(s13.is_no_zero_u16() && value.is_no_zero_u16()){
-                self.attr.energy.add_eq_u16(s13);
+                self.energy.add_eq_u16(s13);
                  
             }
             if(self.attr.sub_hp_and_armor(value)){
@@ -227,6 +228,14 @@ impl C1EntityImpl of EntityTrait<Adventurer> {
             seed:0,
             attr:AttributeTrait::new(80),
             category:1,
+
+            energy:3,
+            max_energy:3,
+        
+            draw_cards:5,
+            talent:0,
+            blessing:0,
+            relic:0,
             init_cards:ArrayTrait::<u8>::new(),
             left_cards:ArrayTrait::<u8>::new(),
             mid_cards:DictMapTrait::<u8>::new(),
@@ -275,7 +284,7 @@ impl C1Action1Impl of ActionTrait<Adventurer,Enemy>{
             let s12 = self.attr.status.get(C1Status::S12);//回合开始时如果你有护甲，获得1点能量
             if(s12.is_no_zero_u16())
             {
-               self.attr.energy.add_eq_u16(s12);
+               self.energy.add_eq_u16(s12);
             }
         }
          
@@ -359,7 +368,7 @@ impl C1Action1Impl of ActionTrait<Adventurer,Enemy>{
         
         target.e_action_feedback(ref self,C1CardImpl::get_card_type(card_id));
         
-        self.attr.energy.self_sub_u16_e(C1CardImpl::get_card_energy(card_id));
+        self.energy.self_sub_u16_e(C1CardImpl::get_card_energy(card_id));
          
     }
 }
@@ -415,7 +424,7 @@ impl C1Action2Impl of ActionTrait<Adventurer,EnemyTeam2>{
             let s12 = self.attr.status.get(C1Status::S12);//回合开始时如果你有护甲，获得1点能量
             if(s12.is_no_zero_u16())
             {
-               self.attr.energy.add_eq_u16(s12);
+               self.energy.add_eq_u16(s12);
             }
         }
          
@@ -571,7 +580,7 @@ impl C1Action2Impl of ActionTrait<Adventurer,EnemyTeam2>{
         }
         
         
-        self.attr.energy.self_sub_u16_e(C1CardImpl::get_card_energy(card_id)); 
+        self.energy.self_sub_u16_e(C1CardImpl::get_card_energy(card_id)); 
     }
 }
 
@@ -695,7 +704,7 @@ impl C1CardImpl of C1CardTrait{
     fn c1(ref self:Adventurer,ref target:Enemy)->CardResult{
         //造成 6 点伤害。
         let mut value:u16 = 6;
-
+        self.check_talent_1(ref value);
         self.c_calculate_damage_dealt(ref value);
         target.e_damage_taken(ref self.attr,value);
 
@@ -707,8 +716,9 @@ impl C1CardImpl of C1CardTrait{
     #[inline]
     fn c2(ref self:Adventurer)->CardResult{
         //获得 5 点护甲。
-
-        self.attr.c1_add_armor(5);
+        let mut value:u16 = 5;
+        self.check_talent_2(ref value);
+        self.attr.c1_add_armor(value);
 
         return CardResult::Discard;
     }
@@ -725,7 +735,7 @@ impl C1CardImpl of C1CardTrait{
         //造成9点伤害，抽1牌
 
         let mut value:u16 = 9;
-        
+        self.check_talent_1(ref value);
         self.c_calculate_damage_dealt(ref value);
         target.e_damage_taken(ref self.attr,value);
 
@@ -741,7 +751,7 @@ impl C1CardImpl of C1CardTrait{
         //抽一张牌，获得卡牌能耗的能量
         self.draw_cards_from_left(1);
       
-        self.attr.energy.add_eq_u16(C1CardTrait::get_card_energy(self.mid_cards.at(self.mid_cards.size()-1)));
+        self.energy.add_eq_u16(C1CardTrait::get_card_energy(self.mid_cards.at(self.mid_cards.size()-1)));
 
         return CardResult::Discard;
     }
@@ -778,6 +788,7 @@ impl C1CardImpl of C1CardTrait{
     fn c11(ref self:Adventurer,ref target:Enemy)->CardResult{
         //造成 15 点伤害。受到 3 点伤害。
         let mut value:u16 = 15;
+        self.check_talent_1(ref value);
         self.attr.add_s10_damage(ref value);
 
         self.c_calculate_damage_dealt(ref value);
@@ -793,6 +804,7 @@ impl C1CardImpl of C1CardTrait{
     fn c12(ref self:Adventurer,ref target:Enemy)->CardResult{
         //造成 12 点伤害。受到 3 点伤害。抽 1 张牌。
         let mut value:u16 = 12;
+        self.check_talent_1(ref value);
         self.attr.add_s10_damage(ref value);
 
         self.c_calculate_damage_dealt(ref value);
@@ -809,12 +821,12 @@ impl C1CardImpl of C1CardTrait{
     fn c13(ref self:Adventurer,ref target:Enemy)->CardResult{
         //造成12点伤害，受到3点伤害，执行x次。
         let mut value:u16 = 12;
-
+        self.check_talent_1(ref value);
         self.attr.add_s10_damage(ref value);
 
         self.c_calculate_damage_dealt(ref value);
         let mut i = 0;
-        let mut size = self.attr.energy;
+        let mut size = self.energy;
         loop{
             if(i == size){
                 break;
@@ -837,6 +849,7 @@ impl C1CardImpl of C1CardTrait{
     fn c14(ref self:Adventurer,ref target:Enemy)->CardResult{
         //对所有敌人造成3点伤害，免疫下次撞击牌伤害
         let mut value:u16 = 3;
+        self.check_talent_1(ref value);
         self.c_calculate_damage_dealt(ref value);
         target.e_damage_taken(ref self.attr,value);
 
@@ -850,6 +863,7 @@ impl C1CardImpl of C1CardTrait{
     fn c14_2(ref self:Adventurer,ref target:EnemyTeam2)->CardResult{
         //对所有敌人造成3点伤害，免疫下次撞击牌伤害
         let mut value:u16 = 3;
+        self.check_talent_1(ref value);
         self.c_calculate_damage_dealt(ref value);
         if(target.e1.attr.state == AttributeState::Live){
             target.e1.e_damage_taken(ref self.attr,value);
@@ -869,6 +883,7 @@ impl C1CardImpl of C1CardTrait{
     fn c15(ref self:Adventurer,ref target:Enemy)->CardResult{
         //造成15点伤害，免疫下1次撞击牌伤害
         let mut value:u16 = 15;
+        self.check_talent_1(ref value);
         self.c_calculate_damage_dealt(ref value);
         target.e_damage_taken(ref self.attr,value);
 
@@ -880,8 +895,9 @@ impl C1CardImpl of C1CardTrait{
         return self.check_burn_bridges_ability(CardResult::Discard);
     }
     fn c16(ref self:Adventurer,ref target:Enemy)->CardResult{
-        //造成 14 点伤害。受到 3 点伤害。嗜血：不受到伤害。
-        let mut value:u16 =14;
+        //造成 12 点伤害。受到 3 点伤害。嗜血：不受到伤害。
+        let mut value:u16 =12;
+        self.check_talent_1(ref value);
         self.attr.add_s10_damage(ref value);
         self.c_calculate_damage_dealt(ref value);
         target.e_damage_taken(ref self.attr,value);
@@ -899,6 +915,7 @@ impl C1CardImpl of C1CardTrait{
     fn c17(ref self:Adventurer,ref target:Enemy)->CardResult{
         //造成 12 点伤害。受到 3 点伤害。嗜血：给予 1 层易伤。
         let mut value:u16 = 12;
+        self.check_talent_1(ref value);
         self.attr.add_s10_damage(ref value);
         self.c_calculate_damage_dealt(ref value);
         target.e_damage_taken(ref self.attr,value);
@@ -916,6 +933,7 @@ impl C1CardImpl of C1CardTrait{
     fn c18(ref self:Adventurer,ref target:Enemy)->CardResult{
         //造成18点伤害，受到3点伤害，本次消耗的流血伤害翻倍
         let mut value:u16 = 18;
+        self.check_talent_1(ref value);
         self.attr.add_s10_damage(ref value);
         self.c_calculate_damage_dealt(ref value);
         target.e_damage_taken(ref self.attr,value);
@@ -930,7 +948,7 @@ impl C1CardImpl of C1CardTrait{
     fn c19(ref self:Adventurer,ref target:Enemy)->CardResult{
         //受到3点伤害，获得2点能量
         self.c_direct_damage_taken(3);
-        self.attr.energy.add_eq_u16(2);
+        self.energy.add_eq_u16(2);
 
         return CardResult::Discard;
     }
@@ -960,7 +978,8 @@ impl C1CardImpl of C1CardTrait{
     }
     fn c24(ref self:Adventurer,ref target:Enemy)->CardResult{
         //造成9点伤害，嗜血：回复6点生命，消耗
-        let mut value:u16 = 49;
+        let mut value:u16 = 9;
+        self.check_talent_1(ref value);
         self.c_calculate_damage_dealt(ref value);
         target.e_damage_taken(ref self.attr,value);
 
@@ -975,8 +994,9 @@ impl C1CardImpl of C1CardTrait{
     fn c25(ref self:Adventurer,ref target:Enemy)->CardResult{
         //造成 5 点伤害。获得 5 点护甲。嗜血：效果翻倍。
         let mut damage:u16 = 5;
+        self.check_talent_1(ref damage);
         let mut armor:u16 = 5;
-     
+        self.check_talent_2(ref armor);
         match self.check_s1(ref target.attr,true)  {
             0=> {},
             _=> {
@@ -995,7 +1015,8 @@ impl C1CardImpl of C1CardTrait{
     }
     fn c26(ref self:Adventurer,ref target:Enemy)->CardResult{
         //造成9点伤害，嗜血：抽2张牌
-        let mut value:u16 = 12_u16;
+        let mut value:u16 = 9;
+        self.check_talent_1(ref value);
         self.c_calculate_damage_dealt(ref value);
         target.e_damage_taken(ref self.attr,value);
 
@@ -1011,13 +1032,14 @@ impl C1CardImpl of C1CardTrait{
     }
     fn c27(ref self:Adventurer,ref target:Enemy)->CardResult{
         //造成12点伤害，嗜血：不消耗能量。
-        let mut value:u16 = 12_u16;
+        let mut value:u16 = 12;
+        self.check_talent_1(ref value);
         self.c_calculate_damage_dealt(ref value);
         target.e_damage_taken(ref self.attr,value);
 
         match self.check_s1(ref target.attr,true) {
             0=> {},
-            _=> self.attr.energy.add_eq_u16(2),
+            _=> self.energy.add_eq_u16(2),
         }
         self.attr.check_s7(ref target.attr);
 
@@ -1026,7 +1048,8 @@ impl C1CardImpl of C1CardTrait{
     
     fn c28(ref self:Adventurer,ref target:Enemy)->CardResult{
         //造成4点伤害，给予所有敌人8层流血
-        let mut value:u16 = 4_u16;
+        let mut value:u16 = 4;
+        self.check_talent_1(ref value);
         self.c_calculate_damage_dealt(ref value);
         target.e_damage_taken(ref self.attr,value);
 
@@ -1039,7 +1062,8 @@ impl C1CardImpl of C1CardTrait{
     }
     fn c28_2(ref self:Adventurer,ref target:EnemyTeam2)->CardResult{
         //造成4点伤害，给予所有敌人8层流血
-        let mut value:u16 = 4_u16;
+        let mut value:u16 = 4;
+        self.check_talent_1(ref value);
         self.c_calculate_damage_dealt(ref value);
         if(target.e1.attr.state == AttributeState::Live){
             target.e1.e_damage_taken(ref self.attr,value);
@@ -1060,6 +1084,7 @@ impl C1CardImpl of C1CardTrait{
     fn c29(ref self:Adventurer,ref target:Enemy)->CardResult{
         //造成 9 点伤害，不移除流血。
         let mut value:u16 = 9;
+        self.check_talent_1(ref value);
         self.c_calculate_damage_dealt(ref value);
         target.e_damage_taken(ref self.attr,value);
 
@@ -1071,6 +1096,7 @@ impl C1CardImpl of C1CardTrait{
     fn c30(ref self:Adventurer,ref target:Enemy)->CardResult{
         //造成6点伤害，嗜血：获得目标流血层数的护甲
         let mut value:u16 = 6_u16;
+        self.check_talent_1(ref value);
         self.c_calculate_damage_dealt(ref value);
         target.e_damage_taken(ref self.attr,value);
 
@@ -1130,6 +1156,7 @@ impl C1CardImpl of C1CardTrait{
     fn c38(ref self:Adventurer,ref target:Enemy)->CardResult{
         //对所有目标造成护甲值的伤害。消耗所有护甲。
         let mut value:u16 = self.attr.armor;
+        self.check_talent_1(ref value);
         self.c_calculate_damage_dealt(ref value);
         target.e_damage_taken(ref self.attr,value);
 
@@ -1141,6 +1168,7 @@ impl C1CardImpl of C1CardTrait{
     }
     fn c38_2(ref self:Adventurer,ref target:EnemyTeam2)->CardResult{
         let mut value:u16 = self.attr.armor;
+        self.check_talent_1(ref value);
         self.c_calculate_damage_dealt(ref value);
         if(target.e1.attr.state == AttributeState::Live){
             target.e1.e_damage_taken(ref self.attr,value);
@@ -1166,6 +1194,8 @@ impl C1CardImpl of C1CardTrait{
         if(self.attr.armor.is_no_zero_u16()){
             value.add_eq_u16(6);
         }
+        self.check_talent_1(ref value);
+
         self.c_calculate_damage_dealt(ref value);
         target.e_damage_taken(ref self.attr,value);
 
@@ -1177,9 +1207,12 @@ impl C1CardImpl of C1CardTrait{
     fn c40(ref self:Adventurer,ref target:Enemy)->CardResult{
         //造成18点伤害，如果目标有护甲，造成额外6点伤害。
         let mut value:u16 = 6;
+       
         if(target.attr.armor.is_no_zero_u16()){
             value.add_eq_u16(6);
         }
+        self.check_talent_1(ref value);
+
         self.c_calculate_damage_dealt(ref value);
         target.e_damage_taken(ref self.attr,value);
 
@@ -1191,7 +1224,7 @@ impl C1CardImpl of C1CardTrait{
     fn c41(ref self:Adventurer,ref target:Enemy)->CardResult{
         //造成6点伤害，如果你有护甲，给予1层虚弱
         let mut value:u16 = 6;
-        
+        self.check_talent_1(ref value);
         self.c_calculate_damage_dealt(ref value);
         target.e_damage_taken(ref self.attr,value);
 
@@ -1207,7 +1240,9 @@ impl C1CardImpl of C1CardTrait{
     #[inline]
     fn c42(ref self:Adventurer)->CardResult{
         //获得8点护甲，抽1张牌
-        self.attr.c1_add_armor(8);
+        let mut value:u16  = 8;
+        self.check_talent_2(ref value);
+        self.attr.c1_add_armor(value);
         self.draw_cards_from_left(1);
 
         return CardResult::Discard;
@@ -1216,7 +1251,7 @@ impl C1CardImpl of C1CardTrait{
     fn c43(ref self:Adventurer)->CardResult{
         //如果你有护甲，获得2点能量
         if(self.attr.armor.is_no_zero_u16()){
-            self.attr.energy.add_eq_u16(2);
+            self.energy.add_eq_u16(2);
         }
 
         return CardResult::Discard;
@@ -1225,35 +1260,38 @@ impl C1CardImpl of C1CardTrait{
     fn c44(ref self:Adventurer)->CardResult{
         //抽2张牌，获得所抽卡费用的护甲
         self.draw_cards_from_left(2);
-        let mut armor:u16 = C1CardTrait::get_card_energy(self.mid_cards.at(self.mid_cards.size()-1));
-        armor.add_eq_u16(C1CardTrait::get_card_energy(self.mid_cards.at(self.mid_cards.size()-2)));
-       
-        self.attr.c1_add_armor(armor);
+        let mut value:u16 = C1CardTrait::get_card_energy(self.mid_cards.at(self.mid_cards.size()-1));
+        value.add_eq_u16(C1CardTrait::get_card_energy(self.mid_cards.at(self.mid_cards.size()-2)));
+        self.check_talent_2(ref value);
+
+        self.attr.c1_add_armor(value);
 
         return CardResult::Discard;
     }
     #[inline]
     fn c45(ref self:Adventurer)->CardResult{
         //消耗你所有手牌，每张被消耗的卡牌获得8点护甲，消耗
-        let mut armor:u16 = 0;
+        let mut value:u16 = 0;
         loop{
             if(self.mid_cards.empty()){
                 self.mid_cards.clean_value_dict();
                 break;
             }
-            armor.self_add_u16();
+            value.self_add_u16();
             self.mid_cards.pop_back_fast();
         };
-       
-        self.attr.c1_add_armor(armor);
+        self.check_talent_2(ref value);
+        self.attr.c1_add_armor(value);
         return CardResult::Null;
     }
     #[inline]
     fn c46(ref self:Adventurer)->CardResult{
         //获得 6 点护甲。下回合开始时获得 6 点护甲。
-        self.attr.c1_add_armor(6_u16);
+        let mut value:u16 = 6;
+        self.check_talent_2(ref value);
+        self.attr.c1_add_armor(value);
 
-        self.attr.status.insert(C1Status::S3,MathU16Trait::add_u16(self.attr.status.get(C1Status::S3),6)); 
+        self.attr.status.insert(C1Status::S3,MathU16Trait::add_u16(self.attr.status.get(C1Status::S3),value)); 
         return CardResult::Discard;
     }
     #[inline]
@@ -1278,7 +1316,9 @@ impl C1CardImpl of C1CardTrait{
     #[inline]
     fn c50(ref self:Adventurer)->CardResult{
         //回合开始时如果你有护甲，对所有敌人造成6点伤害
-        self.attr.status.insert(C1Status::S11,MathU16Trait::add_u16(self.attr.status.get(C1Status::S11),6));
+        let mut value:u16 = 6;
+        self.check_talent_1(ref value);
+        self.attr.status.insert(C1Status::S11,MathU16Trait::add_u16(self.attr.status.get(C1Status::S11),value));
         return CardResult::Consume;
     }
     #[inline]

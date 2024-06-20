@@ -1,12 +1,12 @@
-
+ 
 use abyss_x::utils::dict_map::{DictMap,DictMapTrait};
 use abyss_x::utils::random::{RandomTrait,RandomContainerTrait,RandomArrayTrait};
 use abyss_x::utils::math::{MathU32Trait,MathU16Trait,MathU8Trait};
 use abyss_x::utils::bit::{Bit64Trait};
-use abyss_x::utils::constant::{HAND_CARD_NUMBER_MAX,DebuffCard};
-
+use abyss_x::utils::constant::{HAND_CARD_NUMBER_MAX,HAND_CARD_NUMBER_INIT,DebuffCard,MAX_U16,MIN_U16};
+ 
 use abyss_x::game::attribute::{Attribute,AttributeTrait};
-use abyss_x::game::relic::{CommonRelic};
+use abyss_x::game::relic::{RelicCategory,RelicTrait};
 use abyss_x::game::enemy::{Enemy,EnemyTeam2,EnemyTeam3,EnemyCategory};
 use abyss_x::game::charactor::c1::{C1Action1Impl,C1Action2Impl,C1EntityImpl,C1DamageImpl};
 use abyss_x::game::charactor::c2::{C2ActionImpl,C2EntityImpl,C2DamageImpl};
@@ -21,7 +21,16 @@ struct Adventurer{
     seed:u64,
     attr:Attribute,
     category:u8,
- 
+
+    energy:u16,
+    max_energy:u16,
+
+    draw_cards:u16,
+
+    talent:u16,
+    blessing:u32,
+    relic:u64,
+
     init_cards:Array<u8>,
     left_cards:Array<u8>,
     mid_cards:DictMap<u8>,
@@ -30,7 +39,7 @@ struct Adventurer{
 
  
 pub trait AdventurerTrait<T> {
-    fn c_game_begin_relic(ref self:Adventurer,ref target:T);
+     
     fn c_game_begin(ref self:Adventurer,ref target:T);
     fn c_game_end(ref self:Adventurer,ref target:T);
     fn c_round_begin(ref self:Adventurer,ref target:T);
@@ -59,9 +68,9 @@ impl AdventurerCommonImpl of AdventurerCommonTrait{
         self.attr.hp = role.hp.into();
         self.attr.max_hp = role.max_hp.into();
        
-        self.attr.awake = role.awake;
-        self.attr.blessing =  role.blessing;
-        self.attr.relic = role.relic;
+        self.talent = role.talent;
+        self.blessing =  role.blessing;
+        self.relic = role.relic;
 
  
         self.seed = role.seed;
@@ -69,7 +78,40 @@ impl AdventurerCommonImpl of AdventurerCommonTrait{
 
         self.init_cards = card.get_cards();
     }
-    
+    #[inline]
+    fn add_energy(ref self:Adventurer,value:u16){
+        match core::integer::u16_checked_add(self.energy,value){
+            Option::Some(r) =>{
+                self.energy = r;
+            },
+            Option::None =>{
+                self.energy = MAX_U16;
+            }
+        }
+    }
+    #[inline]
+    fn sub_energy(ref self:Adventurer,value:u16){
+        match core::integer::u16_checked_sub(self.energy,value){
+            Option::Some(r) =>{
+                self.energy = r;
+            },
+            Option::None =>{
+                self.energy = MIN_U16;
+            }
+        }
+    }
+    #[inline]
+    fn add_max_energy(ref self:Adventurer,value:u16){
+        match core::integer::u16_checked_add(self.max_energy,value){
+            Option::Some(r) =>{
+                self.max_energy = r;
+            },
+            Option::None =>{
+                self.max_energy = MAX_U16;
+            }
+        }
+    }
+ 
     #[inline]
     fn c_calculate_damage_dealt(ref self:Adventurer,ref value:u16){
         match self.category {
@@ -195,33 +237,18 @@ impl AdventurerCommonImpl of AdventurerCommonTrait{
 }
 
 impl Adv_EnemyImpl of AdventurerTrait<Enemy>{
-    #[inline]
-    fn c_game_begin_relic(ref self:Adventurer,ref target:Enemy){
-        if(target.category == EnemyCategory::B1){
-            //在Boss战与精英战中，你的最大能量+1
-            match Bit64Trait::is_bit_fast(self.attr.relic,CommonRelic::R12){
-                true => self.attr.add_max_energy(1),
-                false => {}
-            }
-        }
-        //在战斗开始时，将2张伤口放入你的抽牌堆，你的最大能量+1
-        match Bit64Trait::is_bit_fast(self.attr.relic,CommonRelic::R13){
-            true => {
-                self.init_cards.append(DebuffCard::Wound);
-                self.init_cards.append(DebuffCard::Wound);
-                self.attr.add_max_energy(1);
-            },
-            false => {}
-        }
-    }
+  
     #[inline]
     fn c_game_begin(ref self:Adventurer,ref target:Enemy){
 
         //检测遗物
-        self.c_game_begin_relic(ref target);
+        //在每场战斗开始时，额外抽 2 张牌。
+        self.check_relic_2();
+        //在Boss战与精英战中，你的最大能量+1
+        self.check_relic_13(target.category);
 
         self.left_cards = RandomArrayTrait::random_number(ref self.seed,self.init_cards.len()); 
-        self.draw_cards_from_left(self.attr.draw_cards); 
+        self.draw_cards_from_left(self.draw_cards); 
 
         match self.category {
             0 => {},
@@ -232,6 +259,9 @@ impl Adv_EnemyImpl of AdventurerTrait<Enemy>{
     }
     #[inline]
     fn c_game_end(ref self:Adventurer,ref target:Enemy){
+        //在战斗结束时，回复6点生命。
+        self.check_relic_1();
+
         match self.category {
             0 => {},
             1 => C1Action1Impl::game_begin(ref self,ref target),
@@ -241,8 +271,10 @@ impl Adv_EnemyImpl of AdventurerTrait<Enemy>{
     }
     #[inline]
     fn c_round_begin(ref self:Adventurer,ref target:Enemy){
+        //多余的能量可以留到下一回合。
+        self.check_relic_6();
 
-        self.draw_cards_from_left(self.attr.draw_cards);
+        self.draw_cards_from_left(self.draw_cards);
         self.attr.round_begin();
 
         match self.category {
@@ -254,11 +286,11 @@ impl Adv_EnemyImpl of AdventurerTrait<Enemy>{
     }
     #[inline]
     fn c_round_end(ref self:Adventurer,ref target:Enemy){
+        //如果你在回合结束时没有任何格挡，获得6点格挡。
+        self.check_relic_4();
         //你在回合结束时不再自动丢弃所有手牌。
-        match Bit64Trait::is_bit_fast(self.attr.relic,CommonRelic::R4){
-            true => {},
-            false => self.round_end_disard_cards(),
-        }
+        self.check_relic_5();
+
         self.attr.round_end();
 
         match self.category {
@@ -288,34 +320,20 @@ impl Adv_EnemyImpl of AdventurerTrait<Enemy>{
     }
 }
 impl Adv_EnemyTeam2Impl of AdventurerTrait<EnemyTeam2>{
-    #[inline]
-    fn c_game_begin_relic(ref self:Adventurer,ref target:EnemyTeam2){
-        if(target.e1.category == EnemyCategory::B1 || target.e2.category == EnemyCategory::B1){
-            //在Boss战与精英战中，你的最大能量+1
-            match Bit64Trait::is_bit_fast(self.attr.relic,CommonRelic::R12){
-                true => self.attr.add_max_energy(1),
-                false => {}
-            }
-        }
-        //在战斗开始时，将2张伤口放入你的抽牌堆，你的最大能量+1
-        match Bit64Trait::is_bit_fast(self.attr.relic,CommonRelic::R13){
-            true => {
-                self.init_cards.append(DebuffCard::Wound);
-                self.init_cards.append(DebuffCard::Wound);
-                self.attr.add_max_energy(1);
-            },
-            false => {}
-        }
-    }
+
     #[inline]
     fn c_game_begin(ref self:Adventurer,ref target:EnemyTeam2){
 
-        //检测遗物
-        self.c_game_begin_relic(ref target);
+        //在每场战斗开始时，额外抽 2 张牌。
+        self.check_relic_2();
+        //在Boss战与精英战中，你的最大能量+1
+        self.check_relic_13(target.e1.category);
 
         self.left_cards = RandomArrayTrait::random_number(ref self.seed,self.init_cards.len()); 
-        self.draw_cards_from_left(self.attr.draw_cards); 
+        self.draw_cards_from_left(self.draw_cards); 
 
+ 
+        
         match self.category {
             0 => {},
             1 => C1Action2Impl::game_begin(ref self,ref target),
@@ -335,9 +353,11 @@ impl Adv_EnemyTeam2Impl of AdventurerTrait<EnemyTeam2>{
     #[inline]
     fn c_round_begin(ref self:Adventurer,ref target:EnemyTeam2){
 
-        self.draw_cards_from_left(self.attr.draw_cards);
-        self.attr.round_begin();
+        self.draw_cards_from_left(self.draw_cards);
+        self.draw_cards = HAND_CARD_NUMBER_INIT;
 
+        self.attr.round_begin();
+ 
         match self.category {
             0 => {},
             1 => C1Action2Impl::round_begin(ref self,ref target),
@@ -348,10 +368,8 @@ impl Adv_EnemyTeam2Impl of AdventurerTrait<EnemyTeam2>{
     #[inline]
     fn c_round_end(ref self:Adventurer,ref target:EnemyTeam2){
         //你在回合结束时不再自动丢弃所有手牌。
-        match Bit64Trait::is_bit_fast(self.attr.relic,CommonRelic::R4){
-            true => {},
-            false => self.round_end_disard_cards(),
-        }
+        self.check_relic_5();
+        
         self.attr.round_end();
 
         match self.category {

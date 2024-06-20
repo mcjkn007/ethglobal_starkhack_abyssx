@@ -17,10 +17,12 @@ mod game{
     }
     mod action;
     mod adventurer;
+    
     mod attribute;
     mod enemy;
     mod status;
     mod relic;
+    mod talent;
  
 }
 

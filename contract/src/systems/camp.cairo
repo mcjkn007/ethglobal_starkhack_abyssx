@@ -55,9 +55,9 @@ mod camp {
                     role.rest();
                     set!(world,(role)); 
                 },
-                CampAciton::Awake => {
+                CampAciton::Talent => {
                     let mut role:Role = get!(world, (player), (Role));
-                    role.awake(value);
+                    role.talent(value);
                     set!(world,(role)); 
                 },
                 CampAciton::DeleteCard => {

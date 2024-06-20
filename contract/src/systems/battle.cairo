@@ -137,8 +137,10 @@ mod battle {
             }; 
             
            // println!("enemy.hp : {}", enemy.attr.hp);
-            if (enemy.attr.hp.is_zero_u16() && adv.attr.hp.is_no_zero_u16()){
+            if (enemy.attr.state == AttributeState::Death && adv.attr.hp.is_no_zero_u16()){
                 role.cur_stage.self_add_u8();
+                role.hp = adv.attr.hp.try_into().unwrap();
+                role.max_hp = adv.attr.max_hp.hp.try_into().unwrap();
 
             }else{
                 println!("enemy.hp : {}", enemy.attr.hp);
@@ -201,7 +203,8 @@ mod battle {
            // println!("enemy.hp : {}", enemy.attr.hp);
             if (enemy_team.e1.attr.state == AttributeState::Death && enemy_team.e2.attr.state == AttributeState::Death && adv.attr.hp.is_no_zero_u16()){
                 role.cur_stage.self_add_u8();
-
+                role.hp = adv.attr.hp.hp.try_into().unwrap();
+                role.max_hp = adv.attr.max_hp.hp.try_into().unwrap();
             }else{
               
                //assert(false, 'opt error');

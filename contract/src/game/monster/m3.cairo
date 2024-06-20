@@ -1,10 +1,12 @@
+
 use abyss_x::utils::constant::{HAND_CARD_NUMBER_MAX};
 use abyss_x::utils::dict_map::{DictMap,DictMapTrait};
 use abyss_x::utils::random::{RandomTrait,RandomContainerTrait};
 use abyss_x::utils::math::{MathU32Trait,MathU16Trait,MathU8Trait};
 
 use abyss_x::game::adventurer::{Adventurer,AdventurerTrait,AdventurerCommonTrait};
-use abyss_x::game::status::{CommonStatus,StatusTrait};
+use abyss_x::game::status::{StatusCategory,StatusTrait};
+use abyss_x::game::relic::{RelicCategory,RelicTrait};
 
 use abyss_x::game::attribute::{Attribute,AttributeState,AttributeTrait,CalAttributeTrait};
 use abyss_x::game::enemy::{Enemy,EnemyTrait,EnemyCategory,EnemyStatus,EnemyStatusTrait};
@@ -47,7 +49,9 @@ impl M3ActionImpl of ActionTrait<Enemy,Adventurer>{
         self.round.add_eq_u16(data);
         let r = self.round%4;
         if(r == 0 || r == 3){
-            target.attr.add_weak(2);
+            if(target.check_relic_9() == false){
+                target.attr.add_weak(2);
+            }
         }else{
             let mut value = 6;
             self.e_calculate_damage_dealt(ref value);
@@ -68,7 +72,7 @@ impl M3DamageImpl of DamageTrait {
         if(self.hp.is_no_zero_u16()){
             self.check_attacked_armor();
         }
-        let thorns = self.status.get(CommonStatus::Thorns);
+        let thorns = self.status.get(StatusCategory::Thorns);
         if(thorns.is_no_zero_u16()){
             target.sub_hp_and_armor(thorns);
         }

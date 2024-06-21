@@ -60,7 +60,7 @@ mod tests {
 
         let initial = testing::get_available_gas();
         gas::withdraw_gas().unwrap();
-        battle_system.check_e1_battle_result(arr,1);
+        battle_system.check_e1_battle_result(arr);
        
         println!("check_battle_result gas : {}", initial - testing::get_available_gas());
          

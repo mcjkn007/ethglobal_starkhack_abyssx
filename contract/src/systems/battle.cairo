@@ -5,8 +5,8 @@
 trait IBattle {
     fn start_game(game_mode:u32,role_category:u8);
     fn giveup_game();
-    fn check_e1_battle_result(opts:Array<u16>,value:u8);
-    fn check_e2_battle_result(opts:Array<u16>,value:u8);
+    fn check_e1_battle_result(opts:Array<u16>);
+    fn check_e2_battle_result(opts:Array<u16>);
    // fn choose_event_bonus(opt:u64,value:Vec2);
 }
 
@@ -49,7 +49,7 @@ mod battle {
     #[abi(embed_v0)]
     impl BattleImpl of super::IBattle<ContractState> {
      
-        fn start_game(world:IWorldDispatcher,game_mode:u32,role_category:u8) {
+        fn start_game(world:@IWorldDispatcher,game_mode:u32,role_category:u8) {
           
             let player = get_caller_address();
 
@@ -74,7 +74,7 @@ mod battle {
             emit!(world,ActionEvent { player:player, event:EventCode::StartGame});
         }
 
-        fn giveup_game(world:IWorldDispatcher){
+        fn giveup_game(world:@IWorldDispatcher){
            
             let player = get_caller_address();
 
@@ -93,7 +93,7 @@ mod battle {
             emit!(world, ActionEvent { player:player, event:EventCode::GiveUpGame});
         }
  
-        fn check_e1_battle_result(world:IWorldDispatcher,opts:Array<u16>,value:u8){
+        fn check_e1_battle_result(world:@IWorldDispatcher,opts:Array<u16>){
              
             let player = get_caller_address();
         
@@ -155,7 +155,7 @@ mod battle {
             
             emit!(world,ActionEvent { player, event:EventCode::CheckBattleResult});
         }
-        fn check_e2_battle_result(world:IWorldDispatcher,opts:Array<u16>,value:u8){
+        fn check_e2_battle_result(world:@IWorldDispatcher,opts:Array<u16>){
             let player = get_caller_address();
         
             let mut user:User = get!(world, player, (User));

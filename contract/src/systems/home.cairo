@@ -39,7 +39,7 @@ mod home {
     // impl: implement functions specified in trait
     #[abi(embed_v0)]
     impl HomeImpl of super::IHome<ContractState> {
-        fn login(world: IWorldDispatcher){
+        fn login(world: @IWorldDispatcher){
             let player = get_caller_address();
  
             let mut user:User = get!(world, player, (User));
@@ -59,7 +59,7 @@ mod home {
             }
             emit!(world,HomeEvent { player:player, event:EventCode::Login});
         }
-        fn set_name(world: IWorldDispatcher,name:felt252){
+        fn set_name(world: @IWorldDispatcher,name:felt252){
             let player = get_caller_address();
  
             let mut user = get!(world, player, (User));
@@ -73,7 +73,7 @@ mod home {
 
             emit!(world,HomeEvent { player:player, event:EventCode::SetNickName});
         }
-        fn test(world: IWorldDispatcher,game_mode:u32){
+        fn test(world: @IWorldDispatcher,game_mode:u32){
             let player = get_caller_address();
  
             let mut user = get!(world, player, (User));

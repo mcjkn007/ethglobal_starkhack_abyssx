@@ -42,7 +42,7 @@ mod chest {
    // impl: implement functions specified in trait
    #[abi(embed_v0)]
    impl ChestImpl of super::IChest<ContractState> {
-    fn chest_action(world: IWorldDispatcher){
+    fn chest_action(world: @IWorldDispatcher){
             let player = get_caller_address();
 
             //UserTrait::read_user(world,player.into());

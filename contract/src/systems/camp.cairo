@@ -40,7 +40,7 @@ mod camp {
    // impl: implement functions specified in trait
    #[abi(embed_v0)]
    impl CampImpl of super::ICamp<ContractState> {
-    fn camp_action(world: IWorldDispatcher,action:u8,value:u8){
+    fn camp_action(world: @IWorldDispatcher,action:u8,value:u8){
             let player = get_caller_address();
 
             let user:User = get!(world, player, (User));

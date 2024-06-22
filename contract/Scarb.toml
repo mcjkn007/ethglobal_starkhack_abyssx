@@ -1,0 +1,36 @@
+[package]
+cairo-version = "2.6.3"
+name = "abyss_x"
+version = "0.1.0"
+edition = "2023_01"
+
+[cairo]
+sierra-replace-ids = true
+
+[dependencies]
+dojo = { git = "https://github.com/dojoengine/dojo", tag = "v0.7.1" }
+# openzeppelin = { git = "https://github.com/OpenZeppelin/cairo-contracts.git", tag = "v0.10.0" }
+
+[[target.dojo]]
+build-external-contracts = [  ]
+
+[tool.dojo]
+initializer_class_hash = "0xbeef"
+
+[tool.dojo.world]
+description = "abyss_x descrption"
+name = "abyss_x"
+ 
+[tool.dojo.env]
+# Default account for katana with seed = 0
+rpc_url = "http://localhost:5050/"
+account_address = "0xb3ff441a68610b30fd5e2abbf3a1548eb6ba6f3559f2862bf2dc757e5828ca"
+private_key = "0x2bbf4f9fd0bbb2e60b0316c1fe0b76cf7a4d0198bd493ced9b8df2a3a24d68a"
+world_address = "0x313872512cba1e93b4f099b78dd82481b97dcbb04c5b89286d6e1f1697c7fa7"
+
+#slot
+#rpc_url = "https://api.cartridge.gg/x/abyssx/katana"
+#account_address = "0x68ef12089473c16bff7d3f434b21fcd5490f7c76dc78635ebf0b91127fccecf"
+#private_key = "0x58c0ff0a030eeed4c67eb50ceb0209e8f1409f8a87540c8a4ea66c78115873d"
+#world_address = "0x313872512cba1e93b4f099b78dd82481b97dcbb04c5b89286d6e1f1697c7fa7"
+

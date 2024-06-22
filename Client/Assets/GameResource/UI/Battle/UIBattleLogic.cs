@@ -1,11 +1,14 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using Abyss.BattleFSM;
 using cfg.gameCard;
+using DG.Tweening;
 using GameCore;
 using GameCore.CustomComponent.Role;
 using GameCore.Facade;
 using GameFramework.Event;
+using GameFramework.Fsm;
 using Unity.VisualScripting;
 using UnityEngine;
 using UnityGameFramework.Runtime;
@@ -20,9 +23,36 @@ namespace  Abyss
         totalDeck = 3
     }
 
+    public enum RoadNode
+    {
+        /// <summary>
+        /// 如果是0 则在3选一的地方；
+        /// </summary>
+         None = 0,
+         Normal = 1,
+         Epic = 2,
+         Boss = 3,
+
+         Event = 4,
+         Shop = 5,
+         Camp = 6,
+         Chest = 7,
+    }
+
+    public enum GameState
+    {
+        Login = 0,
+        Battle = 1,
+        Elite = 2,
+        Two = 3,
+        Three = 4,
+        Four = 5
+    }
+
     public class UIBattleLogic : UIFormLogic
     {
-        
+
+        public static int SerialId;
         [SerializeField]
         public CardSet cardSet;
         public UIBattleForm battleForm;
@@ -30,17 +60,56 @@ namespace  Abyss
         public CardPanelForm cardPanelForm;
         public CardPanelLogic cardPanelLogic;
         private List<BaseCard> temp = new List<BaseCard>();
-        
-
         [SerializeField]
         private BaseRole protag;
         [SerializeField]
         private BaseRole antag;
+
+        private IFsm<UIBattleLogic> _fsm;
+
+        private BattleStateNormalBattle normalState;
+        private BattleStateEpicBattle epicState;
+        private BattleStateBossBattle bossState;
+        private BattleStateCamp campState;
+        private BattleStateNode nodeState;
+        private BattleStateEvent eventState;
+        private BattleStateChest chestState;
+
+        private BattleFSMState Current;
         private void Awake()
         {
             battleFormController = new BattleFormController(this,battleForm);
-            
+            normalState = new BattleStateNormalBattle(this);
+            epicState = new BattleStateEpicBattle(this);
+            bossState = new BattleStateBossBattle(this);
+            campState = new BattleStateCamp(this);
+            nodeState = new BattleStateNode(this);
+            eventState = new BattleStateEvent(this);
+            chestState = new BattleStateChest(this);
             // battleForm.btn_discard.onClick.AddListener();
+        }
+
+        private void OnHpChange(int val)
+        {
+    
+        }
+
+        public void FadeInAndOut(Action mid, Action end = null)
+        {
+            battleForm.img_mask.gameObject.SetActive(true);
+            var seq = DOTween.Sequence().Append(battleForm.img_mask.DOFade(1f, 0.3f)).AppendInterval(0.1f)
+                .AppendCallback(() =>
+                {
+                    mid?.Invoke();
+                }).AppendInterval(0.1f).Append((battleForm.img_mask.DOFade(0f, 0.3f))).AppendCallback(() =>
+                {
+                    battleForm.img_mask.gameObject.SetActive(false);
+                }).AppendCallback(
+                    () =>
+                    {
+                        end?.Invoke();
+                    });
+           seq.Play();
         }
 
         public void GiveCard(long guid, CardPlace from, CardPlace to)
@@ -72,17 +141,20 @@ namespace  Abyss
             
         }
 
-        public void StartGame()
+        public void StartGame(int cfg = 0, RoadNode node = RoadNode.None)
         {
-            cardPanelLogic.Init();
-            for (int i = 0; i < 6; i++)
+            SetCurrentState(node);
+            battleFormController.UIFlyIn();
+            antag = Entry.RoleFactory.GetRole(1);
+            // cardPanelLogic.Init();
+            for (int i = 0; i < 5; i++)
             {
                 var card = Entry.CardFactory.GetCard(Entry.Core.CardDeck[i], cardSet.handCardTrans);
-                cardSet.AddCards(card, 6);
+                cardSet.AddCards(card, 5);
             }
             cardSet.PlaySequence();
 
-            for (int i = 6; i < Entry.Core.CardDeck.Count; i++)
+            for (int i = 5; i < Entry.Core.CardDeck.Count; i++)
             {
                 var card = Entry.CardFactory.GetCard(Entry.Core.CardDeck[i], cardSet.drawPileTrans);
                 card.transform.localPosition = Vector2.zero;
@@ -91,6 +163,36 @@ namespace  Abyss
                 cardSet.AddDrawPileCard(card);
             }
         }
+        
+        private void SetCurrentState(RoadNode node)
+        {
+            switch (node)
+            {
+                case RoadNode.None:
+                    this.Current = nodeState;
+                    break;
+                case RoadNode.Epic:
+                    this.Current = epicState;
+                    break;
+                case RoadNode.Normal:
+                    this.Current = normalState;
+                    break;
+                case RoadNode.Event:
+                    this.Current = eventState;
+                    break;
+                case RoadNode.Shop:
+                    this.Current = null;
+                    break;
+                case RoadNode.Camp:
+                    this.Current = campState;
+                    break;
+                case RoadNode.Chest:
+                    this.Current = chestState;
+                    break;
+            }
+            this.Current.OnEnter(null);
+        }
+
 
         public void DrawCard(int count)
         {
@@ -138,16 +240,10 @@ namespace  Abyss
         {
             base.OnOpen(userData);
             Entry.Event.Subscribe(CardOutEventArg.EventId, OnCardOut);
-
         }
 
         private void OnCardOut(object sender, GameEventArgs e)
         {
-            if (e is not CardOutEventArg arg)
-            {
-                return;
-            }
-            //卡片打出
         }
 
         public void ShowCardPanel()

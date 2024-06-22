@@ -8,10 +8,12 @@ enum EventCode{
     SetNickName,
     StartGame,
     GiveUpGame,
+    SelectRoad,
     CheckBattleResult,
     ChooseEventBonus,
     CampAction,
-    ChestAction
+    ChestAction,
+    EventAction
 }
 
 #[derive(Serde, Copy, Drop, Introspect,PartialEq)]
@@ -23,15 +25,16 @@ enum CardResult {
 
 #[derive(Serde, Copy, Drop, Introspect,PartialEq)]
 enum CampAciton {
+    Null,
     Rest,
-    Talent,
     DeleteCard,
+    Talent,
 }
 impl U8IntoCampAciton of Into<u8, CampAciton> {
     fn into(self: u8) -> CampAciton {
         match self {
-            0 => CampAciton::Rest,
-            1 => CampAciton::Talent,
+            0 => CampAciton::Null,
+            1 => CampAciton::Rest,
             2 => CampAciton::DeleteCard,
             _ => panic!("error"),
         }
@@ -39,12 +42,15 @@ impl U8IntoCampAciton of Into<u8, CampAciton> {
 }
 
 mod SeedDiff{
-    const Chest_Relic:u64 = 324;
-    const Shop_Relic:u64 = 1009;
-    const Battle_Card:u64 = 1122;
+    const Game:u64 = 1012;
+    const Relic:u64 = 324;
+    const Card:u64 = 1009;
+    const Enemy:u64 = 321;
+    const Event:u64 = 123;
+ 
 }
 
-mod DebuffCard{
+mod CurseCard{
     const Burn:u8 = 201;
     const BurnUp:u8 = 202;
     const Wound:u8 = 203;

@@ -3,6 +3,13 @@ use abyss_x::game::attribute::{Attribute,AttributeTrait};
 
 pub trait EntityTrait<T> {
     fn new()->T;
+    
+}
+pub trait CardInfoTrait {
+    fn get_card_energy(card_id: u8) -> u16;
+    fn get_card_category(card_id: u8) -> u16;
+    fn get_card_rarity(card_id: u8) -> u8;
+    fn get_random_card_by_rarity(seed:u64,card_rarity:u8)->u8;
 }
 
 pub trait ActionTrait<T,V> {

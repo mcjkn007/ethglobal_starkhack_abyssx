@@ -15,7 +15,7 @@ use abyss_x::game::adventurer::{Adventurer,AdventurerTrait,AdventurerCommonTrait
 use abyss_x::game::attribute::{Attribute,AttributeState,AttributeTrait,CalAttributeTrait};
 use abyss_x::game::status::{StatusCategory,StatusTrait};
 use abyss_x::game::enemy::{Enemy,EnemyTeam2,EnemyTrait};
-use abyss_x::game::action::{EntityTrait,ActionTrait,DamageTrait};
+use abyss_x::game::action::{EntityTrait,ActionTrait,DamageTrait,CardInfoTrait};
 use abyss_x::game::talent::{TalentTrait};
 use abyss_x::game::relic::{RelicCategory,RelicTrait};
 
@@ -46,6 +46,9 @@ impl C1DamageImpl of DamageTrait {
         self.status.cal_damage_status(ref value);
     }
     fn damage_taken(ref self:Attribute,ref target:Attribute, mut value:u16){
+        
+        self.status.cal_damaged_status(ref value);
+
         if(Bit32Trait::is_bit_fast(self.ability,C1Ability::Shield_Wall)){
             let mut s4 = self.status.get(C1Status::S4);
             if(s4 > 0){
@@ -68,11 +71,8 @@ impl C1DamageImpl of DamageTrait {
             self.check_taunt_ability();
         }
 
-        self.status.cal_damaged_status(ref value);
-        let thorns = self.status.get(StatusCategory::Thorns);
-        if(thorns > 0){
-            target.sub_hp_and_armor(thorns);
-        }
+         
+        
     }
 
     fn calculate_direct_damage_dealt(ref self:Attribute,ref value:u16){
@@ -244,9 +244,201 @@ impl C1EntityImpl of EntityTrait<Adventurer> {
             mid_cards:DictMapTrait::<u8>::new(),
             right_cards:ArrayTrait::<u8>::new()
         };
+    }   
+}
+
+impl C1CardInfoImpl of  CardInfoTrait {
+    fn get_card_energy(card_id: u8) -> u16{
+        return match card_id {
+            0 => 1,
+            1 => 1,
+            2 => 1,
+            3 => 1,
+            4 => 1,
+            5 => 1,
+            6 => 1,
+            7 => 1,
+            8 => 1,
+            9 => 1,
+            10 => 1,
+            11 => 1,
+            12 => 1,
+            13 => 1,
+            14 => 1,
+            15 => 1,
+            16 => 1,
+            17 => 1,
+            18 => 1,
+            19 => 1,
+            20 => 1,
+            21 => 1,
+            22 => 1,
+            23 => 1,
+            24 => 1,
+            25 => 1,
+            26 => 1,
+            27 => 1,
+            28 => 1,
+            29 => 1,
+            30 => 1,
+            31 => 1,
+            32 => 1,
+            33 => 1,
+            34 => 1,
+            35 => 1,
+            36 => 1,
+            37 => 1,
+            38 => 1,
+            39 => 1,
+            40 => 1,
+            41 => 1,
+            42 => 1,
+            43 => 1,
+            44 => 1,
+            45 => 1,
+            46 => 1,
+            47 => 1,
+            48 => 1,
+            49 => 1,
+            50 => 1,
+            51 => 1,
+            _ => 1,
+        };
+    }
+    fn get_card_category(card_id: u8) -> u16{
+        return match card_id {
+            0 => 0,
+            1 => 1,
+            2 => 2,
+            3 => 1,
+            4 => 1,
+            5 => 2,
+            6 => 2,
+            7 => 2,
+            8 => 2,
+            9 => 3,
+            10 => 3,
+            11 => 1,
+            12 => 1,
+            13 => 1,
+            14 => 1,
+            15 => 1,
+            16 => 1,
+            17 => 1,
+            18 => 1,
+            19 => 2,
+            20 => 2,
+            21 => 3,
+            22 => 3,
+            23 => 3,
+            24 => 1,
+            25 => 1,
+            26 => 1,
+            27 => 1,
+            28 => 1,
+            29 => 1,
+            30 => 1,
+            31 => 2,
+            32 => 2,
+            33 => 2,
+            34 => 2,
+            35 => 3,
+            36 => 3,
+            37 => 3,
+            38 => 1,
+            39 => 1,
+            40 => 1,
+            41 => 1,
+            42 => 2,
+            43 => 2,
+            44 => 2,
+            45 => 2,
+            46 => 2,
+            47 => 2,
+            48 => 3,
+            49 => 3,
+            50 => 3,
+            51 => 3,
+            _ => 1,
+        };
+    }
+    fn get_card_rarity(card_id: u8) -> u8{
+        return match card_id {
+            0 => 0,
+            1 => 0,
+            2 => 1,
+            3 => 3,
+            4 => 1,
+            5 => 2,
+            6 => 3,
+            7 => 1,
+            8 => 1,
+            9 => 3,
+            10 => 2,
+            11 => 1,
+            12 => 1,
+            13 => 2,
+            14 => 1,
+            15 => 1,
+            16 => 2,
+            17 => 2,
+            18 => 2,
+            19 => 2,
+            20 => 1,
+            21 => 2,
+            22 => 3,
+            23 => 3,
+            24 => 3,
+            25 => 1,
+            26 => 1,
+            27 => 2,
+            28 => 2,
+            29 => 3,
+            30 => 2,
+            31 => 1,
+            32 => 3,
+            33 => 3,
+            34 => 1,
+            35 => 1,
+            36 => 3,
+            37 => 2,
+            38 => 2,
+            39 => 1,
+            40 => 2,
+            41 => 1,
+            42 => 1,
+            43 => 2,
+            44 => 2,
+            45 => 3,
+            46 => 2,
+            47 => 3,
+            48 => 2,
+            49 => 3,
+            50 => 2,
+            51 => 3,
+            _ => 1,
+        };
+    }
+    fn get_random_card_by_rarity(seed:u64,card_rarity:u8)->u8{
+        let mut s = seed;
+        return match card_rarity{
+            0 => 1,
+            1 => {
+                let mut arr = array![4,7,8,11,12,14,15,20,25,26,31,34,35,39,41,42];
+                return *RandomContainerTrait::random_array(ref s,@arr).at(0);
+            },
+            2 =>{
+                let mut arr = array![5,10,13,16,17,18,19,21,27,28,30,37,38,40,43,44,46,48,50];
+                return *RandomContainerTrait::random_array(ref s,@arr).at(0);
+            },
+            3 =>{
+                let mut arr = array![3,6,9,22,23,24,29,32,33,36,45,47,49,51];
+                return *RandomContainerTrait::random_array(ref s,@arr).at(0);
+            },
+            _ =>panic!("error"),
+        };
     }
 }
- 
 impl C1Action1Impl of ActionTrait<Adventurer,Enemy>{
     #[inline]
     fn game_begin(ref self:Adventurer,ref target:Enemy){
@@ -306,7 +498,7 @@ impl C1Action1Impl of ActionTrait<Adventurer,Enemy>{
         assert(self.mid_cards.check_value(card_index), 'card void');
 
         let card_id = *self.init_cards.at(card_index.into());
-        let card_category = C1CardImpl::get_card_category(card_id);
+        let card_category = C1CardInfoImpl::get_card_category(card_id);
          
 
         let result = match card_id {
@@ -379,8 +571,8 @@ impl C1Action1Impl of ActionTrait<Adventurer,Enemy>{
             3 =>self.check_relic_20(),
             _ =>{},
         }
-        let mut energy = C1CardImpl::get_card_energy(card_id);
-        if(C1CardImpl::get_card_rarity(card_id) == 3){
+        let mut energy = C1CardInfoImpl::get_card_energy(card_id);
+        if(C1CardInfoImpl::get_card_rarity(card_id) == 3){
             //你的橙色牌费用减一。
             self.check_relic_12(ref energy);
         }
@@ -460,7 +652,7 @@ impl C1Action2Impl of ActionTrait<Adventurer,EnemyTeam2>{
         assert(self.mid_cards.check_value(card_index), 'card void');
 
         let card_id = *self.init_cards.at(card_index.into());
-        let card_category = C1CardImpl::get_card_category(card_id);
+        let card_category = C1CardInfoImpl::get_card_category(card_id);
 
         let mut result = CardResult::Null;
 
@@ -603,8 +795,8 @@ impl C1Action2Impl of ActionTrait<Adventurer,EnemyTeam2>{
             _ =>{},
         }
 
-        let mut energy = C1CardImpl::get_card_energy(card_id);
-        if(C1CardImpl::get_card_rarity(card_id) == 3){
+        let mut energy = C1CardInfoImpl::get_card_energy(card_id);
+        if(C1CardInfoImpl::get_card_rarity(card_id) == 3){
             //你的橙色牌费用减一。
             self.check_relic_12(ref energy);
         }
@@ -613,178 +805,8 @@ impl C1Action2Impl of ActionTrait<Adventurer,EnemyTeam2>{
 
 #[generate_trait]
 impl C1CardImpl of C1CardTrait{
-    #[inline]
-    fn get_card_energy(card_id: u8) -> u16{
-        return match card_id {
-            0 => 1,
-            1 => 1,
-            2 => 1,
-            3 => 1,
-            4 => 1,
-            5 => 1,
-            6 => 1,
-            7 => 1,
-            8 => 1,
-            9 => 1,
-            10 => 1,
-            11 => 1,
-            12 => 1,
-            13 => 1,
-            14 => 1,
-            15 => 1,
-            16 => 1,
-            17 => 1,
-            18 => 1,
-            19 => 1,
-            20 => 1,
-            21 => 1,
-            22 => 1,
-            23 => 1,
-            24 => 1,
-            25 => 1,
-            26 => 1,
-            27 => 1,
-            28 => 1,
-            29 => 1,
-            30 => 1,
-            31 => 1,
-            32 => 1,
-            33 => 1,
-            34 => 1,
-            35 => 1,
-            36 => 1,
-            37 => 1,
-            38 => 1,
-            39 => 1,
-            40 => 1,
-            41 => 1,
-            42 => 1,
-            43 => 1,
-            44 => 1,
-            45 => 1,
-            46 => 1,
-            47 => 1,
-            48 => 1,
-            49 => 1,
-            50 => 1,
-            51 => 1,
-            _ => 1,
-        };
-    }
-    fn get_card_category(card_id: u8) -> u16{
-        return match card_id {
-            0 => 0,
-            1 => 1,
-            2 => 2,
-            3 => 1,
-            4 => 1,
-            5 => 2,
-            6 => 2,
-            7 => 2,
-            8 => 2,
-            9 => 3,
-            10 => 3,
-            11 => 1,
-            12 => 1,
-            13 => 1,
-            14 => 1,
-            15 => 1,
-            16 => 1,
-            17 => 1,
-            18 => 1,
-            19 => 2,
-            20 => 2,
-            21 => 3,
-            22 => 3,
-            23 => 3,
-            24 => 1,
-            25 => 1,
-            26 => 1,
-            27 => 1,
-            28 => 1,
-            29 => 1,
-            30 => 1,
-            31 => 2,
-            32 => 2,
-            33 => 2,
-            34 => 2,
-            35 => 3,
-            36 => 3,
-            37 => 3,
-            38 => 1,
-            39 => 1,
-            40 => 1,
-            41 => 1,
-            42 => 2,
-            43 => 2,
-            44 => 2,
-            45 => 2,
-            46 => 2,
-            47 => 2,
-            48 => 3,
-            49 => 3,
-            50 => 3,
-            51 => 3,
-            _ => 1,
-        };
-    }
-    fn get_card_rarity(card_id: u8) -> u16{
-        return match card_id {
-            0 => 0,
-            1 => 1,
-            2 => 1,
-            3 => 3,
-            4 => 1,
-            5 => 2,
-            6 => 3,
-            7 => 1,
-            8 => 1,
-            9 => 3,
-            10 => 2,
-            11 => 1,
-            12 => 1,
-            13 => 2,
-            14 => 1,
-            15 => 1,
-            16 => 2,
-            17 => 2,
-            18 => 2,
-            19 => 2,
-            20 => 1,
-            21 => 2,
-            22 => 3,
-            23 => 3,
-            24 => 3,
-            25 => 1,
-            26 => 1,
-            27 => 2,
-            28 => 2,
-            29 => 3,
-            30 => 2,
-            31 => 1,
-            32 => 3,
-            33 => 3,
-            34 => 1,
-            35 => 1,
-            36 => 3,
-            37 => 2,
-            38 => 2,
-            39 => 1,
-            40 => 2,
-            41 => 1,
-            42 => 1,
-            43 => 2,
-            44 => 2,
-            45 => 3,
-            46 => 2,
-            47 => 3,
-            48 => 2,
-            49 => 3,
-            50 => 2,
-            51 => 3,
-            _ => 1,
-        };
-    }
+ 
+    
     fn c1(ref self:Adventurer,ref target:Enemy)->CardResult{
         //造成 6 点伤害。
         let mut value:u16 = 6;
@@ -835,7 +857,7 @@ impl C1CardImpl of C1CardTrait{
         //抽一张牌，获得卡牌能耗的能量
         self.draw_cards_from_left(1);
       
-        self.energy.add_eq_u16(C1CardTrait::get_card_energy(self.mid_cards.at(self.mid_cards.size()-1)));
+        self.energy.add_eq_u16(C1CardInfoImpl::get_card_energy(self.mid_cards.at(self.mid_cards.size()-1)));
 
         return CardResult::Discard;
     }
@@ -1344,8 +1366,8 @@ impl C1CardImpl of C1CardTrait{
     fn c44(ref self:Adventurer)->CardResult{
         //抽2张牌，获得所抽卡费用的护甲
         self.draw_cards_from_left(2);
-        let mut value:u16 = C1CardTrait::get_card_energy(self.mid_cards.at(self.mid_cards.size()-1));
-        value.add_eq_u16(C1CardTrait::get_card_energy(self.mid_cards.at(self.mid_cards.size()-2)));
+        let mut value:u16 = C1CardInfoImpl::get_card_energy(self.mid_cards.at(self.mid_cards.size()-1));
+        value.add_eq_u16(C1CardInfoImpl::get_card_energy(self.mid_cards.at(self.mid_cards.size()-2)));
         self.check_talent_2(ref value);
 
         self.attr.c1_add_armor(value);

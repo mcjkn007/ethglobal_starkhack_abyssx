@@ -19,7 +19,7 @@ impl M1EntityImpl of EntityTrait<Enemy>{
         return Enemy{
             category:EnemyCategory::M1,
             round:0,
-            attr:AttributeTrait::new(54),
+            attr:AttributeTrait::new(34),
         };
     }
 }
@@ -66,10 +66,7 @@ impl M1DamageImpl of DamageTrait {
         self.status.cal_damaged_status(ref value);
 
         self.sub_hp_and_armor(value); 
-        let thorns = self.status.get(StatusCategory::Thorns);
-        if(thorns > 0){
-            target.sub_hp_and_armor(thorns);
-        }
+       
     }
 
     fn calculate_direct_damage_dealt(ref self:Attribute,ref value:u16){

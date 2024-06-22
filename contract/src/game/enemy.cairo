@@ -1,5 +1,6 @@
 use abyss_x::game::adventurer::{Adventurer};
 use abyss_x::game::attribute::{Attribute,AttributeTrait};
+use abyss_x::game::status::{StatusCategory};
  
 use abyss_x::game::monster::m1::{M1EntityImpl,M1ActionImpl,M1DamageImpl};
 use abyss_x::game::monster::m2::{M2EntityImpl,M2ActionImpl,M2DamageImpl};
@@ -105,6 +106,28 @@ impl EnemyImpl of EnemyTrait {
         return EnemyTrait::new(EnemyCategory::B1);
     }
 
+  
+    #[inline]
+    fn get_stage_enemey(stage:u8)->Enemy{
+       if(stage == 1){
+            return EnemyTrait::get_stage_1_enemey();
+       }else if(stage == 5){
+            return EnemyTrait::get_stage_5_enemey();
+       }else if(stage == 13){
+            return EnemyTrait::get_stage_7_enemey();
+       }else{
+            return EnemyTrait::get_stage_5_enemey();
+       }
+    }
+    #[inline]
+    fn get_stage_enemey_team(rand:u64)->EnemyTeam2{
+        return match rand{
+            0 =>EnemyTrait::get_stage_2_enemey(),
+            1 =>EnemyTrait::get_stage_3_enemey(),
+            2 =>EnemyTrait::get_stage_4_enemey(),
+            _ =>EnemyTrait::get_stage_2_enemey(),
+        };
+    }
     #[inline]
     fn e_game_begin(ref self:Enemy,ref target:Adventurer){
         match self.category{ 
@@ -174,6 +197,10 @@ impl EnemyImpl of EnemyTrait {
     }
     #[inline]
     fn e_damage_taken(ref self:Enemy,ref target:Attribute, value:u16){
+        let thorns = self.attr.status.get(StatusCategory::Thorns);
+        if(thorns > 0){
+            target.sub_hp_and_armor(thorns);
+        }
         match self.category{ 
             EnemyCategory::M1 => M1DamageImpl::damage_taken(ref self.attr,ref target, value),
             EnemyCategory::M2 => M2DamageImpl::damage_taken(ref self.attr,ref target, value),

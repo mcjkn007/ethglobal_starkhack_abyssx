@@ -28,8 +28,9 @@ mod game{
 
 mod models {
     mod card;
- 
+    mod message;
     mod name;
+    mod opt;
     mod role;
     //mod relic;
     mod user;
@@ -39,6 +40,7 @@ mod systems {
     mod battle;
     mod camp;
     mod chest;
+    mod event;
     mod home;
 }
 mod utils{
@@ -61,7 +63,7 @@ mod tests {
     }
     mod systems {
         mod test_battle;
-        mod test_chest;
+      //  mod test_chest;
       //  mod test_camp;
      //   mod test_home;
     }
@@ -73,9 +75,9 @@ mod tests {
        // mod test_dict_ptr;
        // mod test_pow;
        // mod test_math;
-      //  mod test_random;
+     //   mod test_random;
        // mod test_dict_map;
-       mod test_vector;
+      // mod test_vector;
     }
 
 }

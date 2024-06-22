@@ -1,1 +1,14 @@
-torii --world 0x9b86a67b310934dc4c874300450f4b7d9fd18665dbc29ebc4e4586a62449e8
+#!/bin/bash
+set -euo pipefail
+pushd $(dirname "$0")/..
+
+export RPC_URL="http://localhost:5050"
+
+export WORLD_ADDRESS=$(cat ./manifests/dev/manifest.json | jq -r '.world.address')
+
+echo "---------------------------------------------------------------------------"
+echo world : $WORLD_ADDRESS 
+echo " "
+echo "---------------------------------------------------------------------------"
+
+torii --world $WORLD_ADDRESS --database indexer.db

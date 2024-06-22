@@ -14,6 +14,7 @@ struct Role {
     #[key]
     player: ContractAddress,
     cur_stage:u8,
+    selected_road:u8,
 
     hp:u16,
     max_hp:u16,
@@ -31,6 +32,19 @@ mod RoleCategory{
     const ROGUE:u32 = 2;
     const MAGE:u32 = 3;
 }
+mod RoadCategory{
+    const NONE:u8 = 0;
+
+    const Normal:u8 = 1;
+    const Epic:u8 = 2;
+    const Boss:u8 = 3;
+
+    const Event:u8 = 4;
+    const Shop:u8 = 5;
+    const Camp:u8 = 6;
+    const Chest:u8 = 7;
+
+}
 
 #[generate_trait]
 impl RoleImpl of RoleTrait {
@@ -41,6 +55,7 @@ impl RoleImpl of RoleTrait {
         self.max_hp = 0;
       
         self.cur_stage = 0;
+        self.selected_road = 0;
 
         self.talent = 0;
         self.blessing = 0;

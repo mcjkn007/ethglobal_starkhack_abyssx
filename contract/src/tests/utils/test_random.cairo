@@ -5,23 +5,46 @@ mod tests {
     use abyss_x::utils::random::{RandomTrait,RandomContainerTrait,RandomArrayTrait};
     use abyss_x::utils::vector::{Vector,VectorTrait};
     use abyss_x::utils::math::{MathU32Trait};
+    use abyss_x::utils::constant::{POW_2_U64};
  
+     
     #[test]
+    #[ignore]
     #[available_gas(1_000_000_000)]
     fn test_random_u64() { 
         let mut seed:u64 = 4294967295;
         let result = RandomTrait::random_u64(ref seed,1,10);
     }
+     
     #[test]
+    #[ignore]
     #[available_gas(1_000_000_000)]
     fn test_random_array() { 
         let mut seed:u64 = 4294967295;
         let mut right_cards = array![1_u8,2,3,4,5];
         let aa = RandomContainerTrait::random_array(ref seed,@right_cards);
-        right_cards = ArrayTrait::<u8>::new();
-   
+     
     }
     #[test]
+    #[available_gas(1_000_000_000)]
+    fn test_random_number() { 
+        let mut seed:u64 = POW_2_U64::_60;
+ 
+        let mut left = RandomArrayTrait::random_number(ref seed,10);
+        loop{
+            match left.pop_front() {
+                Option::Some(r) => {
+                    println!("left len  : {}",r);
+                },
+                Option::None => {
+                    break;
+                },
+            }
+        }
+    }
+  
+    #[test]
+    #[ignore]
     #[available_gas(1_000_000_000)]
     fn test_random_loop() { 
         let mut seed:u64 = 4294967295;

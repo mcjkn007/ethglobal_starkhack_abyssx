@@ -17,26 +17,18 @@ mod camp {
    use starknet::{ContractAddress,SyscallResultTrait,SyscallResult, syscalls,get_caller_address,get_contract_address,get_block_timestamp,contract_address_const};
    use abyss_x::models::{
        user::{User,UserState,UserTrait},
-       role::{Role,RoleCategory,RoleTrait},
-       card::{Card,CardTrait}
+       role::{Role,RoadCategory,RoleCategory,RoleTrait},
+       card::{Card,CardTrait},
+       message::{Message},
+       opt::{Opt}
    };
 
    use abyss_x::utils::{
-        constant::{EventCode,CampAciton,U8IntoCampAciton}
+        constant::{EventCode,CampAciton,U8IntoCampAciton},
+        random::{RandomTrait,RandomContainerTrait},
+        
    };
-
-   #[event]
-   #[derive(Drop, starknet::Event)]
-   enum Event {
-       CampEvent:CampEvent,
-   }
-   #[derive(Drop, starknet::Event)]
-   struct CampEvent {
-       player: ContractAddress,
-       event: EventCode
-   }
-
-
+ 
    // impl: implement functions specified in trait
    #[abi(embed_v0)]
    impl CampImpl of super::ICamp<ContractState> {
@@ -47,29 +39,41 @@ mod camp {
 
             assert(user.state.into() == UserState::GAME, 'state is wrong');
 
-            //assert(role.cur_stage%2 == 1, 'stage category is wrong');
+            let mut role:Role = get!(world, (player), (Role));
+            
+            assert(role.cur_stage > 1, 'stage is wrong');
+            assert(role.selected_road == RoadCategory::Camp, 'stage is wrong');
+            
+    
             let act:CampAciton = action.into();
             match act {
-                CampAciton::Rest => {
-                    let mut role:Role = get!(world, (player), (Role));
-                    role.rest();
-                    set!(world,(role)); 
+                CampAciton::Null =>{
+
                 },
-                CampAciton::Talent => {
-                    let mut role:Role = get!(world, (player), (Role));
-                    role.talent(value);
-                    set!(world,(role)); 
+                CampAciton::Rest => {
+                    role.rest();
                 },
                 CampAciton::DeleteCard => {
                     let mut card:Card = get!(world, (player), (Card));
                     card.delete_card(value);
                     set!(world,(card)); 
                 },
+                CampAciton::Talent => {
+                    role.talent(value);
+
+                },
                 _ => {},
         }
       
              
-            emit!(world,CampEvent { player:player, event:EventCode::CampAction});
+            let mut opt:Opt = get!(world, player, (Opt));
+            opt.code = EventCode::CampAction;
+            set!(world,(opt));
+
+            role.selected_road = RoadCategory::NONE;
+            set!(world,(role)); 
+
+            emit!(world,Message { player:player, code:EventCode::CampAction});
        }
      
    }

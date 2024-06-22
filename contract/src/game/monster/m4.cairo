@@ -102,10 +102,7 @@ impl M4DamageImpl of DamageTrait {
         }
 
         self.sub_hp_and_armor(value); 
-        let thorns = self.status.get(StatusCategory::Thorns);
-        if(thorns > 0){
-            target.sub_hp_and_armor(thorns);
-        }
+        
     }
 
     fn calculate_direct_damage_dealt(ref self:Attribute,ref value:u16){

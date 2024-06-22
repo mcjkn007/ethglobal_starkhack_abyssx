@@ -1,11 +1,12 @@
  
 use abyss_x::utils::dict_map::{DictMap,DictMapTrait};
 use abyss_x::utils::random::{RandomTrait,RandomContainerTrait,RandomArrayTrait};
-use abyss_x::utils::math::{MathU32Trait,MathU16Trait,MathU8Trait};
+use abyss_x::utils::math::{MathU64Trait,MathU32Trait,MathU16Trait,MathU8Trait};
 use abyss_x::utils::bit::{Bit64Trait};
-use abyss_x::utils::constant::{HAND_CARD_NUMBER_MAX,HAND_CARD_NUMBER_INIT,DebuffCard,MAX_U16,MIN_U16};
+use abyss_x::utils::constant::{HAND_CARD_NUMBER_MAX,HAND_CARD_NUMBER_INIT,CurseCard,SeedDiff,MAX_U16,MIN_U16};
  
 use abyss_x::game::attribute::{Attribute,AttributeTrait};
+use abyss_x::game::status::{StatusCategory};
 use abyss_x::game::relic::{RelicCategory,RelicTrait};
 use abyss_x::game::enemy::{Enemy,EnemyTeam2,EnemyTeam3,EnemyCategory};
 use abyss_x::game::charactor::c1::{C1Action1Impl,C1Action2Impl,C1EntityImpl,C1DamageImpl};
@@ -74,7 +75,9 @@ impl AdventurerCommonImpl of AdventurerCommonTrait{
         self.relic = role.relic;
         self.relic_flag = role.relic;
  
-        self.seed = role.seed;
+        self.seed = MathU64Trait::add_u64(role.seed,SeedDiff::Game);
+        RandomTrait::random_u64_loop(ref self.seed,role.cur_stage);
+
         self.seed = 123;
 
         self.init_cards = card.get_cards();
@@ -125,6 +128,10 @@ impl AdventurerCommonImpl of AdventurerCommonTrait{
     }
     #[inline]
     fn c_damage_taken(ref self:Adventurer,ref target:Attribute, value:u16){
+        let thorns = self.attr.status.get(StatusCategory::Thorns);
+        if(thorns > 0){
+            target.sub_hp_and_armor(thorns);
+        }
         match self.category {
             0 => {},
             1 => C1DamageImpl::damage_taken(ref self.attr,ref target, value),
@@ -268,7 +275,8 @@ impl Adv_EnemyImpl of AdventurerTrait<Enemy>{
         self.check_relic_15(true);
         //在回合开始时，抽牌数-1。你的最大能量+1
         self.check_relic_16(true);
-        
+ 
+
         self.left_cards = RandomArrayTrait::random_number(ref self.seed,self.init_cards.len()); 
         self.draw_cards_from_left(self.draw_cards); 
 

@@ -2,7 +2,7 @@ use core::dict::Felt252DictTrait;
  
 use abyss_x::utils::math::{MathU32Trait,MathU16Trait,MathU8Trait};
 use abyss_x::utils::bit::{Bit64Trait};
-use abyss_x::utils::constant::{HAND_CARD_NUMBER_MAX,DebuffCard};
+use abyss_x::utils::constant::{HAND_CARD_NUMBER_MAX,CurseCard};
 use abyss_x::utils::constant::{POW_2_U64};
 
 use abyss_x::game::attribute::{Attribute,AttributeTrait};

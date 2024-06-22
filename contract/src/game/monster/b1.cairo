@@ -1,6 +1,6 @@
 use core::dict::Felt252DictTrait;
 use core::array::ArrayTrait;
-use abyss_x::utils::constant::{DebuffCard};
+use abyss_x::utils::constant::{CurseCard};
 use abyss_x::utils::dict_map::{DictMap,DictMapTrait};
 use abyss_x::utils::random::{RandomTrait,RandomContainerTrait};
 use abyss_x::utils::math::{MathU32Trait,MathU16Trait,MathU8Trait};
@@ -70,9 +70,9 @@ impl B1ActionImpl of ActionTrait<Enemy,Adventurer>{
                     self.e_calculate_damage_dealt(ref value);
                     target.c_damage_taken(ref self.attr,value);
                     if(up){
-                        target.right_cards.append(DebuffCard::BurnUp);
+                        target.right_cards.append(CurseCard::BurnUp);
                     }else{
-                        target.right_cards.append(DebuffCard::Burn);
+                        target.right_cards.append(CurseCard::Burn);
                     }
                 },
                 1 => {
@@ -89,9 +89,9 @@ impl B1ActionImpl of ActionTrait<Enemy,Adventurer>{
                     self.e_calculate_damage_dealt(ref value);
                     target.c_damage_taken(ref self.attr,value);
                     if(up){
-                        target.right_cards.append(DebuffCard::BurnUp);
+                        target.right_cards.append(CurseCard::BurnUp);
                     }else{
-                        target.right_cards.append(DebuffCard::Burn);
+                        target.right_cards.append(CurseCard::Burn);
                     }
                 },
                 3 => {
@@ -113,9 +113,9 @@ impl B1ActionImpl of ActionTrait<Enemy,Adventurer>{
                     self.e_calculate_damage_dealt(ref value);
                     target.c_damage_taken(ref self.attr,value);
                     if(up){
-                        target.right_cards.append(DebuffCard::BurnUp);
+                        target.right_cards.append(CurseCard::BurnUp);
                     }else{
-                        target.right_cards.append(DebuffCard::Burn);
+                        target.right_cards.append(CurseCard::Burn);
                     }
                 },
                 6 =>{
@@ -125,9 +125,9 @@ impl B1ActionImpl of ActionTrait<Enemy,Adventurer>{
                     target.c_damage_taken(ref self.attr,value);
                     target.c_damage_taken(ref self.attr,value);
 
-                    target.right_cards.append(DebuffCard::BurnUp);
-                    target.right_cards.append(DebuffCard::BurnUp);
-                    target.right_cards.append(DebuffCard::BurnUp);
+                    target.right_cards.append(CurseCard::BurnUp);
+                    target.right_cards.append(CurseCard::BurnUp);
+                    target.right_cards.append(CurseCard::BurnUp);
                 },
                 _ =>{}
             }
@@ -145,11 +145,6 @@ impl B1DamageImpl of DamageTrait {
         self.status.cal_damaged_status(ref value);
 
         self.sub_hp_and_armor(value); 
-        let thorns = self.status.get(StatusCategory::Thorns);
-        if(thorns > 0){
-            target.sub_hp_and_armor(thorns);
-        }
-       
     }
 
     fn calculate_direct_damage_dealt(ref self:Attribute,ref value:u16){

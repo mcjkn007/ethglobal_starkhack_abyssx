@@ -19,23 +19,16 @@ mod home {
     use starknet::{ContractAddress,SyscallResultTrait,SyscallResult, syscalls,get_caller_address,get_contract_address,get_block_timestamp,contract_address_const};
     use abyss_x::models::{
         user::{User,UserState,UserTrait},
-        name::{Name,NameTrait}
+        name::{Name,NameTrait},
+        message::{Message},
+        opt::{Opt}
     };
 
     use abyss_x::utils::{
         constant::{EventCode}
     };
  
-    #[event]
-    #[derive(Drop, starknet::Event)]
-    enum Event {
-        HomeEvent:HomeEvent,
-    }
-    #[derive(Drop, starknet::Event)]
-    struct HomeEvent {
-        player: ContractAddress,
-        event: EventCode
-    }
+  
     // impl: implement functions specified in trait
     #[abi(embed_v0)]
     impl HomeImpl of super::IHome<ContractState> {
@@ -57,7 +50,11 @@ mod home {
                 user.reset();
                 set!(world,(user));
             }
-            emit!(world,HomeEvent { player:player, event:EventCode::Login});
+            let mut opt:Opt = get!(world, player, (Opt));
+            opt.code = EventCode::Login;
+            set!(world,(opt));
+
+            emit!(world,Message { player:player, code:EventCode::Login});
         }
         fn set_name(world: @IWorldDispatcher,name:felt252){
             let player = get_caller_address();
@@ -71,7 +68,7 @@ mod home {
 
             set!(world,(n));
 
-            emit!(world,HomeEvent { player:player, event:EventCode::SetNickName});
+            emit!(world,Message { player:player, code:EventCode::SetNickName});
         }
         fn test(world: @IWorldDispatcher,game_mode:u32){
             let player = get_caller_address();
@@ -83,7 +80,7 @@ mod home {
             user.game_mode = game_mode.try_into().unwrap();
             set!(world,(user));
             
-            emit!(world,HomeEvent { player:player, event:EventCode::SetNickName});
+            emit!(world,Message { player:player, code:EventCode::SetNickName});
         }
     }
 }

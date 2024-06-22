@@ -67,10 +67,7 @@ impl M2DamageImpl of DamageTrait {
         if(self.hp > 0){
             self.check_attacked_armor();
         }
-        let thorns = self.status.get(StatusCategory::Thorns);
-        if(thorns > 0){
-            target.sub_hp_and_armor(thorns);
-        }
+       
     }
 
     fn calculate_direct_damage_dealt(ref self:Attribute,ref value:u16){

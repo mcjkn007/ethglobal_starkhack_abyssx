@@ -4,7 +4,7 @@ use starknet::ContractAddress;
 use dojo::world::{IWorldDispatcher, IWorldDispatcherTrait};
 use dojo::model::Model;
 
-#[derive(Copy, Drop,Serde,IntrospectPacked)]
+#[derive(Copy, Drop,Serde)]
 #[dojo::model]
 struct Name {
     #[key]

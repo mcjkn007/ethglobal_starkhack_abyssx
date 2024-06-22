@@ -1,3 +1,5 @@
+use core::traits::RemEq;
+use core::traits::DivEq;
 use core::box::BoxTrait;
 use core::traits::AddEq;
 use core::clone::Clone;
@@ -10,9 +12,10 @@ use poseidon::PoseidonTrait;
 use hash::HashStateTrait;
 use debug::PrintTrait;
 
-const RANDOM_P1:u64 = 1103515245_u64;
-const RANDOM_P2:u128 = 12345_128;
-const RANDOM_P3:u128 = 0x7fffffff_u128;
+const RANDOM_P1:u128 = 1103515245;
+const RANDOM_P2:u128 = 12345;
+const RANDOM_P3:u128 = 65536;
+const RANDOM_P4:u128 = 0x7fffffff;
 
  
 use abyss_x::utils::vector::{Vector,VectorTrait};
@@ -20,35 +23,37 @@ use abyss_x::utils::math::{MathU8Trait,MathU32Trait,MathU64Trait};
  
 #[generate_trait]
 impl RandomImpl of RandomTrait{
-    fn random_u64_loop(seed:u64,loop_num:u32,min:u64,max:u64) -> u64{
-        let mut i:u32 = 0_u32;
-        let mut s:u64 = seed;
+    fn random_u64_loop(ref seed:u64,loop_num:u8){
+        let mut i:u8 = 0;
         loop{
             if(i == loop_num){
                 break;
             }
-            s = match core::integer::u128_checked_add(core::integer::u64_wide_mul(s,RANDOM_P1),RANDOM_P2) {
-                Option::Some(r) => (r & RANDOM_P3).try_into().unwrap(),
+            seed = match core::integer::u128_checked_add(seed.into()*RANDOM_P1,RANDOM_P2) {
+                Option::Some(r) => (r & RANDOM_P4).try_into().unwrap(),
                 Option::None => 0,
             };
+            i.self_add_u8();
         };
-       
-        return MathU64Trait::add_u64(min,s % MathU64Trait::sub_u64(max,min));
     }
     #[inline]
     fn random_u64(ref seed:u64,min:u64,max:u64) -> u64{
-        seed = match core::integer::u128_checked_add(core::integer::u64_wide_mul(seed,RANDOM_P1),RANDOM_P2) {
-            Option::Some(r) => (r & RANDOM_P3).try_into().unwrap(),
+        //左闭右开
+        seed = match core::integer::u128_checked_add(seed.into()*RANDOM_P1,RANDOM_P2) {
+            Option::Some(r) => (r & RANDOM_P4).try_into().unwrap(),
             Option::None => 0,
         };
         return MathU64Trait::add_u64(min,seed % MathU64Trait::sub_u64(max,min));
     }
+ 
     #[inline]
     fn random_u64_c(ref seed:u64,min:u64,max:u64) -> u64{
-        seed = match core::integer::u128_checked_add(core::integer::u64_wide_mul(seed,RANDOM_P1),RANDOM_P2) {
-            Option::Some(r) => (r & RANDOM_P3).try_into().unwrap(),
+        //左闭右闭
+        seed = match core::integer::u128_checked_add(seed.into()*RANDOM_P1,RANDOM_P2) {
+            Option::Some(r) => (r & RANDOM_P4).try_into().unwrap(),
             Option::None => 0,
         };
+ 
         return MathU64Trait::add_u64(min,seed % (MathU64Trait::sub_u64(max,min)+1));
     }
 }
@@ -57,25 +62,33 @@ impl RandomImpl of RandomTrait{
 impl RandomContainerImpl<T,+Drop<T>, +Copy<T>,+AddEq<T>,+PartialOrd<T>,+Into<T, felt252>, +Into<u8, T>,+Into<T, u32>,+Into<T, u64>,+PartialEq<T>, +Felt252DictValue<T>> of RandomContainerTrait<T>{
     fn random_array(ref seed:u64,data:@Array<T>)->Array<T>{
  
-        let mut cur_pos:u32 = data.len();
+        let mut cur_pos:u8 = data.len().try_into().unwrap();
         let mut dict: Felt252Dict<u8> = Default::default(); 
         let mut result: Array<T> = ArrayTrait::new();
         loop{
              
-            if(cur_pos == 1_u32){
-                result.append(*data.at(MathU32Trait::sub_u32(dict.get(1).into(),1_u32)));
+            if(cur_pos == 1){
+                
+                result.append(*data.at(MathU8Trait::sub_u8(dict.get(0),1).into()));
                 break;
             } 
         
-            let mut rand_pos:u64 =  MathU64Trait::add_u64(RandomTrait::random_u64(ref seed,0_u64,cur_pos.into()),1);
-            let v:u8 = dict.get(rand_pos.try_into().unwrap());
+            let rand_pos:felt252 = RandomTrait::random_u64(ref seed,0,MathU8Trait::sub_u8(cur_pos,1).into()).into();
+            let mut v:u8 = dict.get(rand_pos);
             if(v == 0){
-                result.append(*data.at((MathU64Trait::sub_u64(rand_pos,1)).try_into().unwrap()));
+                result.append(*data.at(rand_pos.try_into().unwrap()).try_into().unwrap());
             }else{
                 result.append(*data.at((MathU8Trait::sub_u8(v,1)).try_into().unwrap()));
             }
-            dict.insert(rand_pos.try_into().unwrap(),cur_pos.try_into().unwrap());
-            cur_pos.self_sub_u32();
+            v = dict.get((MathU8Trait::sub_u8(cur_pos,1)).into());
+
+            if(v == 0){
+                dict.insert(rand_pos,cur_pos.try_into().unwrap());
+            }else{
+                dict.insert(rand_pos,v);
+            }
+ 
+            cur_pos.self_sub_u8();
         };
 
         return result;
@@ -104,24 +117,32 @@ impl RandomArrayImpl of RandomArrayTrait{
 
     fn random_number(ref seed:u64,size:u32)->Array<u8>{
  
-        let mut cur_pos:u32 = size;
+        let mut cur_pos:u8 = size.try_into().unwrap();
         let mut dict: Felt252Dict<u8> = Default::default(); 
         let mut result: Array<u8> = ArrayTrait::new();
         loop{
-            if(cur_pos == 1_u32){
-                result.append(MathU8Trait::sub_u8(dict.get(1).into(),1));
+            if(cur_pos == 1){
+                result.append(MathU8Trait::sub_u8(dict.get(0),1));
                 break;
             } 
-        
-            let mut rand_pos:u64 =  MathU64Trait::add_u64(RandomTrait::random_u64(ref seed,0_u64,cur_pos.into()),1);
-            let v:u8 = dict.get(rand_pos.try_into().unwrap());
+            println!("seed  : {}",seed);
+            let rand_pos:felt252 = RandomTrait::random_u64(ref seed,0,MathU8Trait::sub_u8(cur_pos,1).into()).into();
+            let mut v:u8 = dict.get(rand_pos);
+            println!("rand_pos  : {}",rand_pos);
+            println!("cur_pos  : {}",cur_pos-1);
+            println!("---------");
             if(v == 0){
-                result.append((MathU64Trait::sub_u64(rand_pos,1)).try_into().unwrap());
+                result.append(rand_pos.try_into().unwrap());
             }else{
-                result.append((MathU8Trait::sub_u8(v,1)).try_into().unwrap());
+                result.append((MathU8Trait::sub_u8(v,1)));
             }
-            dict.insert(rand_pos.try_into().unwrap(),cur_pos.try_into().unwrap());
-            cur_pos.self_sub_u32();
+            v = dict.get((MathU8Trait::sub_u8(cur_pos,1)).into());
+            if(v == 0){
+                dict.insert(rand_pos,cur_pos.try_into().unwrap());
+            }else{
+                dict.insert(rand_pos,v);
+            }
+            cur_pos.self_sub_u8();
         };
 
         return result;

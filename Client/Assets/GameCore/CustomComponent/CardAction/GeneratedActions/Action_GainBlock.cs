@@ -11,6 +11,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using System;
 using DG.Tweening;
+using dojo_bindings;
 using GameCore.CustomComponent.Role;
 
 namespace Abyss.GameActions
@@ -18,12 +19,14 @@ namespace Abyss.GameActions
     /// <summary>
     /// 获得 [value] 点护甲。
     /// </summary>
-    [CardAction(10040)]
+    [CardAction(10030)]
     public class Action_GainBlock : BaseGameAction
     {
         public override void Execute(BaseRole self, object targets, int value, DG.Tweening.Sequence sequence)
         {
             //TODO  
+            self.Stat.QueryArmorFromCard(ref value);
+            self.Armor += value;
         }
     }
 }        

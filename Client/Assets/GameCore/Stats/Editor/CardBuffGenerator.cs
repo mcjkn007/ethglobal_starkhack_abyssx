@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Net;
 using System.Text;
-using cfg.item;
 using UnityEngine;
 using UnityEditor;
 using UnityEngine.EventSystems;

@@ -37,13 +37,13 @@ namespace Abyss
             }
         }
         
-        public  BaseCard GetCard(int cfgId, Transform parent = null)
+        public  BaseCard GetCard(int cfgId, long guid, Transform parent = null)
         {
             var rtn = pool.Get();
             rtn.transform.SetParent(parent);
             rtn.transform.localScale = Vector3.one;
             rtn.gameObject.SetActive(false);
-            rtn.Init(cfgId, rtn.GUID );
+            rtn.Init(cfgId, guid );
             return rtn;
         }
 

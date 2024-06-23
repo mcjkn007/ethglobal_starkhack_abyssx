@@ -1,3 +1,4 @@
+using System;
 using System.Linq;
 using Unity.VisualScripting;
 using UnityEngine;
@@ -17,8 +18,6 @@ namespace Abyss
         
         public void SetSpline(Vector2[] positions)
         {
-
-
             if (positions == null || positions.Length != (imgs.Length + 1))
             {
                 return;
@@ -46,6 +45,16 @@ namespace Abyss
                 }
                 
             }
+        }
+
+        public  void TransferSpline()
+        {
+            
+            for (int i = 0; i < imgs.Length; i++)
+            {
+                imgs[i].transform.position = new Vector2(10000,10000); 
+            }
+            endImg.transform.position = new Vector2(10000,10000); 
         }
 
         public void ShowSpline()

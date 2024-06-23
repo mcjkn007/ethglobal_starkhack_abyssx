@@ -54,7 +54,6 @@ namespace GameCore.Stats
                     }
                 }
             }
-            
             return returnValue;
         }
 

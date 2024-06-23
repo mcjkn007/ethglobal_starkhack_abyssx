@@ -16,10 +16,10 @@ using GameCore.CustomComponent.Role;
 namespace Abyss.GameActions
 {
     /// <summary>
-    /// 下回合少抽 [value] 张牌。
+    /// 获得 [value] 点能量。
     /// </summary>
-    [CardAction(10030)]
-    public class Action_DrawLessCardNextTurn : BaseGameAction
+    [CardAction(10320)]
+    public class Action_GainEnergy : BaseGameAction
     {
         public override void Execute(BaseRole self, object targets, int value, DG.Tweening.Sequence sequence)
         {

@@ -12,9 +12,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: faed63f2427f3ed83a42d16bb3e73e6d, type: 3}
   m_Name: Temp810WorldManager 1
   m_EditorClassIdentifier: 
-  toriiUrl: http://192.168.0.103:8080
-  rpcUrl: http://192.168.0.103:5050
-  relayUrl: /ip4/192.168.0.103/tcp/9090
-  relayWebrtcUrl: /ip4/192.168.0.103/udp/9091/webrtc-direct/certhash/uEiDD8KQcRhXJcyHxQ9MaxEFxVQY-0bsdTqJMCa4t7px4iA
+  privateKey: 0x2bbf4f9fd0bbb2e60b0316c1fe0b76cf7a4d0198bd493ced9b8df2a3a24d68a
+  masterAddress: 0xb3ff441a68610b30fd5e2abbf3a1548eb6ba6f3559f2862bf2dc757e5828ca
+  toriiUrl: http://192.168.0.105:8080
+  rpcUrl: http://192.168.0.105:5050
+  relayUrl: /ip4/192.168.0.105/tcp/9090
+  relayWebrtcUrl: /ip4/192.168.0.105/udp/9091/webrtc-direct/certhash/uEiDD8KQcRhXJcyHxQ9MaxEFxVQY-0bsdTqJMCa4t7px4iA
   limit: 100
   worldAddress: 0x313872512cba1e93b4f099b78dd82481b97dcbb04c5b89286d6e1f1697c7fa7

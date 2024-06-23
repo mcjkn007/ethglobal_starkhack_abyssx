@@ -11,10 +11,9 @@ namespace Abyss
     {
         protected override void OnInit(IFsm<IProcedureManager> procedureOwner)
         {
-            Debug.LogWarning("Procedure Base Launched!");
             base.OnInit(procedureOwner);
             // Entry.Core.BeginGame();
-            Entry.UI.OpenUIForm(UIPath.Battle, "first");
+            Entry.UI.OpenUIForm(UIPath.Login, "first");
         }
     }
 }

@@ -12,7 +12,12 @@ namespace Abyss
         public Image img_face;
         public Image img_quality;
         public GameObject go_outline;
+        public Text txt_guid;
+        
+        public Sprite[] img_typeList;
+        public Image cardType;
 
+        public Sprite[] img_qualityList;
         public void Clear()
         {
             txt_cost = null;

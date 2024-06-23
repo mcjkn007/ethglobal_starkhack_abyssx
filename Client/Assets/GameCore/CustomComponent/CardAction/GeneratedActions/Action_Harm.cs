@@ -10,8 +10,10 @@
 using UnityEngine;        
 using UnityEngine.UI;
 using System;
+using System.Runtime.CompilerServices;
 using DG.Tweening;
 using GameCore.CustomComponent.Role;
+using UnityEditor.Search;
 
 namespace Abyss.GameActions
 {
@@ -24,6 +26,18 @@ namespace Abyss.GameActions
         public override void Execute(BaseRole self, object targets, int value, DG.Tweening.Sequence sequence)
         {
             //TODO  
+            var originalPos = self.transform.position.x;
+            var va =  self.Stat.QueryNormalAttack(value, true);
+            var targetPosX = (targets as BaseRole).transform.position.x;
+            var isRight = self.transform.position.x > targetPosX ? 1 : -1;
+            // sequence.Append(self.transform.DOMoveX(targetPosX + isRight * 0.1f, 0.2f))
+            sequence.Append(self.transform.DOMoveX(targetPosX + isRight * 3f, 0.2f))
+                .AppendInterval(0.05f)
+                .AppendCallback(() =>
+                {
+                    (targets as BaseRole).AcceptAtkDmg(va);
+
+                }).AppendInterval(0.1f).Append(self.transform.DOMoveX(originalPos, 0.2f));
         }
     }
 }        

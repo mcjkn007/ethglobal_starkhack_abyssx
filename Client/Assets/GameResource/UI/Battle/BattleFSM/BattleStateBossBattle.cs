@@ -1,5 +1,6 @@
+using System;
 using GameFramework.Fsm;
-
+using UnityEngine.EventSystems;
 namespace Abyss.BattleFSM
 {
     public class BattleStateBossBattle : BattleFSMState
@@ -9,6 +10,7 @@ namespace Abyss.BattleFSM
         {
             owner.FadeInAndOut(() =>
             {
+                (data as System.Action)?.Invoke();
                 owner.battleForm.campLogic.gameObject.SetActive(false);
                 owner.battleForm.selectLogic.gameObject.SetActive(false);
                 owner.battleForm.eventLogic.gameObject.SetActive(false);

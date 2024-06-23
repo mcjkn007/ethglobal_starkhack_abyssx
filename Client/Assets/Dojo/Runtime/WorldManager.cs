@@ -30,6 +30,7 @@ namespace Dojo
                 Debug.LogError("Clicked ");
             });
             btn_awake.onClick.AddListener(ManualAwake);
+            ManualAwake();
         }
 
         async void ManualAwake()
@@ -51,7 +52,7 @@ namespace Dojo
                 problem is when to start the subscription service
             */
             await synchronizationMaster.SynchronizeEntities();
-
+            
             // listen for entity updates
             synchronizationMaster.RegisterEntityCallbacks();
             synchronizationMaster.RegisterEventMessageCallbacks();
@@ -99,6 +100,7 @@ namespace Dojo
         */
         public GameObject Entity(string name)
         {
+            Debug.LogWarning("name =>" + (name == null));
             var entity = transform.Find(name);
             if (entity == null)
             {

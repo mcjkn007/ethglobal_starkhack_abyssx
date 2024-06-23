@@ -42,11 +42,19 @@ namespace UnityGameFramework.Runtime
                 Log.Error("UI form instance is invalid.");
                 return null;
             }
-
+            
             Transform transform = gameObject.transform;
             transform.SetParent(((MonoBehaviour)uiGroup.Helper).transform);
             transform.localScale = Vector3.one;
-
+            var rect = transform as RectTransform;
+            if (rect == null)
+            {
+                return null;
+            }
+            rect.anchorMin = Vector2.zero;
+            rect.anchorMax = Vector2.one;
+            rect.offsetMax = Vector2.zero;
+            rect.offsetMin = Vector2.zero;
             return gameObject.GetOrAddComponent<UIForm>();
         }
 

@@ -39,9 +39,6 @@ public sealed partial class GameBuff : Luban.BeanBase
     /// 名称
     /// </summary>
     public readonly string Name;
-    /// <summary>
-    /// 英文名
-    /// </summary>
     public readonly string Alias;
     /// <summary>
     /// 描述

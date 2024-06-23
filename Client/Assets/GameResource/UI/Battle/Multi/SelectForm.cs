@@ -5,6 +5,6 @@ namespace Abyss.Multi
 {
     public class SelectForm : MonoBehaviour
     {
-        public Button[] select;
+        public SelectLogicItem[] select;
     }
 }

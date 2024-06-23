@@ -5,6 +5,9 @@
 // Feedback: mailto:ellan@gameframework.cn
 //------------------------------------------------------------
 
+using System;
+using UnityEngine;
+
 namespace UnityGameFramework.Runtime
 {
     /// <summary>
@@ -18,6 +21,12 @@ namespace UnityGameFramework.Runtime
         /// <param name="depth">界面组深度。</param>
         public override void SetDepth(int depth)
         {
+        }
+
+        private void Awake()
+        {
+            var recttransform = gameObject.AddComponent<RectTransform>();
+            recttransform.sizeDelta = new Vector2(Screen.width, Screen.height);
         }
     }
 }

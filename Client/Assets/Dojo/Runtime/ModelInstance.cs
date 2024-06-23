@@ -63,9 +63,9 @@ namespace Dojo
             // if the field is a primitive, we can just set it
             // fieldelement is included as a primitive because its a class
             // but its already instantiated
+            
             if (type.IsPrimitive || type == typeof(FieldElement) || type == typeof(BigInteger) || type == typeof(string))
             {
-                Debug.LogError("current Type = " + type + "ty.type = " + ty.GetType());
                 return Convert.ChangeType(ty, type);
             }
             // handle array

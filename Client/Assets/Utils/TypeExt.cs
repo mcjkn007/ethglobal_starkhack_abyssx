@@ -64,7 +64,7 @@ namespace Utils
             {
                 extraHead += $"第{idx ++}个元素是 {enu.Current} \n";
             }
-            Log.Info(extraHead);
+            Debug.Log(extraHead);
         }
 
         public static void Print(this object obj, string extraHead = "")
@@ -81,7 +81,6 @@ namespace Utils
                 var value = property.GetValue(obj);
                 extraHead += ($"{property.Name} = {value} \n");
             }
-            Log.Info(extraHead);
         }
 
         public static void Dump(this  IEnumerable<dojo.FieldElement> Elements)
@@ -98,7 +97,6 @@ namespace Utils
 
                 header += "\n";
             }
-            Log.Warning(header);
         }
     }
 }

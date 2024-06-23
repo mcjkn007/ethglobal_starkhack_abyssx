@@ -1,3 +1,6 @@
+using System.Runtime.CompilerServices.Events;
+using GameCore;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -39,6 +42,40 @@ namespace Utils
                 float x = screenPos.x / Screen.width;
                 float y = screenPos.y / Screen.height;
                 return new Vector2(x, y);
+            }
+        }
+
+        public static void AnylyseOpt(this Opt source)
+        {
+            if (source.code == new EventCode.Login())
+            {
+                Debug.LogError("opt.code =>  Login");
+            }
+            else if (source.code == new EventCode.StartGame())
+            {
+                Debug.LogError("opt.code =>  startGame");
+            }
+            else if (source.code == new EventCode.GiveUpGame())
+            {
+                Debug.LogError("opt.code =>  GiveUpGame");
+            }
+        }
+        public static void InformOpt(this Opt source)
+        {
+            if (source.code == new EventCode.Login())
+            {
+                Entry.Event.Fire(DojoStateLogin.EventId, null);
+                Debug.LogError("opt.code =>  Login");
+            }
+            else if (source.code == new EventCode.StartGame())
+            {
+                Entry.Event.Fire(DojoStateStartGame.EventId, null);
+                Debug.LogError("opt.code =>  startGame");
+            }
+            else if (source.code == new EventCode.GiveUpGame())
+            {
+                Entry.Event.Fire(DojoStateGiveUpGame.EventId, null);
+                Debug.LogError("opt.code =>  GiveUpGame");
             }
         }
 

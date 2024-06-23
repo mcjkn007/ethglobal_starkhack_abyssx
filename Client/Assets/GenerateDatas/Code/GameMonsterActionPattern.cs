@@ -17,7 +17,8 @@ public sealed partial class GameMonsterActionPattern : Luban.BeanBase
     public GameMonsterActionPattern(ByteBuf _buf) 
     {
         Id = _buf.ReadInt();
-        {int __n0 = System.Math.Min(_buf.ReadSize(), _buf.Size);Cards = new int[__n0];for(var __index0 = 0 ; __index0 < __n0 ; __index0++) { int __e0;__e0 = _buf.ReadInt(); Cards[__index0] = __e0;}}
+        Name = _buf.ReadString();
+        Comment = _buf.ReadString();
     }
 
     public static GameMonsterActionPattern DeserializeGameMonsterActionPattern(ByteBuf _buf)
@@ -30,9 +31,10 @@ public sealed partial class GameMonsterActionPattern : Luban.BeanBase
     /// </summary>
     public readonly int Id;
     /// <summary>
-    /// 输入card表中的卡片id，游戏中会按照顺序每回合触发一张卡片效果，如果一个队列走完了之后会进行循环
+    /// 英文名
     /// </summary>
-    public readonly int[] Cards;
+    public readonly string Name;
+    public readonly string Comment;
    
     public const int __ID__ = 1572007410;
     public override int GetTypeId() => __ID__;
@@ -41,13 +43,15 @@ public sealed partial class GameMonsterActionPattern : Luban.BeanBase
     {
         
         
+        
     }
 
     public override string ToString()
     {
         return "{ "
         + "id:" + Id + ","
-        + "cards:" + Luban.StringUtil.CollectionToString(Cards) + ","
+        + "name:" + Name + ","
+        + "comment:" + Comment + ","
         + "}";
     }
 }

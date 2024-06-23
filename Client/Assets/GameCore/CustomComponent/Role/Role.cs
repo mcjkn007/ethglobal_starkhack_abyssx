@@ -5,15 +5,8 @@ using cfg;
 using DG.Tweening;
 using GameFramework;
 using GameFramework.Event;
-using GameCore.Stats;
 using GameFramework.Resource;
-using Unity.VisualScripting;
 using UnityEngine;
-using UnityEngine.EventSystems;
-using UnityEngine.PlayerLoop;
-using UnityGameFramework.Runtime;
-using Utils;
-using Stats = GameCore.Stats;
 
 namespace GameCore.CustomComponent.Role
 {

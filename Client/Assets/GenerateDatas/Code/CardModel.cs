@@ -20,6 +20,7 @@ public sealed partial class CardModel : Luban.BeanBase
         Name = _buf.ReadString();
         Desc = _buf.ReadString();
         Cost = _buf.ReadInt();
+        Cardtype = _buf.ReadInt();
         NextLevelCardId = _buf.ReadInt();
         Res = _buf.ReadInt();
         Quality = _buf.ReadInt();
@@ -49,6 +50,10 @@ public sealed partial class CardModel : Luban.BeanBase
     /// 花销
     /// </summary>
     public readonly int Cost;
+    /// <summary>
+    /// 卡牌类型
+    /// </summary>
+    public readonly int Cardtype;
     /// <summary>
     /// 升级版Id（如果已经升级过就填0或者不填）
     /// </summary>
@@ -89,6 +94,7 @@ public sealed partial class CardModel : Luban.BeanBase
         
         
         
+        
     }
 
     public override string ToString()
@@ -98,6 +104,7 @@ public sealed partial class CardModel : Luban.BeanBase
         + "name:" + Name + ","
         + "desc:" + Desc + ","
         + "cost:" + Cost + ","
+        + "cardtype:" + Cardtype + ","
         + "nextLevelCardId:" + NextLevelCardId + ","
         + "res:" + Res + ","
         + "quality:" + Quality + ","

@@ -9,6 +9,7 @@ namespace Abyss.BattleFSM
         {
             owner.FadeInAndOut(() =>
             {
+                (data as System.Action)?.Invoke();
                 owner.battleForm.campLogic.gameObject.SetActive(false);
                 owner.battleForm.selectLogic.gameObject.SetActive(false);
                 owner.battleForm.eventLogic.gameObject.SetActive(false);

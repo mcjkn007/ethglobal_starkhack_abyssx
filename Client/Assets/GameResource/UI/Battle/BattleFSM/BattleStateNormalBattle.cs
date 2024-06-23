@@ -1,4 +1,6 @@
+using System;
 using GameFramework.Fsm;
+using UnityEngine.Events;
 
 namespace Abyss.BattleFSM
 {
@@ -9,6 +11,7 @@ namespace Abyss.BattleFSM
         {
             owner.FadeInAndOut(() =>
             {
+                (data as Action)?.Invoke();
                 owner.battleForm.campLogic.gameObject.SetActive(false);
                 owner.battleForm.selectLogic.gameObject.SetActive(false);
                 owner.battleForm.eventLogic.gameObject.SetActive(false);

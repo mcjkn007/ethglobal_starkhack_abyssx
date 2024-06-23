@@ -8,11 +8,9 @@
 //------------------------------------------------------------------------------
 
 
-using System;
 
 namespace cfg.gameCard
 { 
-    [Flags]
     public enum ExtraOperation
     {
         /// <summary>

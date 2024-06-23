@@ -10,7 +10,7 @@ namespace Abyss.BattleFSM
             get;
         }
 
-        public abstract void OnEnter(object data);
+        public abstract void OnEnter(object data );
         public abstract void OnLeave();
 
         public BattleFSMState(UIBattleLogic battleLogic)

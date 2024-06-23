@@ -31,7 +31,7 @@ public sealed partial class GameActions : Luban.BeanBase
     /// </summary>
     public readonly int Id;
     /// <summary>
-    /// 英文名 用于写代码
+    /// 英文名
     /// </summary>
     public readonly string Name;
     public readonly string Comment;
@@ -41,6 +41,8 @@ public sealed partial class GameActions : Luban.BeanBase
 
     public  void ResolveRef(Tables tables)
     {
+        
+        
         
     }
 

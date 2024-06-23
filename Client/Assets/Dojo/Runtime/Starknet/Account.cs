@@ -3,6 +3,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using bottlenoselabs.C2CS.Runtime;
 using dojo_bindings;
+using UnityEngine.EventSystems;
 using Debug = UnityEngine.Debug;
 
 namespace Dojo.Starknet

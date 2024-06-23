@@ -22,6 +22,11 @@ public class UIBattleForm : MonoBehaviour
     public Button btn_consumed;
     [SerializeField]
     public SplinePointer splinePointer;
+
+    [SerializeField]
+    public Text txt_energy;
+    [SerializeField]
+    public Text txt_maxEnergy;
     
     [SerializeField]
     public Button btn_skipRound;
@@ -30,10 +35,14 @@ public class UIBattleForm : MonoBehaviour
     [SerializeField]
     public Text txt_hp;
     [SerializeField]
+    public Text txt_Maxhp;
+    [SerializeField]
     public Text txt_gold;
+    [SerializeField]
+    public Text txt_stage;
 
 
-    
+        
     [SerializeField]
     public Button btn_map;
     [SerializeField]
@@ -44,6 +53,8 @@ public class UIBattleForm : MonoBehaviour
     [SerializeField]
     public SpriteRenderer img_mask;
 
+    [SerializeField]
+    public RoundBanner banner;
     [SerializeField]
     public Transform leftFlyIn;
     [SerializeField]

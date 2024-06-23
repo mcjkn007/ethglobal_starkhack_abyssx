@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -69,9 +70,11 @@ namespace Dojo
         // Spawn an Entity game object from a dojo.Entity
         private GameObject SpawnEntity(FieldElement hashedKeys, Model[] entityModels)
         {
+            // SyncPrint.Enqueue("Spawn Entity");
             // Add the entity to the world.
             var entityGameObject = worldManager.AddEntity(hashedKeys.Hex());
             // Initialize each one of the entity models
+            Debug.LogError($"EntityModel Count => {entityModels.Length}");
             foreach (var entityModel in entityModels)
             {
                 // Check if we have a model definition for this entity model
@@ -81,12 +84,15 @@ namespace Dojo
                     Debug.LogError($"Model {entityModel.Name} not found");
                     continue;
                 }
+                else
+                {
+                    Debug.LogError($"Model {entityModel.Name} Has Been found");
+                }
 
                 // Add the model component to the entity
                 var component = (ModelInstance)entityGameObject.AddComponent(model.GetType());
                 component.Initialize(entityModel);
             }
-
             OnEntitySpawned?.Invoke(entityGameObject);
             return entityGameObject;
         }
@@ -94,6 +100,7 @@ namespace Dojo
         // Handles spawning / updating entities as they are updated from the dojo world
         private void HandleEntityUpdate(FieldElement hashedKeys, Model[] entityModels)
         {
+            SyncPrint.Enqueue("Update Entity");
             // Get the entity game object
             var entity = GameObject.Find(hashedKeys.Hex());
             if (entity == null)
@@ -173,6 +180,28 @@ namespace Dojo
             }
 
             return models.ToArray();
+        }
+    }
+
+    public static class SyncPrint
+    {
+        private static ConcurrentQueue<string> _queue = new ConcurrentQueue<string>();
+
+        public static void Enqueue(string content)
+        {
+            _queue.Enqueue(content);
+        }
+
+        public static bool Dequeue(out string res)
+        {
+            if (_queue.TryDequeue(out var rtn))
+            {
+                res = rtn;
+                return true;
+            }
+
+            res = null;
+            return false;
         }
     }
 }

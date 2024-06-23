@@ -112,7 +112,9 @@ namespace Abyss
         {
             var privateKey = "0x2bbf4f9fd0bbb2e60b0316c1fe0b76cf7a4d0198bd493ced9b8df2a3a24d68a";
             var masterAddress = "0xb3ff441a68610b30fd5e2abbf3a1548eb6ba6f3559f2862bf2dc757e5828ca";
-            
+
+            privateKey = "0x04148a8d4606c75b7b5734e0940aeb21f7909ffa7cce256aabe91e17b7e0191d";
+            masterAddress = "0x06E5a0Ee3A81d3E45e76c730393F568461D78A60ccc23D4f94813399F153F73C";
             // var provider = new JsonRpcClient(dojoConfig.rpcUrl);
             // var signer = new SigningKey(privateKey);
             // this.masterAccount = new Account(provider, signer, new FieldElement(masterAddress));
@@ -124,12 +126,14 @@ namespace Abyss
         {
             spawnedAccounts[this.masterAccount.Address] = null;
         }
-
+    
         async void Start()
         {
             var privateKey = "0x2bbf4f9fd0bbb2e60b0316c1fe0b76cf7a4d0198bd493ced9b8df2a3a24d68a";
             var masterAddress = "0xb3ff441a68610b30fd5e2abbf3a1548eb6ba6f3559f2862bf2dc757e5828ca";
             
+            // privateKey = "0x04148a8d4606c75b7b5734e0940aeb21f7909ffa7cce256aabe91e17b7e0191d";
+            // masterAddress = "0x06E5a0Ee3A81d3E45e76c730393F568461D78A60ccc23D4f94813399F153F73C";
             var provider = new JsonRpcClient(dojoConfig.rpcUrl);
             var signer = new SigningKey(privateKey);
             this.masterAccount = new Account(provider, signer, new FieldElement(masterAddress));

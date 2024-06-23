@@ -113,14 +113,19 @@ mod battle {
             let mut role:Role = get!(world, (player), (Role));
 
             if(value == RoadCategory::Camp){
-                let mut seed:u64 = role.seed;
-                RandomTrait::random_u64_loop(ref seed,role.cur_stage);
-                let r:u64 = RandomTrait::random_u64(ref seed,0,20);
-                assert(r < 20 || role.cur_stage == 12, 'random is wrong');
+                if(role.cur_stage == 2){
+                    
+                }else{
+                    let mut seed:u64 = role.seed;
+                    RandomTrait::random_u64_loop(ref seed,role.cur_stage);
+                    let r:u64 = RandomTrait::random_u64(ref seed,0,100);
+                    assert(r < 20 || role.cur_stage == 12, 'random is wrong');
+                }
+                 
             }else if(value == RoadCategory::Event){
                 let mut seed:u64 = role.seed;
                 RandomTrait::random_u64_loop(ref seed,role.cur_stage);
-                let r = RandomTrait::random_u64(ref seed,0,20);
+                let r = RandomTrait::random_u64(ref seed,0,100);
                 assert(r > 19 && r < 40, 'random is wrong');
     
             }else if(value == RoadCategory::Chest){
@@ -141,6 +146,7 @@ mod battle {
             let player = get_caller_address();
         
             let mut user:User = get!(world, player, (User));
+            println!("check_e1_battle_result");
             assert(user.state == UserState::GAME, 'state is wrong');
         
             let mut role:Role = get!(world, (player), (Role));
@@ -188,12 +194,12 @@ mod battle {
             if (enemy.attr.state == AttributeState::Death
                 && adv.attr.state == AttributeState::Live
                 ){
-
+                    assert(value < 5,'select  card');
                     if(value > 0){
                         let mut seed:u64 = MathU64Trait::add_u64(role.seed,SeedDiff::Card);
-                        RandomTrait::random_u64_loop(ref seed,role.cur_stage);
+                        RandomTrait::random_u64_loop(ref seed,role.cur_stage);            
                         let mut arr = RandomArrayTrait::random_number(ref seed,51);
-                        card.add_card(*arr.at(MathU8Trait::sub_u8(value,1).into()));
+                        card.add_card(*arr.at(MathU8Trait::sub_u8(value,1).into())+1);
                     }
 
                 role.cur_stage.self_add_u8();
@@ -203,7 +209,7 @@ mod battle {
 
             }else{
                 println!("enemy.hp : {}", enemy.attr.hp);
-               //assert(false, 'opt error');
+                assert(false, 'opt error');
             }
 
             
@@ -283,11 +289,12 @@ mod battle {
                 && enemy_team.e2.attr.state == AttributeState::Death
                 && adv.attr.state == AttributeState::Live
             ){
+                assert(value < 5,'select  card');
                 if(value > 0){
                     let mut seed:u64 = MathU64Trait::add_u64(role.seed,SeedDiff::Card);
                     RandomTrait::random_u64_loop(ref seed,role.cur_stage);
                     let mut arr = RandomArrayTrait::random_number(ref seed,51);
-                    card.add_card(*arr.at(MathU8Trait::sub_u8(value,1).into()));
+                    card.add_card(*arr.at(MathU8Trait::sub_u8(value,1).into())+1);
                 }
 
                 role.cur_stage.self_add_u8();

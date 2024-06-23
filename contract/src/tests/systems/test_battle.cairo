@@ -44,20 +44,23 @@ mod tests {
         battle_system.start_game(1,1);
   
         let mut arr:Array<u16> = array![]; 
+        arr.append(1);
         arr.append(257);
-        arr.append(1280);
-        arr.append(2048);
-
+        arr.append(1025);
         arr.append(0);
 
-        arr.append(1);
+        arr.append(769);
+        arr.append(0);
+
+        arr.append(769);
         arr.append(513);
-        arr.append(1536);
+        arr.append(257);
         arr.append(0);
 
         arr.append(1);
-
-
+        arr.append(1025);
+ 
+ 
         let initial = testing::get_available_gas();
         gas::withdraw_gas().unwrap();
         battle_system.check_e1_battle_result(arr,1);

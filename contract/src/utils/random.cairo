@@ -39,6 +39,7 @@ impl RandomImpl of RandomTrait{
     #[inline]
     fn random_u64(ref seed:u64,min:u64,max:u64) -> u64{
         //左闭右开
+        //println!("seed seed : {}",seed);
         seed = match core::integer::u128_checked_add(seed.into()*RANDOM_P1,RANDOM_P2) {
             Option::Some(r) => (r & RANDOM_P4).try_into().unwrap(),
             Option::None => 0,
@@ -63,12 +64,12 @@ impl RandomContainerImpl<T,+Drop<T>, +Copy<T>,+AddEq<T>,+PartialOrd<T>,+Into<T, 
     fn random_array(ref seed:u64,data:@Array<T>)->Array<T>{
  
         let mut cur_pos:u8 = data.len().try_into().unwrap();
+
         let mut dict: Felt252Dict<u8> = Default::default(); 
         let mut result: Array<T> = ArrayTrait::new();
         loop{
              
             if(cur_pos == 1){
-                
                 result.append(*data.at(MathU8Trait::sub_u8(dict.get(0),1).into()));
                 break;
             } 
@@ -76,14 +77,16 @@ impl RandomContainerImpl<T,+Drop<T>, +Copy<T>,+AddEq<T>,+PartialOrd<T>,+Into<T, 
             let rand_pos:felt252 = RandomTrait::random_u64(ref seed,0,MathU8Trait::sub_u8(cur_pos,1).into()).into();
             let mut v:u8 = dict.get(rand_pos);
             if(v == 0){
+               
                 result.append(*data.at(rand_pos.try_into().unwrap()).try_into().unwrap());
             }else{
-                result.append(*data.at((MathU8Trait::sub_u8(v,1)).try_into().unwrap()));
+                
+                result.append(*data.at((MathU8Trait::sub_u8(v,1)).into()));
             }
             v = dict.get((MathU8Trait::sub_u8(cur_pos,1)).into());
 
             if(v == 0){
-                dict.insert(rand_pos,cur_pos.try_into().unwrap());
+                dict.insert(rand_pos,cur_pos);
             }else{
                 dict.insert(rand_pos,v);
             }
@@ -125,12 +128,9 @@ impl RandomArrayImpl of RandomArrayTrait{
                 result.append(MathU8Trait::sub_u8(dict.get(0),1));
                 break;
             } 
-            println!("seed  : {}",seed);
             let rand_pos:felt252 = RandomTrait::random_u64(ref seed,0,MathU8Trait::sub_u8(cur_pos,1).into()).into();
             let mut v:u8 = dict.get(rand_pos);
-            println!("rand_pos  : {}",rand_pos);
-            println!("cur_pos  : {}",cur_pos-1);
-            println!("---------");
+           
             if(v == 0){
                 result.append(rand_pos.try_into().unwrap());
             }else{
@@ -138,7 +138,7 @@ impl RandomArrayImpl of RandomArrayTrait{
             }
             v = dict.get((MathU8Trait::sub_u8(cur_pos,1)).into());
             if(v == 0){
-                dict.insert(rand_pos,cur_pos.try_into().unwrap());
+                dict.insert(rand_pos,cur_pos);
             }else{
                 dict.insert(rand_pos,v);
             }
@@ -147,6 +147,37 @@ impl RandomArrayImpl of RandomArrayTrait{
 
         return result;
     }
+    fn random_array(ref seed:u64,data:@Array<u8>)->Array<u8>{
+ 
+        let mut cur_pos:u8 = data.len().try_into().unwrap();
+        let mut dict: Felt252Dict<u8> = Default::default(); 
+        let mut result: Array<u8> = ArrayTrait::new();
+        loop{
+            if(cur_pos == 1){
+                result.append(*data.at(MathU8Trait::sub_u8(dict.get(0),1).into()));
+                break;
+            } 
+            let rand_pos:felt252 = RandomTrait::random_u64(ref seed,0,MathU8Trait::sub_u8(cur_pos,1).into()).into();
+            let mut v:u8 = dict.get(rand_pos);
+           
+            if(v == 0){
+                result.append(*data.at(rand_pos.try_into().unwrap()));
+            }else{
+                result.append((*data.at(MathU8Trait::sub_u8(v,1).into())));
+            }
+            v = dict.get((MathU8Trait::sub_u8(cur_pos,1)).into());
+            if(v == 0){
+                dict.insert(rand_pos,cur_pos);
+            }else{
+                dict.insert(rand_pos,v);
+            }
+            cur_pos.self_sub_u8();
+        };
+
+      
+        return result;
+    }
+   
 }
 
  

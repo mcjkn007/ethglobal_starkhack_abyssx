@@ -46,7 +46,7 @@ impl C1DamageImpl of DamageTrait {
         self.status.cal_damage_status(ref value);
     }
     fn damage_taken(ref self:Attribute,ref target:Attribute, mut value:u16){
-        
+
         self.status.cal_damaged_status(ref value);
 
         if(Bit32Trait::is_bit_fast(self.ability,C1Ability::Shield_Wall)){
@@ -241,7 +241,7 @@ impl C1EntityImpl of EntityTrait<Adventurer> {
 
             init_cards:ArrayTrait::<u8>::new(),
             left_cards:ArrayTrait::<u8>::new(),
-            mid_cards:DictMapTrait::<u8>::new(),
+            mid_cards:DictMapTrait::new(),
             right_cards:ArrayTrait::<u8>::new()
         };
     }   
@@ -648,7 +648,7 @@ impl C1Action2Impl of ActionTrait<Adventurer,EnemyTeam2>{
     }
     fn action(ref self:Adventurer,ref target:EnemyTeam2,data:u16){
         let card_index = (data/256_u16).try_into().unwrap();
-       // println!("card_index   {}",card_index);
+        println!("card_index   {}",card_index);
         assert(self.mid_cards.check_value(card_index), 'card void');
 
         let card_id = *self.init_cards.at(card_index.into());
@@ -1378,14 +1378,11 @@ impl C1CardImpl of C1CardTrait{
     fn c45(ref self:Adventurer)->CardResult{
         //消耗你所有手牌，每张被消耗的卡牌获得8点护甲，消耗
         let mut value:u16 = 0;
-        loop{
-            if(self.mid_cards.empty()){
-                self.mid_cards.clean_value_dict();
-                break;
-            }
-            value.self_add_u16();
-            self.mid_cards.pop_back_fast();
-        };
+
+ 
+        value += self.mid_cards.pop_all().len().try_into().unwrap();
+        value *= 8;
+
         self.check_talent_2(ref value);
         self.attr.c1_add_armor(value);
         return CardResult::Null;

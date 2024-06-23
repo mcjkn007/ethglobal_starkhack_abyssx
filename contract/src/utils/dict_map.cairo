@@ -3,75 +3,104 @@ use abyss_x::utils::math::{MathU32Trait};
 use core::Felt252DictTrait;
 
 
-struct DictMap<T>{
-    key:Felt252Dict<T>,
-    value:Felt252Dict<u32>,
+struct DictMap{
+    value:Felt252Dict<u8>,
+    key:Felt252Dict<u8>,
     size:u32,
+    max:u32,
 }
 
-impl DestructDictMap<T, +Drop<T>, +Felt252DictValue<T>> of Destruct<DictMap<T>> {
-    fn destruct(self: DictMap<T>) nopanic {
-        self.key.squash();
+impl DestructDictMap of Destruct<DictMap>{
+    fn destruct(self: DictMap) nopanic {
         self.value.squash();
+        self.key.squash();
     }
 }
 
  
- 
 #[generate_trait]
-impl DictMapImpl<T, +Drop<T>, +Copy<T>,+PartialEq<T>,+Felt252DictValue<T>,+Into<u8,T>,+Into<T,u32>,+Into<T,felt252>> of DictMapTrait<T> {
+impl DictMapImpl of DictMapTrait {
     #[inline]
-    fn new()->DictMap<T>{
+    fn new()->DictMap{
         return DictMap{
-            key:Default::default(),
             value:Default::default(),
-            size:0_u32
+            key:Default::default(),
+            size:0,
+            max:0
         };
     }
     #[inline]
-    fn size(self: @DictMap<T>) -> u32{
+    fn size(self: @DictMap) -> u32{
         return *self.size;
     }
     #[inline]
-    fn empty(self:@DictMap<T>) -> bool{
+    fn empty(self:@DictMap) -> bool{
         return (*self.size) == 0;
     }
     #[inline]
-    fn at(ref self:DictMap<T>, index: u32)->T{
-        return self.key.get(index.into());
+    fn at(ref self:DictMap, index: u32)->u8{
+        return self.value.get(index.into());
     }
     #[inline]
-    fn check_value(ref self:DictMap<T>, value: T)->bool{
-        return self.value.get(value.into()) > 0;
+    fn check_value(ref self:DictMap, value: u8)->bool{
+        return self.key.get(value.into()) > 0;
     }
     #[inline]
-    fn remove_value(ref self:DictMap<T>, value: T){
-        let index:u32 = self.value.get(value.into());
-        if(index != self.size){    
-            self.key.insert((index).into(), self.key.get(self.size.into()));
-        }
-        self.value.insert(value.into(),0_u8.into());
-        self.size.self_sub_u32();
+    fn remove_value(ref self:DictMap, value: u8){
+        let mut i = 0;
+        loop{
+            if(i == self.size){
+                break;
+            }
+            if(self.value.get(i.into()) == value){
+                self.value.insert(i.into(),0);
+                self.key.insert(value.into(),0);
+                self.size -=1;
+                break;
+            }
+            i +=1;
+        };
+    }
+
+    #[inline]
+    fn push_back(ref self:DictMap,value:u8){
+        let mut i:u8 = 0;
+        loop{
+            if(self.size == 10){
+                break;
+            }
+            if(self.value.get(i.into()) == 0){
+                self.value.insert(i.into(),value);
+                self.key.insert(value.into(),i+1);
+                self.size +=1;
+                self.max +=1;
+                break;
+            }
+            i +=1;
+        };
     }
     #[inline]
-    fn push_back(ref self:DictMap<T>,value:T){
-        self.key.insert((self.size.self_add__u32()).into(),value);
-        self.value.insert(value.into(),self.size);
-    }
-    #[inline]
-    fn pop_back(ref self:DictMap<T>)->T{
-        let result = self.key.get((self.size.self_sub__u32()).into());
-        self.value.insert(result.into(),0_u8.into());
+    fn pop_all(ref self:DictMap)->Array<u8>{
+        let mut result = ArrayTrait::new();
+        let mut i:u32 = 0;
+        loop{
+            if(i == self.max){
+                break;
+            }
+            if(self.value.get(i.into()) != 0){
+                result.append(self.value.get(i.into()));
+            }
+            i +=1;
+        };
+        self.value = Default::default();
+        self.key = Default::default();
+        self.size = 0;
+        self.max = 0;
+        
         return result;
     }
-    #[inline]
-    fn pop_back_fast(ref self:DictMap<T>)->T{
-        return self.key.get((self.size.self_sub__u32()).into());
-    }
-    #[inline]
-    fn clean_value_dict(ref self:DictMap<T>){
-        self.value = Default::default();
-    }
+    
+    
 }
 
  

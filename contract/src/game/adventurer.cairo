@@ -35,7 +35,7 @@ struct Adventurer{
 
     init_cards:Array<u8>,
     left_cards:Array<u8>,
-    mid_cards:DictMap<u8>,
+    mid_cards:DictMap,
     right_cards:Array<u8>,
 }
 
@@ -77,9 +77,7 @@ impl AdventurerCommonImpl of AdventurerCommonTrait{
  
         self.seed = MathU64Trait::add_u64(role.seed,SeedDiff::Game);
         RandomTrait::random_u64_loop(ref self.seed,role.cur_stage);
-
-        self.seed = 123;
-
+         
         self.init_cards = card.get_cards();
     }
     #[inline]
@@ -169,7 +167,7 @@ impl AdventurerCommonImpl of AdventurerCommonTrait{
         loop{
             match self.left_cards.pop_front() {
                 Option::Some(r) => {
-                  //  println!("draw_cards_from_left gas : {}",r);
+                 //   println!("draw_cards_from_left gas : {}",r);
         
                     self.mid_cards.push_back(r);
 
@@ -186,7 +184,7 @@ impl AdventurerCommonImpl of AdventurerCommonTrait{
                     if(self.right_cards.len() == 0){
                         break;
                     }
-                    self.left_cards = RandomContainerTrait::random_array(ref self.seed,@self.right_cards);
+                    self.left_cards = RandomArrayTrait::random_array(ref self.seed,@self.right_cards);
                     self.right_cards = ArrayTrait::<u8>::new();
                 },
             }
@@ -225,6 +223,7 @@ impl AdventurerCommonImpl of AdventurerCommonTrait{
         }
         self.mid_cards.remove_value(card);
         //你使用的牌会进入抽牌堆底。
+       // println!("card   {}",card);
         match self.check_relic_17(){
             true => {
                 self.left_cards.append(card);
@@ -238,25 +237,12 @@ impl AdventurerCommonImpl of AdventurerCommonTrait{
     fn consume_card(ref self:Adventurer,card:u8){
         self.mid_cards.remove_value(card);
     }
-    #[inline]
-    fn discard_cards(ref self:Adventurer){
-        loop{
-            if(self.mid_cards.empty()){
-                self.mid_cards.clean_value_dict();
-                break;
-            }
-            self.right_cards.append(self.mid_cards.pop_back_fast());
-        };
-    }
+   
     #[inline]
     fn round_end_disard_cards(ref self:Adventurer){
-        loop{
-            if(self.mid_cards.empty()){
-                self.mid_cards.clean_value_dict();
-                break;
-            }
-            self.right_cards.append(self.mid_cards.pop_back_fast());
-        };
+        let arr = self.mid_cards.pop_all();
+        // println!("card111   {}",a);
+         self.right_cards.append_span(arr.span());
     }  
 }
 
